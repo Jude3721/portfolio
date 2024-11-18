@@ -313,7 +313,7 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill{
 
 @for $i from 1 through 100 { .mh-#{$i} { margin-right: 0px + $i $imt;  margin-left: 0px + $i $imt;} }
 @for $i from 1 through 100 { .mv-#{$i} { margin-top: 0px + $i $imt;  margin-bottom: 0px + $i $imt;} }
-@for $i from 1 through 100 { .mt-#{$i} { margin-top: 0px + $i $imt;} }
+@for $i from 1 through 300 { .mt-#{$i} { margin-top: 0px + $i $imt;} }
 @for $i from 1 through 300 { .mr-#{$i} { margin-right: 0px + $i $imt;} }
 @for $i from 1 through 100 { .mb-#{$i} { margin-bottom: 0px + $i $imt;} }
 @for $i from 1 through 100 { .ml-#{$i} { margin-left: 0px + $i $imt;} }

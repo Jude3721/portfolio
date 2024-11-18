@@ -1,8 +1,8 @@
 <template>
   <div class="portfolio">
     <div class="content">
-        <ul class="dp-f flex-column gap-50">
-          <li class="dp-f gap-30">
+        <ul class="dp-f flex-column">
+          <li id="smartScore" class="dp-f gap-30 pv-30">
             <div class="image_box">
               <img src="../../assets/images/img/erp_img.png" alt="" />
             </div>
@@ -17,7 +17,7 @@
               <button class="btn_com mt-at ml-at">자세히 보기</button>
             </div>
           </li>
-          <li class="dp-f gap-30">
+          <li class="dp-f gap-30 pv-30">
             <div class="dp-f flex-column text-box">
               <h4 class="title">스마트스코어 앱(골프 스토리)</h4>
               <p class="text">
@@ -31,7 +31,7 @@
               <img src="../../assets/images/img/golfStory_img.png" alt="" />
             </div>
           </li>
-          <li class="dp-f gap-30">
+          <li class="dp-f gap-30 pv-30">
             <div class="image_box">
               <img src="../../assets/images/img/did_img.png" alt="" />
             </div>
@@ -45,14 +45,15 @@
               <button class="btn_com mt-at ml-at">자세히 보기</button>
             </div>
           </li>
-          <li class="dp-f gap-30">
+          <li class="dp-f gap-30 pv-30" id="cndF">
             <div class="dp-f flex-column text-box">
               <h4 class="title">파타고니아KR</h4>
               <p class="text">
-                KR 사이트 반응형 사이트 작업<br/>
-                총 4명의 퍼블리셔와 협업으로 진행된 프로젝트<br/>
-                작업 기간 : 5개월<br/>
-                퍼블리셔 기여도 : 40% / 프론트 앤드 기여도 : 30%
+                역할: 퍼블리싱
+                기술 스택: html, scss, javascript, jQuery
+                성과: KR 사이트 리뉴얼 프로젝트
+                총 4명의 퍼블리셔와 협업으로 진행하였으며, 선임자로서 프로젝트 관리, 기술 지원, 코드 리뷰 등의 역할을 맡아 팀원들과 원활하게 소통하며 프로젝트를 성공적으로 이끌었습니다.
+                해당 프로젝트 진행 시에는 프론트 앤드 작업 또한 같이 진행하였습니다.
               </p>
               <button class="btn_com mt-at ml-at">자세히 보기</button>
             </div>
@@ -60,7 +61,7 @@
               <img src="../../assets/images/img/golfStory_img.png" alt="" />
             </div>
           </li>
-          <li class="dp-f gap-30">
+          <li class="dp-f gap-30 pv-30">
             <div class="image_box">
               <img src="../../assets/images/img/did_img.png" alt="" />
             </div>
@@ -74,7 +75,7 @@
               <button class="btn_com mt-at ml-at">자세히 보기</button>
             </div>
           </li>
-          <li class="dp-f gap-30">
+          <li class="dp-f gap-30 pv-30">
             <div class="dp-f flex-column text-box">
               <h4 class="title">제주삼다수 웹 페이지</h4>
               <p class="text">
@@ -89,7 +90,7 @@
               <img src="../../assets/images/img/golfStory_img.png" alt="" />
             </div>
           </li>
-          <li class="ta-c mt-60">
+          <li class="ta-c pt-150" id="More">
             <button class="btn_com">다른 프로젝트 더보기</button>
           </li>
         </ul>
