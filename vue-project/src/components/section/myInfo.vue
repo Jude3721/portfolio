@@ -12,7 +12,7 @@
       </div>
 
       <h3 class="fs-24 fw-700 fc-grey600 pt-60 pb-20 ta-c">My Career</h3>
-      <div class="ps-r bg-line wd-500 m-0a pv-14">
+      <div class="ps-r bg-line wd-500 m-0a pv-14 fade-in">
         <div class="dp-f align-items-center size-50 hp-40 round-r ps-r" @click="scrollTo('smartScore')">
           <h4 class="fs-20 fw-600 fc-3e4354">스마트스코어</h4>
         </div>
@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 const  scrollTo = (targetId) => {
   const element = document.getElementById(targetId);
@@ -104,5 +104,17 @@ const  scrollTo = (targetId) => {
         background-color:#1d2f3c;
       }
     }
+}
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeIn 0.5s forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

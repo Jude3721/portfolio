@@ -27,7 +27,6 @@ const type = () => {
   if (index.value < fullText.length) {
     displayedText.value += fullText.charAt(index.value);
     index.value++;
-    console.log(index.value);
     setTimeout(type, 100); // 각 글자 사이의 시간 (100ms)
   } else {
     isTyping.value = false; // 타이핑이 끝나면 커서 제거
