@@ -1,7 +1,7 @@
 <template>
   <div class="portfolio">
-    <div class="content">
-        <ul class="dp-f flex-column">
+    <div class="content" id="PortfolioList">
+        <ul v-show="isPortfolioVisible" class="dp-f flex-column fade-in">
           <li id="smartScore" class="dp-f gap-30 pv-30">
             <div class="image_box">
               <img src="../../assets/images/img/erp_img.png" alt="" />
@@ -109,7 +109,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+
+const isPortfolioVisible = ref(false);
+
+const handleScroll = () => {
+  const careerSection = document.getElementById('PortfolioList');
+
+
+  if (careerSection) {
+    if (isInViewport(careerSection)) {
+      isPortfolioVisible.value = true;
+    }
+  } else {
+    console.log('PortfolioList section not found');
+  }
+};
+
+const isInViewport = (element) => {
+  const rect = document.getElementById('PortfolioList').getBoundingClientRect();
+  
+  return (
+    rect.top < window.innerHeight && 
+    rect.bottom > 0 
+  );
+};
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll);
+  handleScroll();
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll);
+});
+
 
 </script>
 
@@ -162,6 +196,18 @@ import { ref, onMounted } from 'vue';
     color:#ffffff;
     background-color:#10182b;
 
+  }
+}
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeIn 1.5s forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>
