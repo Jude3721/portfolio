@@ -12,23 +12,28 @@
       </div>
 
       <h3 class="fs-24 fw-700 fc-grey600 pt-60 pb-20 ta-c">My Career</h3>
-      <div class="ps-r bg-line wd-500 m-0a pv-14 fade-in">
-        <div class="dp-f align-items-center size-50 hp-40 round-r ps-r" @click="scrollTo('smartScore')">
-          <h4 class="fs-20 fw-600 fc-3e4354">스마트스코어</h4>
-        </div>
-        <div class="dp-f align-items-center size-50 hp-40 justify-end ml-at round-l ps-r" @click="scrollTo('cndF')">
-          <h4 class="fs-20 fw-600 fc-3e4354">CNDF</h4>
-        </div>
-        <div class="dp-f align-items-center size-50 hp-40 round-r ps-r" @click="scrollTo('More')">
-          <h4 class="fs-20 fw-600 fc-3e4354">바잉스퀘어<span class="fs-14">(계약직)</span></h4>
-        </div>
-        <div class="dp-f justify-end align-items-center size-50 hp-40 ml-at round-l ps-r" @click="scrollTo('More')">
-          <h4 class="fs-20 fw-600 fc-3e4354">머지플러스</h4>
-        </div>
-        <div class="dp-f align-items-center size-50 hp-40 round-r ps-r" @click="scrollTo('More')">
-          <h4 class="fs-20 fw-600 fc-3e4354">(주)지식과미래</h4>
+      
+      <div id="Carrer">
+        <div v-show="isCareerVisible" class="ps-r bg-line wd-500 m-0a pv-14 fade-in">
+          <div class="dp-f align-items-center size-50 hp-40 round-r ps-r" @click="scrollTo('smartScore')">
+            <h4 class="fs-20 fw-600 fc-3e4354">스마트스코어</h4>
+          </div>
+          <div class="dp-f align-items-center size-50 hp-40 justify-end ml-at round-l ps-r" @click="scrollTo('cndF')">
+            <h4 class="fs-20 fw-600 fc-3e4354">CNDF</h4>
+          </div>
+          <div class="dp-f align-items-center size-50 hp-40 round-r ps-r" @click="scrollTo('More')">
+            <h4 class="fs-20 fw-600 fc-3e4354">바잉스퀘어<span class="fs-14">(계약직)</span></h4>
+          </div>
+          <div class="dp-f justify-end align-items-center size-50 hp-40 ml-at round-l ps-r" @click="scrollTo('More')">
+            <h4 class="fs-20 fw-600 fc-3e4354">머지플러스</h4>
+          </div>
+          <div class="dp-f align-items-center size-50 hp-40 round-r ps-r" @click="scrollTo('More')">
+            <h4 class="fs-20 fw-600 fc-3e4354">(주)지식과미래</h4>
+          </div>
         </div>
       </div>
+
+
     </div>
   </div>
 </template>
@@ -39,12 +44,47 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 const  scrollTo = (targetId) => {
   const element = document.getElementById(targetId);
   if (element) {
-    const top = element.getBoundingClientRect().top + window.scrollY;
+    const top = (element.getBoundingClientRect().top - 90) + window.scrollY;
     window.scrollTo({ top, behavior: 'smooth' });
   } else {
     console.warn(`Element with id "${targetId}" not found.`);
   }
 }
+
+const isCareerVisible = ref(false);
+
+const handleScroll = () => {
+  const careerSection = document.getElementById('Carrer');
+
+
+  if (careerSection) {
+    if (isInViewport(careerSection)) {
+      isCareerVisible.value = true;
+    }
+  } else {
+    console.log('Career section not found');
+  }
+};
+
+const isInViewport = (element) => {
+  const rect = document.getElementById('Carrer').getBoundingClientRect();
+  
+  console.log(rect);
+  console.log(window.innerHeight);
+  return (
+    rect.top < window.innerHeight && 
+    rect.bottom > 0 
+  );
+};
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll);
+  handleScroll();
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll);
+});
 
 </script>
 
@@ -108,7 +148,7 @@ const  scrollTo = (targetId) => {
 .fade-in {
   opacity: 0;
   transform: translateY(20px);
-  animation: fadeIn 0.5s forwards;
+  animation: fadeIn 1.5s forwards;
 }
 
 @keyframes fadeIn {
