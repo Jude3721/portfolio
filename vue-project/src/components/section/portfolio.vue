@@ -22,7 +22,7 @@
               <button class="btn_com mt-at ml-at" @click="goToLink(erp)">자세히 보기</button> -->
             </div>
           </li>
-          <li class="dp-f gap-30 pv-30">
+          <li class="dp-f gap-30 pv-30" @click="goToLink(golfstory)">
             <div class="image_box">
               <img src="../../assets/images/img/golfStory_img.png" alt="" />
               <div class="dim">
@@ -120,7 +120,7 @@
             </div>
           </li>
           <li class="size-100 ta-c pt-150" id="More">
-            <button class="btn_com">다른 프로젝트 더보기</button>
+            <button class="btn_com" @click="goToLink(moreProjeck)">다른 프로젝트 더보기</button>
           </li>
         </ul>
     </div>
@@ -132,7 +132,8 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 const isPortfolioVisible = ref(false);
 const erp = 'https://faint-fox-278.notion.site/1c87bbcacd7c4ab886b60c5f9570e549';
-
+const moreProjeck = 'https://faint-fox-278.notion.site/ad9cc50c640347e7b2085d7f295d9826';
+const golfstory = 'https://faint-fox-278.notion.site/144dcb345abc8021b713ed4294bddfdf';
 
 const handleScroll = () => {
   const careerSection = document.getElementById('PortfolioList');
@@ -191,6 +192,8 @@ const goToLink = (link) =>{
       width:fit-content;
       text-align:center;
       cursor:pointer;
+
+      &#More{cursor:auto;} 
       
       &:hover{
         .image_box{
