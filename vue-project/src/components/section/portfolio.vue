@@ -15,7 +15,7 @@
                 디자인의 세 가지 타입에 맞춰 퍼블리싱을 진행하며, 컴포넌트화와 모듈화를 중점적으로 고려하였습니다.<br/>
                 이를 통해 코드의 재사용성을 높이고, 유지보수를 용이하게 하는 데 기여하였습니다.
               </p>
-              <button class="btn_com mt-at ml-at">자세히 보기</button>
+              <button class="btn_com mt-at ml-at" @click="goToLink(erp)">자세히 보기</button>
             </div>
           </li>
           <li class="dp-f gap-30 pv-30">
@@ -112,11 +112,12 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 const isPortfolioVisible = ref(false);
+const erp = 'https://www.notion.so/1c87bbcacd7c4ab886b60c5f9570e549?pvs=4';
+
 
 const handleScroll = () => {
   const careerSection = document.getElementById('PortfolioList');
-
-
+  
   if (careerSection) {
     if (isInViewport(careerSection)) {
       isPortfolioVisible.value = true;
@@ -143,6 +144,12 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll);
 });
+
+const goToLink = (link) =>{
+  if (typeof window !== "undefined") {
+    window.location.href = link;
+  }
+}
 
 
 </script>
