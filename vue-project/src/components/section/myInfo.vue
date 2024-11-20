@@ -3,7 +3,7 @@
     <div class="content">
       <h3 class="fs-24 fw-700 fc-ececec pb-14 ta-c">About Me</h3>
       <div class="pb-60 bd-ececec-01 wd-800 m-0a">
-        <p class="fs-20 fw-400 fc-10182b break-keep-all">
+        <p class="fs-18 fw-400 fc-10182b break-keep-all">
           🌟 팀워크와 협업<br/>
           팀워크를 중요하게 생각하며, 여러 팀원들과의 협업을 통해 프로젝트를 성공적으로 완수한 경험이 많습니다.<br/><br/>
 
