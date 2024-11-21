@@ -62,7 +62,7 @@
           </li>
           <li class="dp-f gap-30 pv-30" id="cndF">
             <div class="image_box">
-              <img src="../../assets/images/img/golfStory_img.png" alt="" />
+              <img src="../../assets/images/img/fatagonia.png" alt="" />
               <div class="dim">
                 <button class="btn_com">자세히 보기</button>
               </div>
