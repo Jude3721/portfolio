@@ -183,6 +183,9 @@ const goToLink = (link) =>{
   @media all and (max-width:1000px){
     width:100%;
   }
+  @media all and (max-width:600px){
+    width:90%;
+  }
   
   ul{
     display:flex;
@@ -193,9 +196,6 @@ const goToLink = (link) =>{
 
     @media all and (max-width:1000px){
       justify-content: center;
-    }
-    @media all and (max-width:600px){
-      width:90%;
     }
     
     li{
