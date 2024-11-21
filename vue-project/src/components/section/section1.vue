@@ -53,6 +53,10 @@ onMounted(() => {
   }
   video{
     width:100%;
+    
+    @media all and (max-width:720px){
+      width:auto; height:100%;
+    }
   }
 
 }
