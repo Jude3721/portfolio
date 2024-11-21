@@ -34,6 +34,11 @@ const email = ref('ju_1021@naver.com');
   .content{
     width:1200px;
     margin:0 auto;
+
+    @media all and (max-width:1200px){
+      width:100%;
+      padding:0 3%;
+    }
   }
 }
 

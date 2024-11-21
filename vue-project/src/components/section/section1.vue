@@ -71,6 +71,10 @@ onMounted(() => {
       width:fit-content;
       font-size: 2rem;
       margin: 0;
+
+      @media all and (max-width:1200px){
+        font-size:5vw !important;
+      }
     }
 }
 

@@ -217,7 +217,7 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill{
 @for $i from 1 through 100 { .wh-#{$i} {height:0px  + $i $imt; width:0px  + $i $imt;} }
 @for $i from 1 through 100 { .wd-#{$i}vw {width:0vw  + $i $imt;} }
 @for $i from 1 through 100 { .max-width-#{$i} { max-width: 0% + $i;} }
-@for $i from 1 through 500 { .max-width-#{$i}px { max-width: 0px + $i;} }
+@for $i from 1 through 3000 { .max-width-#{$i}px { max-width: 0px + $i;} }
 @for $i from 1 through 3000 { .min-width-#{$i} { min-width: 0px + $i;} }
 @for $i from 1 through 3000 { .wp-width-#{$i} { width:100%; min-width: 0px + $i;} }
 

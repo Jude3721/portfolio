@@ -179,6 +179,10 @@ const goToLink = (link) =>{
   width:1000px;
   margin:0 auto;
   padding:120px 0;
+
+  @media all and (max-width:1000px){
+    width:100%;
+  }
   
   ul{
     display:flex;
@@ -186,6 +190,13 @@ const goToLink = (link) =>{
     flex-wrap:wrap;
     justify-content: space-between;
     width:100%;
+
+    @media all and (max-width:1000px){
+      justify-content: center;
+    }
+    @media all and (max-width:600px){
+      width:90%;
+    }
     
     li{
       flex-direction: column;
@@ -210,6 +221,9 @@ const goToLink = (link) =>{
         border-radius:20px;
         overflow: hidden;
         margin:0 auto;
+        @media all and (max-width:1000px){
+          max-width:100%;
+        }
 
         .dim{
           position:absolute;

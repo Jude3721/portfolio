@@ -30,8 +30,17 @@ const top = () =>{
   width:1200px;
   margin:0 auto;
 
+  @media all and (max-width:1200px){
+    width:100%;
+  }
+
   h1{
     cursor:pointer;
+      
+    @media all and (max-width:1200px){
+      width:10vw !important; height:5vw !important;
+      margin-left:3%;
+    }
   }
 }
 
