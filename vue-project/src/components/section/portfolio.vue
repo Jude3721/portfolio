@@ -60,9 +60,9 @@
               <button class="btn_com mt-at ml-at">자세히 보기</button> -->
             </div>
           </li>
-          <li class="dp-f gap-30 pv-30" id="cndF">
+          <li class="dp-f gap-30 pv-30" id="cndF" @click="goToLink(patagonia)">
             <div class="image_box">
-              <img src="../../assets/images/img/fatagonia.png" alt="" />
+              <img src="../../assets/images/img/patagonia.png" alt="" />
               <div class="dim">
                 <button class="btn_com">자세히 보기</button>
               </div>
@@ -80,9 +80,9 @@
               <button class="btn_com mt-at ml-at">자세히 보기</button> -->
             </div>
           </li>
-          <li class="dp-f gap-30 pv-30">
+          <li class="dp-f gap-30 pv-30" @click="goToLink(kwangdong)">
             <div class="image_box">
-              <img src="../../assets/images/img/did_img.png" alt="" />
+              <img src="../../assets/images/img/kwangdong.png" alt="" />
               <div class="dim">
                 <button class="btn_com">자세히 보기</button>
               </div>
@@ -99,9 +99,9 @@
               <button class="btn_com mt-at ml-at">자세히 보기</button> -->
             </div>
           </li>
-          <li class="dp-f gap-30 pv-30">
+          <li class="dp-f gap-30 pv-30" @click="goToLink(samdasoo)">
             <div class="image_box">
-              <img src="../../assets/images/img/golfStory_img.png" alt="" />
+              <img src="../../assets/images/img/samdasoo.png" alt="" />
               <div class="dim">
                 <button class="btn_com">자세히 보기</button>
               </div>
@@ -134,6 +134,9 @@ const isPortfolioVisible = ref(false);
 const erp = 'https://faint-fox-278.notion.site/1c87bbcacd7c4ab886b60c5f9570e549';
 const moreProjeck = 'https://faint-fox-278.notion.site/ad9cc50c640347e7b2085d7f295d9826';
 const golfstory = 'https://faint-fox-278.notion.site/144dcb345abc8021b713ed4294bddfdf';
+const patagonia ='https://faint-fox-278.notion.site/d0db8940be454a0082cbeb945bd3c585';
+const kwangdong = 'https://faint-fox-278.notion.site/7efcb67ee90649adbdf6f34d46dca31e';
+const samdasoo = 'https://faint-fox-278.notion.site/28f6934d6deb4945be55774f68cb4222';
 
 const handleScroll = () => {
   const careerSection = document.getElementById('PortfolioList');
