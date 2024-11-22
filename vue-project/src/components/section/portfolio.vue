@@ -2,7 +2,7 @@
   <div class="portfolio">
     <div class="content" id="PortfolioList">
         <ul v-show="isPortfolioVisible" class="fade-in">
-          <li id="smartScore" class="dp-f gap-30 pv-30" @click="goToLink(erp)">
+          <li id="smartScore" class="dp-f gap-15 pb-30" @click="goToLink(erp)">
             <div class="image_box">
               <img src="../../assets/images/img/erp_img.png" alt="" />
               
@@ -12,6 +12,7 @@
             </div>
             <div class="dp-f flex-column text-box">
               <h4 class="title">골프장 홈페이지</h4>
+              <p class="text">작업기간 : 약 2달 / 작업 환경 : PC, MOB, ADMIN</p>
               <!-- <p class="text">
                 역할: 퍼블리셔<br/>
                 기술 스택: html, scss, javascript, Nuxt.js<br/>
@@ -22,7 +23,7 @@
               <button class="btn_com mt-at ml-at" @click="goToLink(erp)">자세히 보기</button> -->
             </div>
           </li>
-          <li class="dp-f gap-30 pv-30" @click="goToLink(golfstory)">
+          <li class="dp-f gap-15 pb-30" @click="goToLink(golfstory)">
             <div class="image_box">
               <img src="../../assets/images/img/golfStory_img.png" alt="" />
               <div class="dim">
@@ -31,6 +32,7 @@
             </div>
             <div class="dp-f flex-column text-box">
               <h4 class="title">스마트스코어 앱(골프 스토리)</h4>
+              <p class="text">작업기간 : 약 10일 / 작업 환경 : 웹 앱</p>
               <!-- <p class="text">
                 역할: 퍼블리셔<br/>
                 기술 스택: html, scss, javascript, vue.js<br/>
@@ -41,7 +43,7 @@
               <button class="btn_com mt-at ml-at">자세히 보기</button> -->
             </div>
           </li>
-          <li class="dp-f gap-30 pv-30">
+          <li class="dp-f gap-15 pb-30">
             <div class="image_box">
               <img src="../../assets/images/img/did_img.png" alt="" />
               <div class="dim">
@@ -50,6 +52,7 @@
             </div>
             <div class="dp-f flex-column text-box">
               <h4 class="title">DID 대기화면</h4>
+              <p class="text">작업기간 : 약 4일 / 작업 환경 : UHD 해상도</p>
               <!-- <p class="text">
                 역할: 퍼블리셔<br/>
                 기술 스택: html, scss, javascript, vue.js<br/>
@@ -60,7 +63,7 @@
               <button class="btn_com mt-at ml-at">자세히 보기</button> -->
             </div>
           </li>
-          <li class="dp-f gap-30 pv-30" id="cndF" @click="goToLink(patagonia)">
+          <li class="dp-f gap-15 pb-30" id="cndF" @click="goToLink(patagonia)">
             <div class="image_box">
               <img src="../../assets/images/img/patagonia.png" alt="" />
               <div class="dim">
@@ -69,6 +72,7 @@
             </div>
             <div class="dp-f flex-column text-box">
               <h4 class="title">파타고니아KR</h4>
+              <p class="text">작업기간 : 약 3개월 / 작업 환경 : 반응형 웹 페이지</p>
               <!-- <p class="text">
                 역할: 퍼블리셔 및 PM<br/>
                 기술 스택: html, scss, javascript, jQuery<br/>
@@ -80,7 +84,7 @@
               <button class="btn_com mt-at ml-at">자세히 보기</button> -->
             </div>
           </li>
-          <li class="dp-f gap-30 pv-30" @click="goToLink(kwangdong)">
+          <li class="dp-f gap-15 pb-30" @click="goToLink(kwangdong)">
             <div class="image_box">
               <img src="../../assets/images/img/kwangdong.png" alt="" />
               <div class="dim">
@@ -89,6 +93,7 @@
             </div>
             <div class="dp-f flex-column text-box">
               <h4 class="title">광동상회 웹 페이지</h4>
+              <p class="text">작업기간 : 약 2개월 / 작업 환경 : 반응형 웹 페이지</p>
               <!-- <p class="text">
                 역할: 퍼블리셔 및 PM<br/>
                 기술 스택: html, scss, javascript, jQuery<br/>
@@ -99,7 +104,7 @@
               <button class="btn_com mt-at ml-at">자세히 보기</button> -->
             </div>
           </li>
-          <li class="dp-f gap-30 pv-30" @click="goToLink(samdasoo)">
+          <li class="dp-f gap-15 pb-30" @click="goToLink(samdasoo)">
             <div class="image_box">
               <img src="../../assets/images/img/samdasoo.png" alt="" />
               <div class="dim">
@@ -108,6 +113,7 @@
             </div>
             <div class="dp-f flex-column text-box">
               <h4 class="title">제주삼다수 웹 페이지</h4>
+              <p class="text">작업기간 : 약 1개월 / 작업 환경 : 반응형 웹 페이지</p>
               <!-- <p class="text">
                 역할: 퍼블리셔 및 PM<br/>
                 기술 스택: html, scss, javascript, jQuery<br/>
