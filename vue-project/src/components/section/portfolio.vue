@@ -189,6 +189,9 @@ const goToLink = (link) =>{
   margin:0 auto;
   padding:120px 0;
 
+  @media all and (max-width:1300px){
+    width:900px;
+  }
   @media all and (max-width:1000px){
     width:100%;
   }
