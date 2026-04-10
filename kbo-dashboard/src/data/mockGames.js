@@ -1,0 +1,250 @@
+const CDN = 'https://6ptotvmi5753.edge.naverncp.com/KBO_IMAGE/KBOHome/resources/images/emblem/regular'
+
+export const KBO_TEAMS = {
+  두산: { name: '두산 베어스', short: '두산', color: '#131230', textColor: '#fff', logo: `${CDN}/2025/OB.png` },
+  LG: { name: 'LG 트윈스', short: 'LG', color: '#C30452', textColor: '#fff', logo: `${CDN}/2022/LG.png` },
+  KT: { name: 'KT 위즈', short: 'KT', color: '#000000', textColor: '#fff', logo: `${CDN}/2022/KT.png` },
+  SSG: { name: 'SSG 랜더스', short: 'SSG', color: '#CE0E2D', textColor: '#fff', logo: `${CDN}/2024/SK.png` },
+  NC: { name: 'NC 다이노스', short: 'NC', color: '#071D3B', textColor: '#fff', logo: `${CDN}/2022/NC.png` },
+  삼성: { name: '삼성 라이온즈', short: '삼성', color: '#074CA1', textColor: '#fff', logo: `${CDN}/2022/SS.png` },
+  롯데: { name: '롯데 자이언츠', short: '롯데', color: '#D00B14', textColor: '#fff', logo: `${CDN}/2022/LT.png` },
+  한화: { name: '한화 이글스', short: '한화', color: '#F37321', textColor: '#fff', logo: `${CDN}/2025/HH.png` },
+  KIA: { name: 'KIA 타이거즈', short: 'KIA', color: '#EA0029', textColor: '#fff', logo: `${CDN}/2022/HT.png` },
+  키움: { name: '키움 히어로즈', short: '키움', color: '#820024', textColor: '#fff', logo: `${CDN}/2022/WO.png` },
+}
+
+// status: 'scheduled' | 'live' | 'final'
+// 2026-04-09 오늘 예정 경기 (18:10 시작)
+export const mockGames = [
+  {
+    id: 1,
+    status: 'scheduled',
+    time: '18:10',
+    stadium: '잠실야구장',
+    awayTeam: '키움',
+    homeTeam: '두산',
+    awayScore: null,
+    homeScore: null,
+    inning: null,
+    inningHalf: null,
+    outs: null,
+    bases: null,
+    lineup: {
+      away: {
+        // 안우진·이정후·김혜성·송성문 모두 MLB 이적
+        pitcher: { name: '하영민', hand: '우완' },
+        batters: [
+          { order: 1, pos: 'CF', name: '이주형' },
+          { order: 2, pos: '2B', name: '김태진' },
+          { order: 3, pos: 'RF', name: '임지열' },
+          { order: 4, pos: '1B', name: '트렌턴 브룩스' },
+          { order: 5, pos: 'DH', name: '최주환' },
+          { order: 6, pos: 'LF', name: '박주홍' },
+          { order: 7, pos: '3B', name: '오선진' },
+          { order: 8, pos: 'SS', name: '어준서' },
+          { order: 9, pos: 'C', name: '김건희' },
+        ],
+      },
+      home: {
+        // 허경민 → KT 이적
+        pitcher: { name: '크리스 플렉센', hand: '우완' },
+        batters: [
+          { order: 1, pos: 'CF', name: '정수빈' },
+          { order: 2, pos: '2B', name: '강승호' },
+          { order: 3, pos: 'DH', name: '양석환' },
+          { order: 4, pos: 'LF', name: '김재환' },
+          { order: 5, pos: '1B', name: '조수행' },
+          { order: 6, pos: 'RF', name: '박계범' },
+          { order: 7, pos: '3B', name: '전민재' },
+          { order: 8, pos: 'C', name: '박세혁' },
+          { order: 9, pos: 'SS', name: '권휘' },
+        ],
+      },
+    },
+  },
+  {
+    id: 2,
+    status: 'scheduled',
+    time: '18:10',
+    stadium: 'SSG랜더스필드',
+    awayTeam: '한화',
+    homeTeam: 'SSG',
+    awayScore: null,
+    homeScore: null,
+    inning: null,
+    inningHalf: null,
+    outs: null,
+    bases: null,
+    lineup: {
+      away: {
+        // 강백호 KT→한화 FA, 오재원 신인 리드오프
+        pitcher: { name: '류현진', hand: '좌완' },
+        batters: [
+          { order: 1, pos: 'CF', name: '오재원' },
+          { order: 2, pos: 'RF', name: '손아섭' },
+          { order: 3, pos: 'LF', name: '문현빈' },
+          { order: 4, pos: '3B', name: '노시환' },
+          { order: 5, pos: 'DH', name: '강백호' },
+          { order: 6, pos: '1B', name: '채은성' },
+          { order: 7, pos: '2B', name: '하주석' },
+          { order: 8, pos: 'C', name: '최재훈' },
+          { order: 9, pos: 'SS', name: '심우준' },
+        ],
+      },
+      home: {
+        // 추신수 은퇴, 기예르모 에레디아 잔류
+        pitcher: { name: '김광현', hand: '좌완' },
+        batters: [
+          { order: 1, pos: '3B', name: '최정' },
+          { order: 2, pos: '2B', name: '정준재' },
+          { order: 3, pos: 'DH', name: '기예르모 에레디아' },
+          { order: 4, pos: '1B', name: '고명준' },
+          { order: 5, pos: 'RF', name: '한유섬' },
+          { order: 6, pos: 'LF', name: '이재원' },
+          { order: 7, pos: 'SS', name: '박성한' },
+          { order: 8, pos: 'C', name: '조형우' },
+          { order: 9, pos: 'CF', name: '오태곤' },
+        ],
+      },
+    },
+  },
+  {
+    id: 3,
+    status: 'scheduled',
+    time: '18:10',
+    stadium: '사직야구장',
+    awayTeam: 'KT',
+    homeTeam: '롯데',
+    awayScore: null,
+    homeScore: null,
+    inning: null,
+    inningHalf: null,
+    outs: null,
+    bases: null,
+    lineup: {
+      away: {
+        // 강백호 한화 이적, 김현수 LG→KT, 샘 힐리어드(외인), 이강민(신인 SS)
+        pitcher: { name: '고영표', hand: '우완' },
+        batters: [
+          { order: 1, pos: 'CF', name: '최원준' },
+          { order: 2, pos: '1B', name: '김현수' },
+          { order: 3, pos: 'RF', name: '안현민' },
+          { order: 4, pos: 'LF', name: '샘 힐리어드' },
+          { order: 5, pos: '2B', name: '류현인' },
+          { order: 6, pos: 'DH', name: '이정훈' },
+          { order: 7, pos: '3B', name: '허경민' },
+          { order: 8, pos: 'C', name: '한승택' },
+          { order: 9, pos: 'SS', name: '이강민' },
+        ],
+      },
+      home: {
+        // 이대호 은퇴, 레이예스(외인), 황성빈·윤동희 주전
+        pitcher: { name: '박세웅', hand: '우완' },
+        batters: [
+          { order: 1, pos: 'CF', name: '황성빈' },
+          { order: 2, pos: 'LF', name: '레이예스' },
+          { order: 3, pos: 'RF', name: '윤동희' },
+          { order: 4, pos: 'DH', name: '전준우' },
+          { order: 5, pos: '1B', name: '노진혁' },
+          { order: 6, pos: '3B', name: '손호영' },
+          { order: 7, pos: 'C', name: '유강남' },
+          { order: 8, pos: '2B', name: '한태양' },
+          { order: 9, pos: 'SS', name: '전민재' },
+        ],
+      },
+    },
+  },
+  {
+    id: 4,
+    status: 'scheduled',
+    time: '18:10',
+    stadium: '창원NC파크',
+    awayTeam: 'LG',
+    homeTeam: 'NC',
+    awayScore: null,
+    homeScore: null,
+    inning: null,
+    inningHalf: null,
+    outs: null,
+    bases: null,
+    lineup: {
+      away: {
+        // 오스틴 딘(외인 1B), 박해민(CF), 이영빈(2B), 천성호(3B)
+        pitcher: { name: '임찬규', hand: '좌완' },
+        batters: [
+          { order: 1, pos: 'RF', name: '홍창기' },
+          { order: 2, pos: 'CF', name: '박해민' },
+          { order: 3, pos: '1B', name: '오스틴 딘' },
+          { order: 4, pos: 'DH', name: '문보경' },
+          { order: 5, pos: '3B', name: '천성호' },
+          { order: 6, pos: 'SS', name: '오지환' },
+          { order: 7, pos: 'C', name: '박동원' },
+          { order: 8, pos: 'LF', name: '이재원' },
+          { order: 9, pos: '2B', name: '이영빈' },
+        ],
+      },
+      home: {
+        // 구창모 에이스, 신재인(신인 2B), 천재환(CF), 나성범(DH)
+        pitcher: { name: '구창모', hand: '좌완' },
+        batters: [
+          { order: 1, pos: 'CF', name: '천재환' },
+          { order: 2, pos: 'SS', name: '박민우' },
+          { order: 3, pos: 'C', name: '양의지' },
+          { order: 4, pos: 'DH', name: '나성범' },
+          { order: 5, pos: 'LF', name: '이우성' },
+          { order: 6, pos: 'RF', name: '권희동' },
+          { order: 7, pos: '3B', name: '박건우' },
+          { order: 8, pos: '2B', name: '신재인' },
+          { order: 9, pos: '1B', name: '김형준' },
+        ],
+      },
+    },
+  },
+  {
+    id: 5,
+    status: 'scheduled',
+    time: '18:10',
+    stadium: '광주-기아 챔피언스필드',
+    awayTeam: '삼성',
+    homeTeam: 'KIA',
+    awayScore: null,
+    homeScore: null,
+    inning: null,
+    inningHalf: null,
+    outs: null,
+    bases: null,
+    lineup: {
+      away: {
+        // 원태인 굴곡근 부상 이탈 → 아리엘 후라도(외인) 선발
+        // 르윈 디아즈(외인 1B), 류지혁(2B), 김영웅(3B)
+        pitcher: { name: '아리엘 후라도', hand: '우완' },
+        batters: [
+          { order: 1, pos: 'CF', name: '김지찬' },
+          { order: 2, pos: 'RF', name: '김성윤' },
+          { order: 3, pos: 'LF', name: '구자욱' },
+          { order: 4, pos: '1B', name: '르윈 디아즈' },
+          { order: 5, pos: 'DH', name: '최형우' },
+          { order: 6, pos: '2B', name: '류지혁' },
+          { order: 7, pos: '3B', name: '김영웅' },
+          { order: 8, pos: 'C', name: '강민호' },
+          { order: 9, pos: 'SS', name: '이재현' },
+        ],
+      },
+      home: {
+        // 김도영(3B), 윤도현(1B), 해럴드 카스트로(LF, 외인), 제리드 데일(SS, 외인)
+        pitcher: { name: '양현종', hand: '좌완' },
+        batters: [
+          { order: 1, pos: 'CF', name: '김호령' },
+          { order: 2, pos: 'RF', name: '오선우' },
+          { order: 3, pos: '3B', name: '김도영' },
+          { order: 4, pos: 'DH', name: '나성범' },
+          { order: 5, pos: 'LF', name: '해럴드 카스트로' },
+          { order: 6, pos: '1B', name: '윤도현' },
+          { order: 7, pos: '2B', name: '김선빈' },
+          { order: 8, pos: 'C', name: '한준수' },
+          { order: 9, pos: 'SS', name: '제리드 데일' },
+        ],
+      },
+    },
+  },
+]
