@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { KBO_TEAMS } from '../data/mockGames'
 import LineupModal from './LineupModal'
+import { fetchGameLineup } from '../services/kboApi'
 
 function StatusBadge({ status }) {
   if (status === 'live') {
@@ -167,21 +168,41 @@ export default function TodayGameCard({ game, standings = [] }) {
   const homeWR = standings.find((s) => s.team === homeTeam)?.winRate
 
   const [showLineup, setShowLineup] = useState(false)
-  const hasLineup = !!game.lineup
+  const [lineup, setLineup] = useState(game.lineup)
+  const [lineupLoading, setLineupLoading] = useState(false)
+
+  const handleCardClick = async () => {
+    setShowLineup(true)
+    if (!lineup && !lineupLoading) {
+      setLineupLoading(true)
+      try {
+        const result = await fetchGameLineup(game.id)
+        setLineup(result)
+      } catch (err) {
+        console.warn('lineup fetch 실패:', err.message)
+      } finally {
+        setLineupLoading(false)
+      }
+    }
+  }
 
   return (
     <>
-    {showLineup && hasLineup && (
-      <LineupModal game={game} onClose={() => setShowLineup(false)} />
+    {showLineup && (
+      <LineupModal
+        game={{ ...game, lineup }}
+        loading={lineupLoading}
+        onClose={() => setShowLineup(false)}
+      />
     )}
     <div
-      className={`rounded-2xl p-5 flex flex-col gap-4 transition-shadow duration-200 hover:shadow-lg ${hasLineup ? 'cursor-pointer' : 'cursor-default'}`}
+      className="rounded-2xl p-5 flex flex-col gap-4 transition-shadow duration-200 hover:shadow-lg cursor-pointer"
       style={{
         background: 'var(--bg)',
         border: '1px solid var(--border)',
         boxShadow: 'var(--shadow)',
       }}
-      onClick={() => hasLineup && setShowLineup(true)}
+      onClick={handleCardClick}
     >
       {/* 상태 배지 */}
       <div className="flex items-center justify-between">
@@ -238,11 +259,9 @@ export default function TodayGameCard({ game, standings = [] }) {
       </div>
 
       {/* 라인업 힌트 */}
-      {hasLineup && (
-        <div className="text-center text-[10px] opacity-30" style={{ color: 'var(--text)' }}>
-          클릭하여 선발 라인업 보기
-        </div>
-      )}
+      <div className="text-center text-[10px] opacity-30" style={{ color: 'var(--text)' }}>
+        클릭하여 선발 라인업 보기
+      </div>
     </div>
     </>
   )

@@ -1,56 +1,134 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import TodayGameList from './components/TodayGameList'
 import StandingsTable from './components/StandingsTable'
 import TeamStatsModal from './components/TeamStatsModal'
-import { mockGames } from './data/mockGames'
+import { mockGames, mockNextDayGames } from './data/mockGames'
 import { mockStandings } from './data/mockStandings'
-import { fetchTodayGamesWithLineup } from './services/kboApi'
+import { fetchTodayGamesWithLineup, fetchStandings, getDisplayDate } from './services/kboApi'
 
 function App() {
   const [selectedTeam, setSelectedTeam] = useState(null)
   const [games, setGames] = useState(mockGames)
   const [standings, setStandings] = useState(mockStandings)
+  const [standingsSource, setStandingsSource] = useState('mock')
   const [lastUpdated, setLastUpdated] = useState(new Date())
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [dataSource, setDataSource] = useState('mock') // 'live' | 'mock'
+  const [countdown, setCountdown] = useState(0)
+  const intervalRef = useRef(null)
+  const countdownRef = useRef(null)
+
+  const hasLiveGame = games.some((g) => g.status === 'live')
+  // 진행 중 경기: 30초, 그 외: 60초
+  const REFRESH_INTERVAL = hasLiveGame ? 30 : 60
+
+  const startCountdown = useCallback((seconds) => {
+    setCountdown(seconds)
+    if (countdownRef.current) clearInterval(countdownRef.current)
+    countdownRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownRef.current)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }, [])
 
   const refresh = useCallback(async () => {
     setIsRefreshing(true)
+    const { isNextDay } = getDisplayDate()
+    const fallbackGames = isNextDay ? mockNextDayGames : mockGames
     try {
       const liveGames = await fetchTodayGamesWithLineup()
-      if (liveGames.length > 0) {
-        // 실시간 데이터가 있으면 사용, 라인업은 mock으로 보완
-        const merged = liveGames.map((liveGame) => {
-          const mock = mockGames.find(
-            (m) => m.awayTeam === liveGame.awayTeam && m.homeTeam === liveGame.homeTeam
-          )
-          return {
-            ...liveGame,
-            lineup: liveGame.lineup ?? mock?.lineup ?? null,
-            bases: liveGame.bases ?? mock?.bases ?? null,
-          }
-        })
-        setGames(merged)
-        setDataSource('live')
-      } else {
-        setGames([...mockGames])
-        setDataSource('mock')
-      }
+      const merged = liveGames.map((liveGame) => {
+        const mock = fallbackGames.find(
+          (m) => m.awayTeam === liveGame.awayTeam && m.homeTeam === liveGame.homeTeam
+        )
+        return {
+          ...liveGame,
+          lineup: liveGame.lineup ?? mock?.lineup ?? null,
+          bases: liveGame.bases ?? mock?.bases ?? null,
+        }
+      })
+      setGames(merged)
+      setDataSource('live')
     } catch (err) {
       console.warn('KBO API 오류, mock 데이터 사용:', err.message)
-      setGames([...mockGames])
+      setGames([...fallbackGames])
       setDataSource('mock')
     }
+    // 순위 병렬 갱신
+    try {
+      const liveStandings = await fetchStandings()
+      if (liveStandings.length > 0) {
+        setStandings(liveStandings)
+        setStandingsSource('live')
+      } else {
+        setStandings(mockStandings)
+        setStandingsSource('mock')
+      }
+    } catch (err) {
+      console.warn('순위 API 오류, mock 사용:', err.message)
+      setStandings(mockStandings)
+      setStandingsSource('mock')
+    }
+
     setLastUpdated(new Date())
     setIsRefreshing(false)
   }, [])
 
-  // 초기 로드 + 60초마다 자동 새로고침
+  // 초기 로드 + 자동 새로고침 (진행 중 경기 여부에 따라 간격 조정)
   useEffect(() => {
     refresh()
-    const id = setInterval(refresh, 60_000)
-    return () => clearInterval(id)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 22:00 정각에 자동으로 다음날 경기로 전환
+  useEffect(() => {
+    const scheduleSwitch = () => {
+      const now = new Date()
+      const target = new Date(now)
+      target.setHours(22, 0, 0, 0)
+      // 이미 22시 이후면 다음날 22시로
+      if (now >= target) target.setDate(target.getDate() + 1)
+      const msUntilSwitch = target - now
+      const t = setTimeout(() => {
+        refresh()
+        scheduleSwitch() // 다음날 22:00도 예약
+      }, msUntilSwitch)
+      return t
+    }
+    const t = scheduleSwitch()
+    return () => clearTimeout(t)
   }, [refresh])
+
+  useEffect(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    startCountdown(REFRESH_INTERVAL)
+    intervalRef.current = setInterval(() => {
+      refresh()
+      startCountdown(REFRESH_INTERVAL)
+    }, REFRESH_INTERVAL * 1000)
+    return () => {
+      clearInterval(intervalRef.current)
+      if (countdownRef.current) clearInterval(countdownRef.current)
+    }
+  }, [REFRESH_INTERVAL, refresh, startCountdown])
+
+  const handleManualRefresh = useCallback(() => {
+    refresh()
+    startCountdown(REFRESH_INTERVAL)
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    intervalRef.current = setInterval(() => {
+      refresh()
+      startCountdown(REFRESH_INTERVAL)
+    }, REFRESH_INTERVAL * 1000)
+  }, [refresh, startCountdown, REFRESH_INTERVAL])
+
+  const { isNextDay, year, month, day } = getDisplayDate()
+  const dateLabel = isNextDay ? '내일 경기' : '오늘 경기'
+  const dateStr = `${year}.${month}.${day}`
 
   const timeStr = lastUpdated.toLocaleTimeString('ko-KR', {
     hour: '2-digit',
@@ -68,6 +146,12 @@ function App() {
         <h1 className="text-lg font-bold m-0" style={{ color: 'var(--text-h)', fontSize: '1.125rem' }}>
           KBO 대시보드
         </h1>
+        <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{
+          backgroundColor: isNextDay ? 'rgba(99,102,241,0.15)' : 'rgba(34,197,94,0.12)',
+          color: isNextDay ? '#818cf8' : '#4ade80',
+        }}>
+          {dateLabel} {dateStr}
+        </span>
 
         <div className="ml-auto flex items-center gap-3">
           {dataSource === 'live' ? (
@@ -75,11 +159,16 @@ function App() {
           ) : (
             <span className="text-xs opacity-40" style={{ color: 'var(--text)' }}>목업 데이터</span>
           )}
+          {hasLiveGame && (
+            <span className="text-xs font-medium" style={{ color: 'var(--text)', opacity: 0.6 }}>
+              {countdown}초 후 업데이트
+            </span>
+          )}
           <span className="text-xs tabular-nums" style={{ color: 'var(--text)' }}>
             업데이트 {timeStr}
           </span>
           <button
-            onClick={refresh}
+            onClick={handleManualRefresh}
             disabled={isRefreshing}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity duration-150"
             style={{
@@ -116,7 +205,7 @@ function App() {
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
 
       <TodayGameList games={games} standings={standings} />
-      <StandingsTable standings={standings} onTeamClick={setSelectedTeam} />
+      <StandingsTable standings={standings} onTeamClick={setSelectedTeam} dataSource={standingsSource} />
 
       {selectedTeam && (
         <TeamStatsModal

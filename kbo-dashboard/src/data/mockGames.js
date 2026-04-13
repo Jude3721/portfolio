@@ -14,7 +14,7 @@ export const KBO_TEAMS = {
 }
 
 // status: 'scheduled' | 'live' | 'final'
-// 2026-04-09 오늘 예정 경기 (18:10 시작)
+// 2026-04-10 오늘 예정 경기
 export const mockGames = [
   {
     id: 1,
@@ -246,5 +246,84 @@ export const mockGames = [
         ],
       },
     },
+  },
+]
+
+// 2026-04-11 내일 예정 경기
+export const mockNextDayGames = [
+  {
+    id: 101,
+    status: 'scheduled',
+    time: '18:10',
+    stadium: '잠실야구장',
+    awayTeam: 'LG',
+    homeTeam: '두산',
+    awayScore: null,
+    homeScore: null,
+    inning: null,
+    inningHalf: null,
+    outs: null,
+    bases: null,
+    lineup: null,
+  },
+  {
+    id: 102,
+    status: 'scheduled',
+    time: '18:10',
+    stadium: 'SSG랜더스필드',
+    awayTeam: 'KT',
+    homeTeam: 'SSG',
+    awayScore: null,
+    homeScore: null,
+    inning: null,
+    inningHalf: null,
+    outs: null,
+    bases: null,
+    lineup: null,
+  },
+  {
+    id: 103,
+    status: 'scheduled',
+    time: '18:10',
+    stadium: '사직야구장',
+    awayTeam: '한화',
+    homeTeam: '롯데',
+    awayScore: null,
+    homeScore: null,
+    inning: null,
+    inningHalf: null,
+    outs: null,
+    bases: null,
+    lineup: null,
+  },
+  {
+    id: 104,
+    status: 'scheduled',
+    time: '18:10',
+    stadium: '창원NC파크',
+    awayTeam: '삼성',
+    homeTeam: 'NC',
+    awayScore: null,
+    homeScore: null,
+    inning: null,
+    inningHalf: null,
+    outs: null,
+    bases: null,
+    lineup: null,
+  },
+  {
+    id: 105,
+    status: 'scheduled',
+    time: '18:10',
+    stadium: '광주-기아 챔피언스필드',
+    awayTeam: '키움',
+    homeTeam: 'KIA',
+    awayScore: null,
+    homeScore: null,
+    inning: null,
+    inningHalf: null,
+    outs: null,
+    bases: null,
+    lineup: null,
   },
 ]

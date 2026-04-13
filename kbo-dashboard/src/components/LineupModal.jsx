@@ -16,7 +16,9 @@ function PitcherRow({ pitcher, teamColor }) {
       <span className="text-sm font-bold" style={{ color: 'var(--text-h)' }}>
         {pitcher.name}
       </span>
-      <span className="text-xs opacity-50">{pitcher.hand}</span>
+      {pitcher.hand && pitcher.hand !== '-' && (
+        <span className="text-xs opacity-50">{pitcher.hand}</span>
+      )}
     </div>
   )
 }
@@ -80,7 +82,7 @@ function TeamColumn({ teamKey, side, lineup }) {
   )
 }
 
-export default function LineupModal({ game, onClose }) {
+export default function LineupModal({ game, loading = false, onClose }) {
   const awayTeam = KBO_TEAMS[game.awayTeam]
   const homeTeam = KBO_TEAMS[game.homeTeam]
 
@@ -138,12 +140,27 @@ export default function LineupModal({ game, onClose }) {
         {/* 구분선 */}
         <div style={{ borderTop: '1px solid var(--border)' }} />
 
-        {/* 라인업 양쪽 */}
-        <div className="flex gap-4">
-          <TeamColumn teamKey={game.awayTeam} side="away" lineup={game.lineup} />
-          <div style={{ width: '1px', background: 'var(--border)' }} />
-          <TeamColumn teamKey={game.homeTeam} side="home" lineup={game.lineup} />
-        </div>
+        {/* 라인업 */}
+        {loading ? (
+          <div className="flex items-center justify-center py-10 gap-2 opacity-40" style={{ color: 'var(--text)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+              style={{ animation: 'spin 0.8s linear infinite' }}>
+              <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+              <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+            </svg>
+            라인업 불러오는 중...
+          </div>
+        ) : !game.lineup ? (
+          <div className="text-center py-10 text-sm opacity-40" style={{ color: 'var(--text)' }}>
+            라인업 미확정
+          </div>
+        ) : (
+          <div className="flex gap-4">
+            <TeamColumn teamKey={game.awayTeam} side="away" lineup={game.lineup} />
+            <div style={{ width: '1px', background: 'var(--border)' }} />
+            <TeamColumn teamKey={game.homeTeam} side="home" lineup={game.lineup} />
+          </div>
+        )}
       </div>
     </div>
   )

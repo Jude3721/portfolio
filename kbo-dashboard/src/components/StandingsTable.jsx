@@ -35,15 +35,22 @@ function WinRateBar({ winRate }) {
   )
 }
 
-export default function StandingsTable({ standings = [], onTeamClick }) {
+export default function StandingsTable({ standings = [], onTeamClick, dataSource = 'mock' }) {
   const dateStr = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
 
   return (
     <section className="w-full px-6 pb-10">
       <div className="mb-6 text-left">
-        <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-h)' }}>
-          2026 시즌 순위
-        </h2>
+        <div className="flex items-center gap-2 mb-1">
+          <h2 className="text-xl font-bold" style={{ color: 'var(--text-h)' }}>
+            2026 시즌 순위
+          </h2>
+          {dataSource === 'live' ? (
+            <span className="text-xs font-semibold text-green-500">● 실시간</span>
+          ) : (
+            <span className="text-xs opacity-40" style={{ color: 'var(--text)' }}>목업 데이터</span>
+          )}
+        </div>
         <p className="text-sm" style={{ color: 'var(--text)' }}>
           {dateStr} 기준 · 구단 클릭 시 선수 스탯 확인
         </p>
@@ -76,6 +83,7 @@ export default function StandingsTable({ standings = [], onTeamClick }) {
         {/* 테이블 바디 */}
         {standings.map((row, idx) => {
           const team = KBO_TEAMS[row.team]
+          if (!team) return null
           const isTop3 = row.rank <= 3
           const isLast = idx === standings.length - 1
 

@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { KBO_TEAMS } from '../data/mockGames'
-import { mockPlayerStats } from '../data/mockPlayerStats'
+import { fetchTeamStats } from '../services/kboApi'
 
 function StatHeader({ children, align = 'right' }) {
   return (
@@ -31,7 +31,6 @@ function BatterTable({ batters }) {
         <thead>
           <tr style={{ borderBottom: '1px solid var(--border)' }}>
             <StatHeader align="left">선수</StatHeader>
-            <StatHeader>포지션</StatHeader>
             <StatHeader>경기</StatHeader>
             <StatHeader>타수</StatHeader>
             <StatHeader>안타</StatHeader>
@@ -49,14 +48,6 @@ function BatterTable({ batters }) {
               style={{ borderBottom: i < batters.length - 1 ? '1px solid var(--border)' : 'none' }}
             >
               <StatCell align="left">{p.name}</StatCell>
-              <StatCell align="center">
-                <span
-                  className="inline-block px-1.5 py-0.5 rounded text-xs font-medium"
-                  style={{ backgroundColor: 'var(--accent-bg)', color: 'var(--accent)' }}
-                >
-                  {p.pos}
-                </span>
-              </StatCell>
               <StatCell>{p.games}</StatCell>
               <StatCell>{p.ab}</StatCell>
               <StatCell>{p.hits}</StatCell>
@@ -80,14 +71,13 @@ function PitcherTable({ pitchers }) {
         <thead>
           <tr style={{ borderBottom: '1px solid var(--border)' }}>
             <StatHeader align="left">선수</StatHeader>
-            <StatHeader>구분</StatHeader>
             <StatHeader>경기</StatHeader>
             <StatHeader>이닝</StatHeader>
             <StatHeader>승</StatHeader>
             <StatHeader>패</StatHeader>
+            <StatHeader>SV</StatHeader>
             <StatHeader>탈삼진</StatHeader>
             <StatHeader>피안타</StatHeader>
-            <StatHeader>SV</StatHeader>
             <StatHeader>ERA</StatHeader>
             <StatHeader>WHIP</StatHeader>
           </tr>
@@ -99,21 +89,13 @@ function PitcherTable({ pitchers }) {
               style={{ borderBottom: i < pitchers.length - 1 ? '1px solid var(--border)' : 'none' }}
             >
               <StatCell align="left">{p.name}</StatCell>
-              <StatCell align="center">
-                <span
-                  className="inline-block px-1.5 py-0.5 rounded text-xs font-medium"
-                  style={{ backgroundColor: 'var(--social-bg)', color: 'var(--text)' }}
-                >
-                  {p.pos}
-                </span>
-              </StatCell>
               <StatCell>{p.games}</StatCell>
               <StatCell>{p.innings.toFixed(1)}</StatCell>
               <StatCell highlight={p.wins > 0}>{p.wins}</StatCell>
               <StatCell>{p.losses}</StatCell>
+              <StatCell highlight={(p.saves ?? 0) > 0}>{p.saves ?? 0}</StatCell>
               <StatCell>{p.ks}</StatCell>
               <StatCell>{p.hits}</StatCell>
-              <StatCell highlight={(p.saves ?? 0) > 0}>{p.saves ?? 0}</StatCell>
               <StatCell highlight={p.era < 2.00}>{p.era.toFixed(2)}</StatCell>
               <StatCell highlight={p.whip < 1.00}>{p.whip.toFixed(2)}</StatCell>
             </tr>
@@ -126,7 +108,10 @@ function PitcherTable({ pitchers }) {
 
 export default function TeamStatsModal({ teamKey, onClose }) {
   const team = KBO_TEAMS[teamKey]
-  const stats = mockPlayerStats[teamKey]
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [updatedAt, setUpdatedAt] = useState(null)
 
   useEffect(() => {
     const handleKey = (e) => { if (e.key === 'Escape') onClose() }
@@ -134,7 +119,20 @@ export default function TeamStatsModal({ teamKey, onClose }) {
     return () => document.removeEventListener('keydown', handleKey)
   }, [onClose])
 
-  if (!team || !stats) return null
+  useEffect(() => {
+    if (!teamKey) return
+    setLoading(true)
+    setError(null)
+    fetchTeamStats(teamKey)
+      .then(data => {
+        setStats(data)
+        setUpdatedAt(new Date())
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [teamKey])
+
+  if (!team) return null
 
   return (
     <>
@@ -173,6 +171,11 @@ export default function TeamStatsModal({ teamKey, onClose }) {
               </h2>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text)' }}>
                 2026 시즌 선수 스탯
+                {updatedAt && (
+                  <span className="ml-1 opacity-50">
+                    · {updatedAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} 기준
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -187,46 +190,52 @@ export default function TeamStatsModal({ teamKey, onClose }) {
 
         {/* 바디 (스크롤) */}
         <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-6">
-          {/* 팀 컬러 배너 */}
-          <div
-            className="rounded-xl px-4 py-3 flex items-center gap-3"
-            style={{ backgroundColor: team.color + '22', border: `1px solid ${team.color}44` }}
-          >
-            <div
-              className="w-1 h-10 rounded-full"
-              style={{ backgroundColor: team.color }}
-            />
-            <div>
-              <p className="text-xs font-semibold" style={{ color: team.color }}>타자 {stats.batters.length}명 · 투수 {stats.pitchers.length}명</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text)' }}>4월 7일 기준 · 강조색은 상위 스탯</p>
+          {loading ? (
+            <div className="flex-1 flex items-center justify-center py-20 gap-3" style={{ color: 'var(--text)', opacity: 0.5 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                style={{ animation: 'spin 0.8s linear infinite' }}>
+                <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+              </svg>
+              <span className="text-sm">스탯 불러오는 중...</span>
             </div>
-          </div>
+          ) : error ? (
+            <div className="flex-1 flex items-center justify-center py-20 text-sm" style={{ color: 'var(--text)', opacity: 0.5 }}>
+              데이터를 불러올 수 없습니다
+            </div>
+          ) : stats && (
+            <>
+              {/* 팀 컬러 배너 */}
+              <div
+                className="rounded-xl px-4 py-3 flex items-center gap-3"
+                style={{ backgroundColor: team.color + '22', border: `1px solid ${team.color}44` }}
+              >
+                <div className="w-1 h-10 rounded-full" style={{ backgroundColor: team.color }} />
+                <div>
+                  <p className="text-xs font-semibold" style={{ color: team.color }}>
+                    타자 {stats.batters.length}명 · 투수 {stats.pitchers.length}명
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text)' }}>실시간 · 강조색은 상위 스탯</p>
+                </div>
+              </div>
 
-          {/* 타자 스탯 */}
-          <section>
-            <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-h)' }}>
-              타자
-            </h3>
-            <div
-              className="rounded-xl overflow-hidden"
-              style={{ border: '1px solid var(--border)' }}
-            >
-              <BatterTable batters={stats.batters} />
-            </div>
-          </section>
+              {/* 타자 스탯 */}
+              <section>
+                <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-h)' }}>타자</h3>
+                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                  <BatterTable batters={stats.batters} />
+                </div>
+              </section>
 
-          {/* 투수 스탯 */}
-          <section>
-            <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-h)' }}>
-              투수
-            </h3>
-            <div
-              className="rounded-xl overflow-hidden"
-              style={{ border: '1px solid var(--border)' }}
-            >
-              <PitcherTable pitchers={stats.pitchers} />
-            </div>
-          </section>
+              {/* 투수 스탯 */}
+              <section>
+                <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-h)' }}>투수</h3>
+                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                  <PitcherTable pitchers={stats.pitchers} />
+                </div>
+              </section>
+            </>
+          )}
         </div>
       </div>
     </>
