@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import TodayGameList from './components/TodayGameList'
 import StandingsTable from './components/StandingsTable'
 import TeamStatsModal from './components/TeamStatsModal'
+import StadiumBackground from './components/StadiumBackground'
 import { mockGames, mockNextDayGames } from './data/mockGames'
 import { mockStandings } from './data/mockStandings'
 import { fetchTodayGamesWithLineup, fetchStandings, getDisplayDate } from './services/kboApi'
@@ -137,7 +138,8 @@ function App() {
   })
 
   return (
-    <main>
+    <main style={{ position: 'relative', zIndex: 1 }}>
+      <StadiumBackground />
       <header
         className="px-6 py-4 flex items-center gap-2 border-b"
         style={{ borderColor: 'var(--border)' }}
