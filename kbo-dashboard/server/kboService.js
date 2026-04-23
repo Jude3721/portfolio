@@ -252,64 +252,80 @@ export async function fetchStandings() {
 }
 
 // ─── 팀 선수 스탯 ────────────────────────────────────────────
-const TEAM_SEL_NAME = 'ctl00$cphContents$cphContents$cphContents$ddlTeam$ddlTeam'
+const KBO_TEAM_CODES = new Set(['OB','LG','KT','SK','SS','LT','HH','HT','NC','WO'])
+
+function mergeCookies(base, incoming) {
+  const map = new Map()
+  for (const c of base.split('; ').filter(Boolean)) {
+    const i = c.indexOf('='); if (i < 0) continue
+    map.set(c.slice(0, i), c.slice(i + 1))
+  }
+  for (const c of incoming) {
+    const part = c.split(';')[0].trim(); const i = part.indexOf('='); if (i < 0) continue
+    map.set(part.slice(0, i), part.slice(i + 1))
+  }
+  return [...map.entries()].map(([k, v]) => `${k}=${v}`).join('; ')
+}
+
+function getSetCookies(res) {
+  return typeof res.headers.getSetCookie === 'function'
+    ? res.headers.getSetCookie()
+    : [res.headers.get('set-cookie')].filter(Boolean)
+}
 
 async function scrapeStatsPage(path, teamCode) {
   await getSession()
   const url = `${KBO_BASE}${path}`
 
-  // 1. 초기 GET → VIEWSTATE 추출
-  const initRes = await fetch(url, {
-    headers: { ...BASE_HEADERS, Cookie: _sessionCookies },
+  // 1. GET → form 필드 탐색 + VIEWSTATE 추출
+  const initRes = await fetch(url, { headers: { ...BASE_HEADERS, Cookie: _sessionCookies } })
+  _sessionCookies = mergeCookies(_sessionCookies, getSetCookies(initRes))
+  const initHtml = await initRes.text()
+  const root0 = parse(initHtml)
+
+  // 모든 input 값 수집
+  const formInputs = {}
+  root0.querySelectorAll('input[name]').forEach(inp => {
+    const name = inp.getAttribute('name')
+    if (name) formInputs[name] = inp.getAttribute('value') || ''
   })
 
-  // 새 쿠키 병합
-  const newCookies = typeof initRes.headers.getSetCookie === 'function'
-    ? initRes.headers.getSetCookie().map(c => c.split(';')[0])
-    : [initRes.headers.get('set-cookie')].filter(Boolean).map(c => c.split(';')[0])
-  if (newCookies.length) _sessionCookies = [_sessionCookies, ...newCookies].filter(Boolean).join('; ')
+  // 팀 드롭다운 동적 탐지 (옵션값에 KBO 팀코드 포함 여부로 판단)
+  let teamSelName = null
+  root0.querySelectorAll('select[name]').forEach(sel => {
+    const name = sel.getAttribute('name')
+    if (!name) return
+    const optVals = sel.querySelectorAll('option').map(o => o.getAttribute('value') || '')
+    if (optVals.some(v => KBO_TEAM_CODES.has(v))) {
+      teamSelName = name
+      formInputs[name] = teamCode // 팀 선택
+    } else {
+      // 다른 드롭다운은 현재 선택값 또는 첫 번째 옵션 유지
+      const sel2 = sel.querySelector('option[selected]')
+      formInputs[name] = sel2?.getAttribute('value') || optVals[0] || ''
+    }
+  })
 
-  const initHtml = await initRes.text()
-  const root = parse(initHtml)
+  console.log(`[KBO] team select: ${teamSelName ?? '(not found)'} = ${teamCode}`)
 
-  const viewState      = root.querySelector('#__VIEWSTATE')?.getAttribute('value') || ''
-  const viewStateGen   = root.querySelector('#__VIEWSTATEGENERATOR')?.getAttribute('value') || ''
-  const eventValid     = root.querySelector('#__EVENTVALIDATION')?.getAttribute('value') || ''
+  // UpdatePanel 없이 일반 폼 POST → 서버가 팀 필터 적용 후 전체 HTML 반환
+  formInputs['__EVENTTARGET']   = teamSelName || ''
+  formInputs['__EVENTARGUMENT'] = ''
+  delete formInputs['__ASYNCPOST']
 
-  // 2. UpdatePanel POST → 팀 선택
   const postRes = await fetch(url, {
     method: 'POST',
     headers: {
       ...BASE_HEADERS,
       'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'X-Requested-With': 'XMLHttpRequest',
       'Cookie': _sessionCookies,
     },
-    body: new URLSearchParams({
-      '__EVENTTARGET': TEAM_SEL_NAME,
-      '__EVENTARGUMENT': '',
-      '__VIEWSTATE': viewState,
-      '__VIEWSTATEGENERATOR': viewStateGen,
-      '__EVENTVALIDATION': eventValid,
-      [TEAM_SEL_NAME]: teamCode,
-      '__ASYNCPOST': 'true',
-    }),
+    body: new URLSearchParams(formInputs),
+    redirect: 'follow',
   })
-
-  const responseText = await postRes.text()
-
-  // UpdatePanel 응답에서 HTML 추출
-  // 형식: length|type|id|content|...
-  const segments = responseText.split('|')
-  let tableHtml = ''
-  for (let i = 0; i < segments.length - 3; i++) {
-    if (segments[i + 1] === 'updatePanel') {
-      tableHtml = segments[i + 3] || ''
-      break
-    }
-  }
-
-  return parse(tableHtml || responseText)
+  _sessionCookies = mergeCookies(_sessionCookies, getSetCookies(postRes))
+  const postHtml = await postRes.text()
+  return parse(postHtml)
 }
 
 function parseIP(str) {
@@ -341,25 +357,36 @@ export async function fetchTeamStats(teamKorName) {
   const h2rows = tableRows(h2root)
   const p1rows = tableRows(p1root)
 
-  const h2map = new Map()
-  for (const r of h2rows.slice(1)) {
-    if (r[1]) h2map.set(r[1], { bb: parseInt(r[4]) || 0, obp: parseFloat(r[10]) || 0 })
+  // r[2] = 팀명 컬럼 (서버 필터 실패 시 클라이언트 필터 fallback)
+  const teamMatch = (r) => {
+    const cell = r[2] || ''
+    return SITE_NAME_TO_KEY[cell] === teamKorName || cell === teamKorName
   }
 
+  const h2map = new Map()
+  for (const r of h2rows.slice(1)) {
+    if (r[1] && teamMatch(r)) h2map.set(r[1], { bb: parseInt(r[4]) || 0, obp: parseFloat(r[10]) || 0 })
+  }
+
+  // 컬럼: 순위(0) | 선수명(1) | 팀명(2) | 타율(3) | 경기(4) | 타석(5) | 타수(6) | 득점(7)
+  //       안타(8) | 2루타(9) | 3루타(10) | 홈런(11) | 타점(12) | 도루(13)
   const batters = h1rows.slice(1)
-    .filter(r => r[1] && r[1] !== '선수명')
+    .filter(r => r[1] && r[1] !== '선수명' && teamMatch(r))
     .map(r => {
       const extra = h2map.get(r[1]) || {}
       return {
         name: r[1], avg: parseFloat(r[3]) || 0, games: parseInt(r[4]) || 0,
         ab: parseInt(r[6]) || 0, hits: parseInt(r[8]) || 0,
-        hr: parseInt(r[11]) || 0, rbi: parseInt(r[13]) || 0,
+        hr: parseInt(r[11]) || 0, rbi: parseInt(r[12]) || 0,
         bb: extra.bb || 0, obp: extra.obp || 0,
       }
     })
 
+  // 컬럼: 순위(0) | 선수명(1) | 팀명(2) | ERA(3) | 경기(4) | 승(5) | 패(6) | 세(7)
+  //       홀드(8) | 블론(9) | 이닝(10) | 피안타(11) | 피홈런(12) | 볼넷(13) | 사구(14) | 삼진(15)
+  //       실점(16) | 자책(17) | WHIP(18)
   const pitchers = p1rows.slice(1)
-    .filter(r => r[1] && r[1] !== '선수명')
+    .filter(r => r[1] && r[1] !== '선수명' && teamMatch(r))
     .map(r => ({
       name: r[1], era: parseFloat(r[3]) || 0, games: parseInt(r[4]) || 0,
       wins: parseInt(r[5]) || 0, losses: parseInt(r[6]) || 0, saves: parseInt(r[7]) || 0,
