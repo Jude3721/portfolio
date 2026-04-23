@@ -422,11 +422,15 @@ function parseRssItems(xml) {
   for (const m of xml.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
     const b = m[1]
     const stripCdata = s => s?.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim() ?? ''
-    const title  = stripCdata(b.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '')
-    const link   = (b.match(/<link>([\s\S]*?)<\/link>/)?.[1] ?? '').trim()
-    const pubDate = (b.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] ?? '').trim()
-    const source = stripCdata(b.match(/<source[^>]*>([\s\S]*?)<\/source>/)?.[1] ?? '')
-    if (title && link) items.push({ title, link, pubDate, source })
+    const title    = stripCdata(b.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '')
+    // Naver RSS는 originallink에 실제 기사 URL, link는 네이버 뷰어 URL
+    const origLink = (b.match(/<originallink>([\s\S]*?)<\/originallink>/)?.[1] ?? '').trim()
+    const link     = origLink || (b.match(/<link>([\s\S]*?)<\/link>/)?.[1] ?? '').trim()
+    const pubDate  = (b.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] ?? '').trim()
+    // Naver RSS는 description에 출처 포함, source 태그 없음
+    const source   = stripCdata(b.match(/<source[^>]*>([\s\S]*?)<\/source>/)?.[1] ?? '')
+    const desc     = stripCdata(b.match(/<description>([\s\S]*?)<\/description>/)?.[1] ?? '')
+    if (title && link) items.push({ title, link, pubDate, source, desc })
     if (items.length >= 15) break
   }
   return items
@@ -440,14 +444,17 @@ export async function fetchTeamNews(teamKorName) {
   if (!query) return []
 
   console.log(`[KBO] 뉴스 조회: ${teamKorName}`)
-  const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko`
+
+  // Naver 뉴스 검색 RSS (클라우드 환경에서 안정적)
+  const url = `https://newssearch.naver.com/search.naver?where=rss&query=${encodeURIComponent(query)}&field=0&is_mts=Y`
   const res = await fetch(url, {
     headers: {
       'User-Agent': UA,
-      'Accept': 'application/rss+xml,application/xml,text/xml',
+      'Accept': 'application/rss+xml,application/xml,text/xml,*/*',
+      'Accept-Language': 'ko-KR,ko;q=0.9',
     },
   })
-  if (!res.ok) throw new Error(`Google News RSS ${res.status}`)
+  if (!res.ok) throw new Error(`Naver News RSS ${res.status}`)
   const xml = await res.text()
   const news = parseRssItems(xml)
   console.log(`[KBO] ${teamKorName} 뉴스 ${news.length}건`)

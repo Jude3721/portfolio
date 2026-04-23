@@ -92,7 +92,7 @@ app.get('/api/news/:teamKey', async (req, res) => {
     res.json({ news })
   } catch (err) {
     console.error('[server] news error:', err.message)
-    res.status(500).json({ error: err.message })
+    res.json({ news: [], error: err.message }) // 500 대신 빈 배열 반환
   }
 })
 

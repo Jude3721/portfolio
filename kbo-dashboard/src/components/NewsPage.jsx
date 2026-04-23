@@ -40,12 +40,12 @@ function NewsItem({ item, index }) {
           {item.title}
         </p>
         <div className="flex items-center gap-2">
-          {item.source && (
+          {(item.source || item.desc) && (
             <span
               className="text-xs px-1.5 py-0.5 rounded"
               style={{ backgroundColor: 'var(--code-bg)', color: 'var(--text)' }}
             >
-              {item.source}
+              {item.source || item.desc}
             </span>
           )}
           <span className="text-xs" style={{ color: 'var(--text)', opacity: 0.6 }}>
