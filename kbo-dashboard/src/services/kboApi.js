@@ -3,6 +3,9 @@
  * 실제 KBO 연동은 백엔드 서버(server/index.js)가 담당
  */
 
+// 개발: '' (Vite 프록시), 배포: Render URL (VITE_API_BASE 환경변수)
+const API_BASE = import.meta.env.VITE_API_BASE ?? ''
+
 /**
  * 22:00 이후에는 다음날 날짜를 반환
  * @returns {{ year, month, day, dateStr, isNextDay: boolean }}
@@ -22,7 +25,7 @@ export function getDisplayDate() {
 /** 오늘(또는 내일) 경기 목록 조회 */
 export async function fetchTodayGamesWithLineup() {
   const { dateStr } = getDisplayDate()
-  const res = await fetch(`/api/schedule?date=${dateStr}`)
+  const res = await fetch(`${API_BASE}/api/schedule?date=${dateStr}`)
   if (!res.ok) throw new Error(`백엔드 오류: ${res.status}`)
   const { games } = await res.json()
   return games ?? []
@@ -30,7 +33,7 @@ export async function fetchTodayGamesWithLineup() {
 
 /** 특정 경기 라인업 조회 */
 export async function fetchGameLineup(gameId) {
-  const res = await fetch(`/api/lineup/${gameId}`)
+  const res = await fetch(`${API_BASE}/api/lineup/${gameId}`)
   if (!res.ok) throw new Error(`lineup 오류: ${res.status}`)
   const data = await res.json()
   return data?.lineup ?? null
@@ -38,7 +41,7 @@ export async function fetchGameLineup(gameId) {
 
 /** 시즌 순위 조회 */
 export async function fetchStandings() {
-  const res = await fetch('/api/standings')
+  const res = await fetch(`${API_BASE}/api/standings`)
   if (!res.ok) throw new Error(`standings 오류: ${res.status}`)
   const data = await res.json()
   return data?.standings ?? []
@@ -46,7 +49,7 @@ export async function fetchStandings() {
 
 /** 팀 선수 스탯 조회 */
 export async function fetchTeamStats(teamKey) {
-  const res = await fetch(`/api/stats/${encodeURIComponent(teamKey)}`)
+  const res = await fetch(`${API_BASE}/api/stats/${encodeURIComponent(teamKey)}`)
   if (!res.ok) throw new Error(`stats 오류: ${res.status}`)
   return res.json()
 }

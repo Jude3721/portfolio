@@ -3,6 +3,12 @@ import { resolve } from 'path'
 import express from 'express'
 import { fetchSchedule, fetchLineup, fetchTeamStats, fetchStandings } from './kboService.js'
 
+const ALLOWED_ORIGINS = [
+  'https://jude3721.github.io',
+  'http://localhost:5173',
+  'http://localhost:4173',
+]
+
 // .env 로드
 try {
   const lines = readFileSync(resolve(process.cwd(), '.env'), 'utf-8').split('\n')
@@ -13,7 +19,18 @@ try {
 } catch { /* .env 없어도 무시 */ }
 
 const app = express()
-const PORT = 3001
+const PORT = process.env.PORT || 3001
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204)
+  next()
+})
 
 function getDisplayDateStr() {
   const now = new Date()
