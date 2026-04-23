@@ -57,7 +57,8 @@ export async function fetchTeamStats(teamKey) {
 /** 팀 인기 뉴스 조회 */
 export async function fetchTeamNews(teamKey) {
   const res = await fetch(`${API_BASE}/api/news/${encodeURIComponent(teamKey)}`)
-  if (!res.ok) throw new Error(`news 오류: ${res.status}`)
+  // 에러 응답도 일단 JSON으로 파싱해서 news 추출 (서버가 200+빈배열 반환)
+  if (!res.ok) return []
   const data = await res.json()
   return data?.news ?? []
 }

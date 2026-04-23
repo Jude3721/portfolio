@@ -436,6 +436,22 @@ function parseRssItems(xml) {
   return items
 }
 
+const NEWS_HEADERS = {
+  'User-Agent': UA,
+  'Accept': 'application/rss+xml,application/xml,text/xml,*/*',
+  'Accept-Language': 'ko-KR,ko;q=0.9',
+  'Accept-Encoding': 'identity',
+}
+
+async function tryFetchRss(url) {
+  const res = await fetch(url, { headers: NEWS_HEADERS })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const xml = await res.text()
+  const items = parseRssItems(xml)
+  if (!items.length) throw new Error('결과 없음')
+  return items
+}
+
 export async function fetchTeamNews(teamKorName) {
   const cached = newsCache.get(teamKorName)
   if (cached && Date.now() < cached.exp) return cached.data
@@ -445,19 +461,28 @@ export async function fetchTeamNews(teamKorName) {
 
   console.log(`[KBO] 뉴스 조회: ${teamKorName}`)
 
-  // Naver 뉴스 검색 RSS (클라우드 환경에서 안정적)
-  const url = `https://newssearch.naver.com/search.naver?where=rss&query=${encodeURIComponent(query)}&field=0&is_mts=Y`
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': UA,
-      'Accept': 'application/rss+xml,application/xml,text/xml,*/*',
-      'Accept-Language': 'ko-KR,ko;q=0.9',
-    },
-  })
-  if (!res.ok) throw new Error(`Naver News RSS ${res.status}`)
-  const xml = await res.text()
-  const news = parseRssItems(xml)
+  const sources = [
+    // 1순위: Naver 뉴스 검색 RSS
+    () => tryFetchRss(
+      `https://newssearch.naver.com/search.naver?where=rss&query=${encodeURIComponent(query)}&field=0&is_mts=Y`
+    ),
+    // 2순위: 연합뉴스 스포츠 야구 RSS (전체) + 클라이언트 필터
+    () => tryFetchRss('https://www.yna.co.kr/sports/baseball/rss').then(items =>
+      items.filter(i => i.title.includes(teamKorName) || i.desc?.includes(teamKorName))
+    ),
+  ]
+
+  let news = []
+  for (const source of sources) {
+    try {
+      news = await source()
+      if (news.length) break
+    } catch (e) {
+      console.warn(`[KBO] 뉴스 소스 실패: ${e.message}`)
+    }
+  }
+
   console.log(`[KBO] ${teamKorName} 뉴스 ${news.length}건`)
-  newsCache.set(teamKorName, { data: news, exp: Date.now() + TTL_NEWS })
+  if (news.length) newsCache.set(teamKorName, { data: news, exp: Date.now() + TTL_NEWS })
   return news
 }
