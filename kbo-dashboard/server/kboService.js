@@ -417,39 +417,8 @@ export async function fetchTeamStats(teamKorName) {
 }
 
 // ─── 팀 뉴스 ─────────────────────────────────────────────────
-function parseRssItems(xml) {
-  const items = []
-  for (const m of xml.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
-    const b = m[1]
-    const stripCdata = s => s?.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim() ?? ''
-    const title    = stripCdata(b.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '')
-    // Naver RSS는 originallink에 실제 기사 URL, link는 네이버 뷰어 URL
-    const origLink = (b.match(/<originallink>([\s\S]*?)<\/originallink>/)?.[1] ?? '').trim()
-    const link     = origLink || (b.match(/<link>([\s\S]*?)<\/link>/)?.[1] ?? '').trim()
-    const pubDate  = (b.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] ?? '').trim()
-    // Naver RSS는 description에 출처 포함, source 태그 없음
-    const source   = stripCdata(b.match(/<source[^>]*>([\s\S]*?)<\/source>/)?.[1] ?? '')
-    const desc     = stripCdata(b.match(/<description>([\s\S]*?)<\/description>/)?.[1] ?? '')
-    if (title && link) items.push({ title, link, pubDate, source, desc })
-    if (items.length >= 15) break
-  }
-  return items
-}
-
-const NEWS_HEADERS = {
-  'User-Agent': UA,
-  'Accept': 'application/rss+xml,application/xml,text/xml,*/*',
-  'Accept-Language': 'ko-KR,ko;q=0.9',
-  'Accept-Encoding': 'identity',
-}
-
-async function tryFetchRss(url) {
-  const res = await fetch(url, { headers: NEWS_HEADERS })
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const xml = await res.text()
-  const items = parseRssItems(xml)
-  if (!items.length) throw new Error('결과 없음')
-  return items
+function stripHtmlTags(str) {
+  return (str || '').replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim()
 }
 
 export async function fetchTeamNews(teamKorName) {
@@ -459,30 +428,33 @@ export async function fetchTeamNews(teamKorName) {
   const query = TEAM_NEWS_QUERY[teamKorName]
   if (!query) return []
 
-  console.log(`[KBO] 뉴스 조회: ${teamKorName}`)
-
-  const sources = [
-    // 1순위: Naver 뉴스 검색 RSS
-    () => tryFetchRss(
-      `https://newssearch.naver.com/search.naver?where=rss&query=${encodeURIComponent(query)}&field=0&is_mts=Y`
-    ),
-    // 2순위: 연합뉴스 스포츠 야구 RSS (전체) + 클라이언트 필터
-    () => tryFetchRss('https://www.yna.co.kr/sports/baseball/rss').then(items =>
-      items.filter(i => i.title.includes(teamKorName) || i.desc?.includes(teamKorName))
-    ),
-  ]
-
-  let news = []
-  for (const source of sources) {
-    try {
-      news = await source()
-      if (news.length) break
-    } catch (e) {
-      console.warn(`[KBO] 뉴스 소스 실패: ${e.message}`)
-    }
+  const clientId     = process.env.NAVER_CLIENT_ID
+  const clientSecret = process.env.NAVER_CLIENT_SECRET
+  if (!clientId || !clientSecret) {
+    console.warn('[KBO] NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 환경변수 미설정')
+    return []
   }
 
+  console.log(`[KBO] 네이버 뉴스 조회: ${teamKorName}`)
+  const url = `https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(query)}&display=15&sort=date`
+  const res = await fetch(url, {
+    headers: {
+      'X-Naver-Client-Id':     clientId,
+      'X-Naver-Client-Secret': clientSecret,
+    },
+  })
+  if (!res.ok) throw new Error(`Naver Open API ${res.status}`)
+
+  const json = await res.json()
+  const news = (json.items || []).map(item => ({
+    title:   stripHtmlTags(item.title),
+    link:    item.originallink || item.link,
+    pubDate: item.pubDate,
+    source:  '', // Open API 응답에 언론사 없음 → description에서 유추
+    desc:    stripHtmlTags(item.description),
+  }))
+
   console.log(`[KBO] ${teamKorName} 뉴스 ${news.length}건`)
-  if (news.length) newsCache.set(teamKorName, { data: news, exp: Date.now() + TTL_NEWS })
+  newsCache.set(teamKorName, { data: news, exp: Date.now() + TTL_NEWS })
   return news
 }

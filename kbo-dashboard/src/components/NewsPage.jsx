@@ -39,13 +39,18 @@ function NewsItem({ item, index }) {
         >
           {item.title}
         </p>
+        {item.desc && (
+          <p className="text-xs mb-1.5 line-clamp-2" style={{ color: 'var(--text)', opacity: 0.7 }}>
+            {item.desc}
+          </p>
+        )}
         <div className="flex items-center gap-2">
-          {(item.source || item.desc) && (
+          {item.source && (
             <span
               className="text-xs px-1.5 py-0.5 rounded"
               style={{ backgroundColor: 'var(--code-bg)', color: 'var(--text)' }}
             >
-              {item.source || item.desc}
+              {item.source}
             </span>
           )}
           <span className="text-xs" style={{ color: 'var(--text)', opacity: 0.6 }}>
