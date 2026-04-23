@@ -53,3 +53,11 @@ export async function fetchTeamStats(teamKey) {
   if (!res.ok) throw new Error(`stats 오류: ${res.status}`)
   return res.json()
 }
+
+/** 팀 인기 뉴스 조회 */
+export async function fetchTeamNews(teamKey) {
+  const res = await fetch(`${API_BASE}/api/news/${encodeURIComponent(teamKey)}`)
+  if (!res.ok) throw new Error(`news 오류: ${res.status}`)
+  const data = await res.json()
+  return data?.news ?? []
+}

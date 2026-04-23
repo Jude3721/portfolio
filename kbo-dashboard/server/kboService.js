@@ -80,14 +80,30 @@ async function kboPost(path, params) {
   try { return JSON.parse(text) } catch { throw new Error(`JSON 파싱 실패: ${text.slice(0, 200)}`) }
 }
 
+// ─── 팀 뉴스 검색어 ──────────────────────────────────────────
+const TEAM_NEWS_QUERY = {
+  '두산': '두산베어스 야구',
+  'LG':   'LG트윈스 야구',
+  'KT':   'KT위즈 야구',
+  'SSG':  'SSG랜더스 야구',
+  '삼성': '삼성라이온즈 야구',
+  '롯데': '롯데자이언츠 야구',
+  '한화': '한화이글스 야구',
+  'KIA':  'KIA타이거즈 야구',
+  'NC':   'NC다이노스 야구',
+  '키움': '키움히어로즈 야구',
+}
+
 // ─── 캐시 ─────────────────────────────────────────────────────
 const scheduleCache  = new Map() // dateStr → { data, exp }
 const statsCache     = new Map() // teamCode → { data, exp }
+const newsCache      = new Map() // teamKey  → { data, exp }
 const standingsCache = { data: null, exp: 0 }
 
 const TTL_SCHEDULE  = 60_000
 const TTL_STANDINGS = 60_000
 const TTL_STATS     = 600_000
+const TTL_NEWS      = 300_000 // 5분
 
 // ─── 경기 일정 파싱 ──────────────────────────────────────────
 const STATUS_MAP = { '0': 'scheduled', '1': 'scheduled', '2': 'live', '3': 'final' }
@@ -398,4 +414,43 @@ export async function fetchTeamStats(teamKorName) {
   const data = { batters, pitchers }
   statsCache.set(teamCode, { data, exp: Date.now() + TTL_STATS })
   return data
+}
+
+// ─── 팀 뉴스 ─────────────────────────────────────────────────
+function parseRssItems(xml) {
+  const items = []
+  for (const m of xml.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
+    const b = m[1]
+    const stripCdata = s => s?.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim() ?? ''
+    const title  = stripCdata(b.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '')
+    const link   = (b.match(/<link>([\s\S]*?)<\/link>/)?.[1] ?? '').trim()
+    const pubDate = (b.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] ?? '').trim()
+    const source = stripCdata(b.match(/<source[^>]*>([\s\S]*?)<\/source>/)?.[1] ?? '')
+    if (title && link) items.push({ title, link, pubDate, source })
+    if (items.length >= 15) break
+  }
+  return items
+}
+
+export async function fetchTeamNews(teamKorName) {
+  const cached = newsCache.get(teamKorName)
+  if (cached && Date.now() < cached.exp) return cached.data
+
+  const query = TEAM_NEWS_QUERY[teamKorName]
+  if (!query) return []
+
+  console.log(`[KBO] 뉴스 조회: ${teamKorName}`)
+  const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko`
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': UA,
+      'Accept': 'application/rss+xml,application/xml,text/xml',
+    },
+  })
+  if (!res.ok) throw new Error(`Google News RSS ${res.status}`)
+  const xml = await res.text()
+  const news = parseRssItems(xml)
+  console.log(`[KBO] ${teamKorName} 뉴스 ${news.length}건`)
+  newsCache.set(teamKorName, { data: news, exp: Date.now() + TTL_NEWS })
+  return news
 }
