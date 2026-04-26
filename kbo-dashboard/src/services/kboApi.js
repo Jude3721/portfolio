@@ -54,6 +54,14 @@ export async function fetchTeamStats(teamKey) {
   return res.json()
 }
 
+/** 팀 부상자 명단 조회 */
+export async function fetchInjuries(teamKey) {
+  const res = await fetch(`${API_BASE}/api/injuries/${encodeURIComponent(teamKey)}`)
+  if (!res.ok) return []
+  const data = await res.json()
+  return data?.injuries ?? []
+}
+
 /** 팀 인기 뉴스 조회 */
 export async function fetchTeamNews(teamKey) {
   const res = await fetch(`${API_BASE}/api/news/${encodeURIComponent(teamKey)}`)
