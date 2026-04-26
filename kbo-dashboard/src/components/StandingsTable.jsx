@@ -1,162 +1,130 @@
+import { useState } from 'react'
 import { KBO_TEAMS } from '../data/mockGames'
 
+const G = {
+  bg:     'rgba(255,255,255,0.05)',
+  bgDeep: 'rgba(255,255,255,0.03)',
+  border: 'rgba(255,255,255,0.08)',
+  blur:   'blur(16px)',
+}
+
 function StreakBadge({ streak }) {
-  const isWin = streak.includes('연승')
+  const isWin  = streak.includes('연승')
   const isLose = streak.includes('연패')
-
-  let color = 'var(--text)'
-  let bg = 'var(--code-bg)'
-  if (isWin) { color = '#16a34a'; bg = 'rgba(22,163,74,0.1)' }
-  if (isLose) { color = '#dc2626'; bg = 'rgba(220,38,38,0.1)' }
-
+  const color  = isWin ? '#4ade80' : isLose ? '#f87171' : 'rgba(255,255,255,0.4)'
+  const bg     = isWin ? 'rgba(74,222,128,0.12)' : isLose ? 'rgba(248,113,113,0.12)' : 'rgba(255,255,255,0.05)'
+  const border = isWin ? 'rgba(74,222,128,0.3)'  : isLose ? 'rgba(248,113,113,0.3)'  : 'rgba(255,255,255,0.1)'
   return (
-    <span
-      className="inline-block px-2 py-0.5 rounded text-xs font-semibold"
-      style={{ color, backgroundColor: bg }}
-    >
-      {streak}
-    </span>
+    <span style={{
+      display: 'inline-block', padding: '2px 8px', borderRadius: '99px',
+      fontSize: '11px', fontWeight: 700,
+      background: bg, color, border: `1px solid ${border}`,
+      boxShadow: isWin || isLose ? `0 0 8px ${color}44` : 'none',
+    }}>{streak}</span>
   )
 }
 
-function WinRateBar({ winRate }) {
+function WinRateBar({ winRate, teamColor }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-sm tabular-nums w-12 text-right" style={{ color: 'var(--text-h)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <span style={{ fontSize: '13px', fontVariantNumeric: 'tabular-nums', width: '44px', textAlign: 'right', color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>
         {winRate.toFixed(3)}
       </span>
-      <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border)' }}>
-        <div
-          className="h-full rounded-full"
-          style={{ width: `${winRate * 100}%`, backgroundColor: 'var(--accent)' }}
-        />
+      <div style={{ width: '56px', height: '5px', borderRadius: '99px', background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+        <div style={{
+          height: '100%', borderRadius: '99px', width: `${winRate * 100}%`,
+          background: `linear-gradient(to right, ${teamColor}, ${teamColor}bb)`,
+          boxShadow: `0 0 6px ${teamColor}88`, transition: 'width 0.8s ease',
+        }} />
       </div>
     </div>
   )
 }
 
 export default function StandingsTable({ standings = [], onTeamClick, dataSource = 'mock' }) {
+  const [hoveredRow, setHoveredRow] = useState(null)
   const dateStr = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
 
   return (
-    <section className="w-full px-6 pb-10">
-      <div className="mb-6 text-left">
-        <div className="flex items-center gap-2 mb-1">
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-h)' }}>
-            2026 시즌 순위
-          </h2>
-          {dataSource === 'live' ? (
-            <span className="text-xs font-semibold text-green-500">● 실시간</span>
-          ) : (
-            <span className="text-xs opacity-40" style={{ color: 'var(--text)' }}>목업 데이터</span>
-          )}
-        </div>
-        <p className="text-sm" style={{ color: 'var(--text)' }}>
-          {dateStr} 기준 · 구단 클릭 시 선수 스탯 확인
-        </p>
+    <section style={{ width: '100%', padding: '0 24px 40px' }}>
+      <div style={{ marginBottom: '16px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'rgba(255,255,255,0.9)', letterSpacing: '-0.3px', margin: 0 }}>
+          2026 시즌 순위
+        </h2>
+        {dataSource === 'live'
+          ? <span className="live-badge" style={{ fontSize: '10px' }}><span className="live-dot" />실시간</span>
+          : <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>목업 데이터</span>
+        }
+        <span style={{ marginLeft: 'auto', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
+          {dateStr} 기준 · 구단 클릭 → 선수 스탯
+        </span>
       </div>
 
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{ border: '1px solid var(--border)', boxShadow: 'var(--shadow)' }}
-      >
-        {/* 테이블 헤더 */}
-        <div
-          className="grid text-xs font-semibold px-4 py-3"
-          style={{
-            gridTemplateColumns: '2rem 1fr 3rem 3rem 3rem 3rem 10rem 5rem',
-            color: 'var(--text)',
-            backgroundColor: 'var(--code-bg)',
-            borderBottom: '1px solid var(--border)',
-          }}
-        >
-          <span className="text-center">순위</span>
-          <span className="pl-2">구단</span>
-          <span className="text-center">경기</span>
-          <span className="text-center">승</span>
-          <span className="text-center">패</span>
-          <span className="text-center">무</span>
-          <span className="text-center">승률</span>
-          <span className="text-center">연속</span>
+      <div style={{
+        borderRadius: '20px', overflow: 'hidden',
+        background: G.bg, backdropFilter: G.blur, WebkitBackdropFilter: G.blur,
+        border: `1px solid ${G.border}`, boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+      }}>
+        {/* 헤더 */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: '2.2rem 1fr 3rem 3rem 3rem 3rem 10rem 5rem',
+          padding: '10px 16px', background: G.bgDeep, borderBottom: `1px solid ${G.border}`,
+          fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px', color: 'rgba(255,255,255,0.35)',
+        }}>
+          <span style={{ textAlign: 'center' }}>순위</span>
+          <span style={{ paddingLeft: '8px' }}>구단</span>
+          <span style={{ textAlign: 'center' }}>경기</span>
+          <span style={{ textAlign: 'center' }}>승</span>
+          <span style={{ textAlign: 'center' }}>패</span>
+          <span style={{ textAlign: 'center' }}>무</span>
+          <span style={{ textAlign: 'center' }}>승률</span>
+          <span style={{ textAlign: 'center' }}>연속</span>
         </div>
 
-        {/* 테이블 바디 */}
         {standings.map((row, idx) => {
-          const team = KBO_TEAMS[row.team]
+          const team   = KBO_TEAMS[row.team]
           if (!team) return null
-          const isTop3 = row.rank <= 3
-          const isLast = idx === standings.length - 1
-
+          const isTop3  = row.rank <= 3
+          const isLast  = idx === standings.length - 1
+          const isHover = hoveredRow === idx
           return (
-            <div
-              key={`${row.rank}-${row.team}`}
-              className="grid items-center px-4 py-3 transition-colors duration-150 cursor-pointer hover:opacity-75"
-              style={{
-                gridTemplateColumns: '2rem 1fr 3rem 3rem 3rem 3rem 10rem 5rem',
-                backgroundColor: 'var(--bg)',
-                borderBottom: isLast ? 'none' : '1px solid var(--border)',
-              }}
+            <div key={`${row.rank}-${row.team}`}
+              onMouseEnter={() => setHoveredRow(idx)}
+              onMouseLeave={() => setHoveredRow(null)}
               onClick={() => onTeamClick(row.team)}
+              style={{
+                display: 'grid', gridTemplateColumns: '2.2rem 1fr 3rem 3rem 3rem 3rem 10rem 5rem',
+                alignItems: 'center', padding: '12px 16px',
+                borderBottom: isLast ? 'none' : `1px solid ${G.border}`,
+                background: isHover ? `linear-gradient(to right, ${team.color}14, rgba(255,255,255,0.04))` : 'transparent',
+                cursor: 'pointer', transition: 'background 0.2s',
+              }}
             >
-              {/* 순위 */}
-              <span
-                className="text-center text-sm font-bold tabular-nums"
-                style={{ color: isTop3 ? 'var(--accent)' : 'var(--text)' }}
-              >
-                {row.rank}
-              </span>
+              <span style={{
+                textAlign: 'center', fontSize: '13px', fontWeight: 800, fontVariantNumeric: 'tabular-nums',
+                color: isTop3 ? '#c084fc' : 'rgba(255,255,255,0.45)',
+                textShadow: isTop3 ? '0 0 10px rgba(192,132,252,0.5)' : 'none',
+              }}>{row.rank}</span>
 
-              {/* 구단 */}
-              <div className="flex items-center gap-2 pl-2">
-                <img
-                  src={team.logo}
-                  alt={team.name}
-                  className="w-7 h-7 object-contain shrink-0"
-                  onError={(e) => {
-                    e.target.style.display = 'none'
-                    e.target.nextSibling.style.display = 'flex'
-                  }}
-                />
-                <div
-                  className="w-7 h-7 rounded-full items-center justify-center text-xs font-bold hidden shrink-0"
-                  style={{ backgroundColor: team.color, color: team.textColor }}
-                >
-                  {team.short}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px' }}>
+                <div style={{
+                  width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
+                  background: `${team.color}22`, border: `1px solid ${team.color}44`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <img src={team.logo} alt={team.name} style={{ width: '70%', height: '70%', objectFit: 'contain' }}
+                    onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }} />
+                  <div style={{ display: 'none', width: '100%', height: '100%', borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: team.color, color: team.textColor, fontSize: '9px', fontWeight: 700 }}>{team.short}</div>
                 </div>
-                <span className="text-sm font-medium" style={{ color: 'var(--text-h)' }}>
-                  {team.name}
-                </span>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{team.name}</span>
               </div>
 
-              {/* 경기수 */}
-              <span className="text-center text-sm tabular-nums" style={{ color: 'var(--text)' }}>
-                {row.games}
-              </span>
-
-              {/* 승 */}
-              <span className="text-center text-sm font-semibold tabular-nums" style={{ color: '#16a34a' }}>
-                {row.wins}
-              </span>
-
-              {/* 패 */}
-              <span className="text-center text-sm font-semibold tabular-nums" style={{ color: '#dc2626' }}>
-                {row.losses}
-              </span>
-
-              {/* 무 */}
-              <span className="text-center text-sm tabular-nums" style={{ color: 'var(--text)' }}>
-                {row.draws}
-              </span>
-
-              {/* 승률 */}
-              <div className="flex justify-center">
-                <WinRateBar winRate={row.winRate} />
-              </div>
-
-              {/* 연속 */}
-              <div className="flex justify-center">
-                <StreakBadge streak={row.streak} />
-              </div>
+              <span style={{ textAlign: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontVariantNumeric: 'tabular-nums' }}>{row.games}</span>
+              <span style={{ textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#4ade80', fontVariantNumeric: 'tabular-nums' }}>{row.wins}</span>
+              <span style={{ textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#f87171', fontVariantNumeric: 'tabular-nums' }}>{row.losses}</span>
+              <span style={{ textAlign: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontVariantNumeric: 'tabular-nums' }}>{row.draws}</span>
+              <div style={{ display: 'flex', justifyContent: 'center' }}><WinRateBar winRate={row.winRate} teamColor={team.color} /></div>
+              <div style={{ display: 'flex', justifyContent: 'center' }}><StreakBadge streak={row.streak} /></div>
             </div>
           )
         })}

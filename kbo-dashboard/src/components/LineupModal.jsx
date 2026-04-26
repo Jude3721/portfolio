@@ -1,51 +1,30 @@
 import { useEffect } from 'react'
 import { KBO_TEAMS } from '../data/mockGames'
 
+const G = { bg: 'rgba(13,13,26,0.75)', border: 'rgba(255,255,255,0.1)', blur: 'blur(24px)' }
+
 function PitcherRow({ pitcher, teamColor }) {
   return (
-    <div
-      className="flex items-center gap-3 px-3 py-2 rounded-lg mb-3"
-      style={{ backgroundColor: teamColor + '18' }}
-    >
-      <span
-        className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-        style={{ backgroundColor: teamColor, color: '#fff' }}
-      >
-        선발
-      </span>
-      <span className="text-sm font-bold" style={{ color: 'var(--text-h)' }}>
-        {pitcher.name}
-      </span>
-      {pitcher.hand && pitcher.hand !== '-' && (
-        <span className="text-xs opacity-50">{pitcher.hand}</span>
-      )}
+    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '12px', marginBottom: '10px', background: `linear-gradient(135deg, ${teamColor}22, ${teamColor}0a)`, border: `1px solid ${teamColor}44` }}>
+      <span style={{ fontSize: '10px', fontWeight: 800, padding: '2px 7px', borderRadius: '4px', background: teamColor, color: '#fff', letterSpacing: '0.5px', boxShadow: `0 0 8px ${teamColor}66`, flexShrink: 0 }}>선발</span>
+      <span style={{ fontSize: '14px', fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>{pitcher.name}</span>
+      {pitcher.hand && pitcher.hand !== '-' && <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{pitcher.hand}</span>}
     </div>
   )
 }
 
 function BatterList({ batters }) {
   return (
-    <div className="flex flex-col gap-0.5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
       {batters.map((b) => (
-        <div
-          key={b.order}
-          className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+        <div key={b.order}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 10px', borderRadius: '8px', transition: 'background 0.15s', cursor: 'default' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
-          <span
-            className="w-4 text-right text-xs font-bold tabular-nums opacity-40"
-            style={{ color: 'var(--text-h)' }}
-          >
-            {b.order}
-          </span>
-          <span
-            className="w-8 text-center text-[10px] font-semibold px-1 py-0.5 rounded"
-            style={{ background: 'var(--border)', color: 'var(--text)' }}
-          >
-            {b.pos}
-          </span>
-          <span className="text-sm" style={{ color: 'var(--text-h)' }}>
-            {b.name}
-          </span>
+          <span style={{ width: '16px', textAlign: 'right', fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', fontVariantNumeric: 'tabular-nums' }}>{b.order}</span>
+          <span style={{ width: '32px', textAlign: 'center', fontSize: '10px', fontWeight: 700, padding: '2px 4px', borderRadius: '4px', background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.45)' }}>{b.pos}</span>
+          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.82)' }}>{b.name}</span>
         </div>
       ))}
     </div>
@@ -55,27 +34,17 @@ function BatterList({ batters }) {
 function TeamColumn({ teamKey, side, lineup }) {
   const team = KBO_TEAMS[teamKey]
   const data = lineup[side]
-
   return (
-    <div className="flex-1 min-w-0">
-      {/* 팀 헤더 */}
-      <div className="flex items-center gap-2 mb-3">
-        <img
-          src={team.logo}
-          alt={team.name}
-          className="w-7 h-7 object-contain"
-          onError={(e) => { e.target.style.display = 'none' }}
-        />
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+        <div style={{ width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0, background: `${team.color}22`, border: `1px solid ${team.color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img src={team.logo} alt={team.name} style={{ width: '70%', height: '70%', objectFit: 'contain' }} onError={e => { e.target.style.display = 'none' }} />
+        </div>
         <div>
-          <div className="text-xs font-bold" style={{ color: 'var(--text-h)' }}>
-            {team.name}
-          </div>
-          <div className="text-[10px] opacity-40" style={{ color: 'var(--text)' }}>
-            {side === 'away' ? '원정' : '홈'}
-          </div>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>{team.name}</div>
+          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{side === 'away' ? '원정' : '홈'}</div>
         </div>
       </div>
-
       <PitcherRow pitcher={data.pitcher} teamColor={team.color} />
       <BatterList batters={data.batters} />
     </div>
@@ -93,71 +62,45 @@ export default function LineupModal({ game, loading = false, onClose }) {
   }, [onClose])
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-lg rounded-2xl p-5 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
-        style={{
-          background: 'var(--bg)',
-          border: '1px solid var(--border)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '24px', padding: '22px', display: 'flex', flexDirection: 'column', gap: '16px', background: G.bg, backdropFilter: G.blur, WebkitBackdropFilter: G.blur, border: `1px solid ${G.border}`, boxShadow: '0 24px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
+
         {/* 헤더 */}
-        <div className="flex items-center justify-between">
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <div>
-            <h3 className="text-base font-bold" style={{ color: 'var(--text-h)' }}>
-              선발 라인업
-            </h3>
-            <p className="text-xs opacity-50" style={{ color: 'var(--text)' }}>
-              {game.stadium} · {game.time}
-            </p>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'rgba(255,255,255,0.92)', margin: '0 0 4px', letterSpacing: '-0.3px' }}>선발 라인업</h3>
+            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>{game.stadium} · {game.time}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-full text-sm opacity-40 hover:opacity-80 transition-opacity"
-            style={{ background: 'var(--border)', color: 'var(--text-h)' }}
-          >
-            ✕
-          </button>
+          <button onClick={onClose}
+            style={{ width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: `1px solid ${G.border}`, color: 'rgba(255,255,255,0.5)', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+          >✕</button>
         </div>
 
         {/* 팀 vs */}
-        <div className="flex items-center justify-center gap-3 py-1">
-          <span className="text-sm font-bold" style={{ color: awayTeam.color }}>
-            {awayTeam.short}
-          </span>
-          <span className="text-xs opacity-30" style={{ color: 'var(--text-h)' }}>VS</span>
-          <span className="text-sm font-bold" style={{ color: homeTeam.color }}>
-            {homeTeam.short}
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '4px 0' }}>
+          <span style={{ fontSize: '14px', fontWeight: 800, color: awayTeam.color, textShadow: `0 0 10px ${awayTeam.color}88` }}>{awayTeam.short}</span>
+          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)', fontWeight: 300 }}>VS</span>
+          <span style={{ fontSize: '14px', fontWeight: 800, color: homeTeam.color, textShadow: `0 0 10px ${homeTeam.color}88` }}>{homeTeam.short}</span>
         </div>
 
-        {/* 구분선 */}
-        <div style={{ borderTop: '1px solid var(--border)' }} />
+        <div style={{ height: '1px', background: G.border }} />
 
-        {/* 라인업 */}
         {loading ? (
-          <div className="flex items-center justify-center py-10 gap-2 opacity-40" style={{ color: 'var(--text)' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-              style={{ animation: 'spin 0.8s linear infinite' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 0', gap: '8px', color: 'rgba(255,255,255,0.35)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: 'spin 0.8s linear infinite' }}>
               <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
               <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
             </svg>
-            라인업 불러오는 중...
+            <span style={{ fontSize: '13px' }}>라인업 불러오는 중...</span>
           </div>
         ) : !game.lineup ? (
-          <div className="text-center py-10 text-sm opacity-40" style={{ color: 'var(--text)' }}>
-            라인업 미확정
-          </div>
+          <div style={{ textAlign: 'center', padding: '48px 0', fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>라인업 미확정</div>
         ) : (
-          <div className="flex gap-4">
+          <div style={{ display: 'flex', gap: '16px' }}>
             <TeamColumn teamKey={game.awayTeam} side="away" lineup={game.lineup} />
-            <div style={{ width: '1px', background: 'var(--border)' }} />
+            <div style={{ width: '1px', background: G.border, flexShrink: 0 }} />
             <TeamColumn teamKey={game.homeTeam} side="home" lineup={game.lineup} />
           </div>
         )}

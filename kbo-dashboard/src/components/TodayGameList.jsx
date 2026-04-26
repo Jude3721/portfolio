@@ -2,33 +2,50 @@ import TodayGameCard from './TodayGameCard'
 
 export default function TodayGameList({ games, standings }) {
   const today = new Date().toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
+    year: 'numeric', month: 'long', day: 'numeric', weekday: 'short',
   })
 
   return (
-    <section className="w-full px-6 py-8">
-      <div className="mb-6 text-left">
-        <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-h)' }}>
-          오늘의 경기
-        </h2>
-        <p className="text-sm" style={{ color: 'var(--text)' }}>
+    <section style={{ width: '100%', padding: '28px 24px 24px' }}>
+      {/* 섹션 헤더 */}
+      <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+          <h2 style={{
+            fontSize: '18px', fontWeight: 800, color: 'rgba(255,255,255,0.9)',
+            letterSpacing: '-0.3px', margin: 0,
+          }}>
+            오늘의 경기
+          </h2>
+          {games.some(g => g.status === 'live') && (
+            <span className="live-badge" style={{ fontSize: '10px' }}>
+              <span className="live-dot" />LIVE
+            </span>
+          )}
+        </div>
+        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.3px' }}>
           {today}
         </p>
       </div>
 
+      {/* 경기 없음 */}
       {games.length === 0 ? (
-        <div
-          className="text-center py-16 rounded-2xl"
-          style={{ border: '1px solid var(--border)', color: 'var(--text)' }}
-        >
-          <p className="text-4xl mb-3">⚾</p>
-          <p className="font-medium">오늘 예정된 경기가 없습니다.</p>
+        <div style={{
+          textAlign: 'center', padding: '64px 0',
+          background: 'rgba(255,255,255,0.04)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '20px',
+          color: 'rgba(255,255,255,0.4)',
+        }}>
+          <p style={{ fontSize: '40px', marginBottom: '12px' }}>⚾</p>
+          <p style={{ fontSize: '14px', fontWeight: 500 }}>오늘 예정된 경기가 없습니다.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gap: '14px',
+        }}>
           {games.map((game) => (
             <TodayGameCard key={game.id} game={game} standings={standings} />
           ))}

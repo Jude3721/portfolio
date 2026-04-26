@@ -8,24 +8,31 @@ import { mockStandings } from './data/mockStandings'
 import { fetchTodayGamesWithLineup, fetchStandings, getDisplayDate } from './services/kboApi'
 
 const NAV_TABS = [
-  { id: 'games',  label: '경기' },
-  { id: 'injury', label: '부상리포트' },
+  { id: 'games',  label: '⚾ 경기' },
+  { id: 'injury', label: '🩹 부상리포트' },
 ]
 
+const G = {
+  bg:     'rgba(255,255,255,0.05)',
+  border: 'rgba(255,255,255,0.1)',
+  hover:  'rgba(255,255,255,0.09)',
+  blur:   'blur(16px)',
+}
+
 function App() {
-  const [activeTab, setActiveTab]           = useState('games')
-  const [selectedTeam, setSelectedTeam]     = useState(null)
-  const [games, setGames]                   = useState(mockGames)
-  const [standings, setStandings]           = useState(mockStandings)
+  const [activeTab, setActiveTab]             = useState('games')
+  const [selectedTeam, setSelectedTeam]       = useState(null)
+  const [games, setGames]                     = useState(mockGames)
+  const [standings, setStandings]             = useState(mockStandings)
   const [standingsSource, setStandingsSource] = useState('mock')
-  const [lastUpdated, setLastUpdated]       = useState(new Date())
-  const [isRefreshing, setIsRefreshing]     = useState(false)
-  const [dataSource, setDataSource]         = useState('mock')
-  const [countdown, setCountdown]           = useState(0)
+  const [lastUpdated, setLastUpdated]         = useState(new Date())
+  const [isRefreshing, setIsRefreshing]       = useState(false)
+  const [dataSource, setDataSource]           = useState('mock')
+  const [countdown, setCountdown]             = useState(0)
   const intervalRef  = useRef(null)
   const countdownRef = useRef(null)
 
-  const hasLiveGame = games.some((g) => g.status === 'live')
+  const hasLiveGame      = games.some((g) => g.status === 'live')
   const REFRESH_INTERVAL = hasLiveGame ? 30 : 60
 
   const startCountdown = useCallback((seconds) => {
@@ -65,18 +72,16 @@ function App() {
     } catch (err) {
       console.warn('순위 API 오류, mock 사용:', err.message)
       setStandings(mockStandings)
-      setStandingsSource('mock')
     }
     setLastUpdated(new Date())
     setIsRefreshing(false)
   }, [])
 
-  useEffect(() => { refresh() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { refresh() }, []) // eslint-disable-line
 
   useEffect(() => {
     const scheduleSwitch = () => {
-      const now = new Date()
-      const target = new Date(now)
+      const now = new Date(); const target = new Date(now)
       target.setHours(22, 0, 0, 0)
       if (now >= target) target.setDate(target.getDate() + 1)
       const t = setTimeout(() => { refresh(); scheduleSwitch() }, target - now)
@@ -94,97 +99,125 @@ function App() {
   }, [REFRESH_INTERVAL, refresh, startCountdown])
 
   const handleManualRefresh = useCallback(() => {
-    refresh()
-    startCountdown(REFRESH_INTERVAL)
+    refresh(); startCountdown(REFRESH_INTERVAL)
     if (intervalRef.current) clearInterval(intervalRef.current)
     intervalRef.current = setInterval(() => { refresh(); startCountdown(REFRESH_INTERVAL) }, REFRESH_INTERVAL * 1000)
   }, [refresh, startCountdown, REFRESH_INTERVAL])
 
   const { isNextDay, year, month, day } = getDisplayDate()
-  const dateLabel = isNextDay ? '내일 경기' : '오늘 경기'
-  const dateStr   = `${year}.${month}.${day}`
-  const timeStr   = lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  const dateStr = `${year}.${month}.${day}`
+  const timeStr = lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
   return (
     <main>
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg) } }
+        @keyframes header-glow {
+          0%,100% { box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.3); }
+          50%      { box-shadow: 0 1px 0 rgba(192,132,252,0.15), 0 8px 32px rgba(0,0,0,0.3); }
+        }
+      `}</style>
 
       {/* ── 헤더 ── */}
-      <header
-        className="px-6 py-4 border-b"
-        style={{ borderColor: 'var(--border)' }}
-      >
-        {/* 상단 행: 로고 + 날짜 배지 + 새로고침 컨트롤 */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-2xl">⚾</span>
-          <h1 className="text-lg font-bold m-0" style={{ color: 'var(--text-h)', fontSize: '1.125rem' }}>
+      <header style={{
+        background: 'rgba(13,13,26,0.7)',
+        backdropFilter: G.blur,
+        WebkitBackdropFilter: G.blur,
+        borderBottom: `1px solid ${G.border}`,
+        padding: '14px 24px 0',
+        position: 'sticky', top: 0, zIndex: 50,
+        animation: 'header-glow 8s ease-in-out infinite',
+      }}>
+        {/* 상단 행 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
+
+          {/* 로고 + 타이틀 */}
+          <span style={{ fontSize: '20px' }}>⚾</span>
+          <span style={{ fontSize: '16px', fontWeight: 800, color: 'rgba(255,255,255,0.92)', letterSpacing: '-0.3px' }}>
             KBO 대시보드
-          </h1>
-          <span
-            className="text-xs px-2 py-0.5 rounded-full font-medium"
-            style={{
-              backgroundColor: isNextDay ? 'rgba(99,102,241,0.15)' : 'rgba(34,197,94,0.12)',
-              color: isNextDay ? '#818cf8' : '#4ade80',
-            }}
-          >
-            {dateLabel} {dateStr}
           </span>
 
-          <div className="ml-auto flex items-center gap-3">
+          {/* 날짜 배지 */}
+          <span style={{
+            fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px',
+            padding: '3px 10px', borderRadius: '99px',
+            background: isNextDay ? 'rgba(99,102,241,0.15)' : 'rgba(74,222,128,0.12)',
+            border: `1px solid ${isNextDay ? 'rgba(99,102,241,0.35)' : 'rgba(74,222,128,0.3)'}`,
+            color: isNextDay ? '#a5b4fc' : '#4ade80',
+          }}>
+            {isNextDay ? '내일' : '오늘'} {dateStr}
+          </span>
+
+          {/* 우측 컨트롤 */}
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            {/* 데이터 소스 */}
             {dataSource === 'live' ? (
-              <span className="text-xs font-semibold text-green-500">● 실시간</span>
+              <span className="live-badge"><span className="live-dot" />실시간</span>
             ) : (
-              <span className="text-xs opacity-40" style={{ color: 'var(--text)' }}>목업 데이터</span>
+              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.5px' }}>목업 데이터</span>
             )}
-            {hasLiveGame && (
-              <span className="text-xs font-medium" style={{ color: 'var(--text)', opacity: 0.6 }}>
-                {countdown}초 후 업데이트
+
+            {/* 카운트다운 */}
+            {hasLiveGame && countdown > 0 && (
+              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontVariantNumeric: 'tabular-nums' }}>
+                {countdown}초 후 갱신
               </span>
             )}
-            <span className="text-xs tabular-nums" style={{ color: 'var(--text)' }}>
-              업데이트 {timeStr}
+
+            {/* 업데이트 시간 */}
+            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontVariantNumeric: 'tabular-nums' }}>
+              {timeStr}
             </span>
+
+            {/* 새로고침 버튼 */}
             <button
               onClick={handleManualRefresh}
               disabled={isRefreshing}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity duration-150"
               style={{
-                backgroundColor: 'var(--code-bg)',
-                border: '1px solid var(--border)',
-                color: 'var(--text-h)',
-                opacity: isRefreshing ? 0.5 : 1,
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '6px 14px', borderRadius: '10px',
+                background: G.bg,
+                border: `1px solid ${G.border}`,
+                backdropFilter: 'blur(8px)',
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: '12px', fontWeight: 600,
                 cursor: isRefreshing ? 'not-allowed' : 'pointer',
+                opacity: isRefreshing ? 0.5 : 1,
+                transition: 'all 0.2s',
               }}
             >
-              <svg
-                width="12" height="12" viewBox="0 0 24 24" fill="none"
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                style={{ animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }}
-              >
-                <path d="M21 2v6h-6" />
-                <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
-                <path d="M3 22v-6h6" />
-                <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                style={{ animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }}>
+                <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
               </svg>
               새로고침
             </button>
           </div>
         </div>
 
-        {/* 하단 행: 네비게이션 탭 */}
-        <nav className="flex items-center gap-1">
+        {/* 탭 내비게이션 */}
+        <nav style={{ display: 'flex', gap: '4px' }}>
           {NAV_TABS.map(tab => {
             const isActive = activeTab === tab.id
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150"
                 style={{
-                  backgroundColor: isActive ? 'var(--accent-bg)' : 'transparent',
-                  color: isActive ? 'var(--accent)' : 'var(--text)',
-                  border: isActive ? '1px solid var(--accent-border)' : '1px solid transparent',
-                  cursor: 'pointer',
+                  padding: '8px 18px',
+                  borderRadius: '10px 10px 0 0',
+                  fontSize: '13px', fontWeight: 600,
+                  cursor: 'pointer', border: 'none',
+                  background: isActive ? 'rgba(192,132,252,0.18)' : 'transparent',
+                  color: isActive ? '#c084fc' : 'rgba(255,255,255,0.4)',
+                  borderTop:    isActive ? '1px solid rgba(192,132,252,0.35)' : '1px solid transparent',
+                  borderLeft:   isActive ? '1px solid rgba(192,132,252,0.35)' : '1px solid transparent',
+                  borderRight:  isActive ? '1px solid rgba(192,132,252,0.35)' : '1px solid transparent',
+                  borderBottom: isActive ? '1px solid transparent' : '1px solid transparent',
+                  boxShadow:    isActive ? '0 0 12px rgba(192,132,252,0.15)' : 'none',
+                  transition: 'all 0.2s',
                 }}
               >
                 {tab.label}
@@ -194,19 +227,15 @@ function App() {
         </nav>
       </header>
 
-      {/* ── 페이지 콘텐츠 ── */}
+      {/* ── 콘텐츠 ── */}
       {activeTab === 'games' && (
         <>
           <TodayGameList games={games} standings={standings} />
           <StandingsTable standings={standings} onTeamClick={setSelectedTeam} dataSource={standingsSource} />
         </>
       )}
-
       {activeTab === 'injury' && <InjuryPage />}
-
-      {selectedTeam && (
-        <TeamStatsModal teamKey={selectedTeam} onClose={() => setSelectedTeam(null)} />
-      )}
+      {selectedTeam && <TeamStatsModal teamKey={selectedTeam} onClose={() => setSelectedTeam(null)} />}
     </main>
   )
 }
