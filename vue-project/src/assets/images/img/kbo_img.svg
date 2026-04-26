@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+  <defs>
+    <radialGradient id="bg" cx="30%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#1a0a2e"/>
+      <stop offset="100%" stop-color="#0d0d1a"/>
+    </radialGradient>
+    <radialGradient id="glow1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#aa3bff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#aa3bff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38b6ff" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#38b6ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="kboText" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#60b6ff"/>
+    </linearGradient>
+    <linearGradient id="barGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#aa3bff"/>
+      <stop offset="100%" stop-color="#aa3bff" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="barGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#CE0E2D"/>
+      <stop offset="100%" stop-color="#CE0E2D" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="barGrad3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#074CA1"/>
+      <stop offset="100%" stop-color="#074CA1" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="barGrad4" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F37321"/>
+      <stop offset="100%" stop-color="#F37321" stop-opacity="0.3"/>
+    </linearGradient>
+    <filter id="glow-filter">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- 배경 -->
+  <rect width="600" height="600" fill="url(#bg)"/>
+
+  <!-- Aurora glow blobs -->
+  <ellipse cx="150" cy="200" rx="220" ry="180" fill="url(#glow1)"/>
+  <ellipse cx="480" cy="120" rx="160" ry="130" fill="url(#glow2)"/>
+
+  <!-- 상단 라벨 -->
+  <text x="52" y="88" font-family="'Courier New', monospace" font-size="13" font-weight="700"
+        fill="rgba(255,255,255,0.3)" letter-spacing="3">DASHBOARD · 2025</text>
+  <line x1="52" y1="96" x2="548" y2="96" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+  <!-- KBO 메인 텍스트 -->
+  <text x="52" y="250" font-family="'Segoe UI', system-ui, sans-serif" font-size="148"
+        font-weight="900" letter-spacing="-6" fill="url(#kboText)" filter="url(#glow-filter)">KBO</text>
+
+  <!-- 서브 텍스트 -->
+  <text x="54" y="295" font-family="'Segoe UI', system-ui, sans-serif" font-size="18"
+        font-weight="400" fill="rgba(255,255,255,0.35)" letter-spacing="2">한국프로야구 실시간 대시보드</text>
+
+  <!-- 구분선 -->
+  <line x1="52" y1="330" x2="548" y2="330" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+  <!-- 승률 바 섹션 레이블 -->
+  <text x="52" y="362" font-family="'Courier New', monospace" font-size="11"
+        font-weight="700" fill="rgba(255,255,255,0.25)" letter-spacing="2">STANDINGS</text>
+
+  <!-- 팀 승률 바 1 -->
+  <text x="52" y="392" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="700"
+        fill="rgba(255,255,255,0.5)">KIA</text>
+  <rect x="100" y="381" width="320" height="7" rx="3" fill="rgba(255,255,255,0.05)"/>
+  <rect x="100" y="381" width="260" height="7" rx="3" fill="url(#barGrad1)"/>
+  <text x="430" y="392" font-family="'Courier New', monospace" font-size="12"
+        fill="rgba(255,255,255,0.3)">.641</text>
+
+  <!-- 팀 승률 바 2 -->
+  <text x="52" y="420" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="700"
+        fill="rgba(255,255,255,0.5)">SSG</text>
+  <rect x="100" y="409" width="320" height="7" rx="3" fill="rgba(255,255,255,0.05)"/>
+  <rect x="100" y="409" width="220" height="7" rx="3" fill="url(#barGrad2)"/>
+  <text x="430" y="420" font-family="'Courier New', monospace" font-size="12"
+        fill="rgba(255,255,255,0.3)">.600</text>
+
+  <!-- 팀 승률 바 3 -->
+  <text x="52" y="448" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="700"
+        fill="rgba(255,255,255,0.5)">삼성</text>
+  <rect x="100" y="437" width="320" height="7" rx="3" fill="rgba(255,255,255,0.05)"/>
+  <rect x="100" y="437" width="195" height="7" rx="3" fill="url(#barGrad3)"/>
+  <text x="430" y="448" font-family="'Courier New', monospace" font-size="12"
+        fill="rgba(255,255,255,0.3)">.571</text>
+
+  <!-- 팀 승률 바 4 -->
+  <text x="52" y="476" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="700"
+        fill="rgba(255,255,255,0.5)">한화</text>
+  <rect x="100" y="465" width="320" height="7" rx="3" fill="rgba(255,255,255,0.05)"/>
+  <rect x="100" y="465" width="165" height="7" rx="3" fill="url(#barGrad4)"/>
+  <text x="430" y="476" font-family="'Courier New', monospace" font-size="12"
+        fill="rgba(255,255,255,0.3)">.524</text>
+
+  <!-- 구분선 -->
+  <line x1="52" y1="510" x2="548" y2="510" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+  <!-- 하단 태그 뱃지들 -->
+  <!-- LIVE 뱃지 -->
+  <rect x="52" y="526" width="58" height="24" rx="12" fill="rgba(255,77,77,0.15)"
+        stroke="rgba(255,77,77,0.4)" stroke-width="1"/>
+  <circle cx="67" cy="538" r="4" fill="#ff4d4d">
+    <animate attributeName="opacity" values="1;0.2;1" dur="1.4s" repeatCount="indefinite"/>
+  </circle>
+  <text x="76" y="543" font-family="'Courier New', monospace" font-size="11" font-weight="700"
+        fill="#ff8080" letter-spacing="0.5">LIVE</text>
+
+  <!-- React 뱃지 -->
+  <rect x="122" y="526" width="64" height="24" rx="12" fill="rgba(97,218,251,0.1)"
+        stroke="rgba(97,218,251,0.3)" stroke-width="1"/>
+  <text x="140" y="543" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="700"
+        fill="rgba(97,218,251,0.7)">React</text>
+
+  <!-- Node.js 뱃지 -->
+  <rect x="198" y="526" width="72" height="24" rx="12" fill="rgba(104,159,56,0.1)"
+        stroke="rgba(104,159,56,0.3)" stroke-width="1"/>
+  <text x="215" y="543" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="700"
+        fill="rgba(104,159,56,0.7)">Node.js</text>
+
+  <!-- 우측 베이스볼 아이콘 영역 -->
+  <circle cx="490" cy="490" r="60" fill="rgba(170,59,255,0.06)" stroke="rgba(170,59,255,0.15)" stroke-width="1"/>
+  <text x="490" y="510" font-family="'Segoe UI', sans-serif" font-size="56"
+        text-anchor="middle" dominant-baseline="middle">⚾</text>
+</svg>
