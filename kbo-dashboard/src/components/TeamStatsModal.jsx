@@ -102,7 +102,7 @@ export default function TeamStatsModal({ teamKey, onClose }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px', borderBottom: `1px solid ${G.border}`, background: `linear-gradient(to right, ${team.color}18, transparent)`, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: `${team.color}22`, border: `1px solid ${team.color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 16px ${team.color}44` }}>
-              <img src={team.logo} alt={team.name} style={{ width: '70%', height: '70%', objectFit: 'contain' }} onError={e => { e.target.style.display = 'none' }} />
+              <img src={team.logo} alt={team.name} style={{ width: '70%', height: '70%' }} onError={e => { e.target.style.display = 'none' }} />
             </div>
             <div>
               <h2 style={{ fontSize: '17px', fontWeight: 800, color: 'rgba(255,255,255,0.92)', margin: '0 0 3px', letterSpacing: '-0.3px' }}>{team.name}</h2>

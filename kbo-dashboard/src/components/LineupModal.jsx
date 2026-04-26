@@ -38,7 +38,7 @@ function TeamColumn({ teamKey, side, lineup }) {
     <div style={{ flex: 1, minWidth: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
         <div style={{ width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0, background: `${team.color}22`, border: `1px solid ${team.color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src={team.logo} alt={team.name} style={{ width: '70%', height: '70%', objectFit: 'contain' }} onError={e => { e.target.style.display = 'none' }} />
+          <img src={team.logo} alt={team.name} style={{ width: '70%', height: '70%' }} onError={e => { e.target.style.display = 'none' }} />
         </div>
         <div>
           <div style={{ fontSize: '13px', fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>{team.name}</div>

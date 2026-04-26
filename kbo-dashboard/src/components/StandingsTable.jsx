@@ -112,7 +112,7 @@ export default function StandingsTable({ standings = [], onTeamClick, dataSource
                   background: `${team.color}22`, border: `1px solid ${team.color}44`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <img src={team.logo} alt={team.name} style={{ width: '70%', height: '70%', objectFit: 'contain' }}
+                  <img src={team.logo} alt={team.name} style={{ width: '70%', height: '70%' }}
                     onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }} />
                   <div style={{ display: 'none', width: '100%', height: '100%', borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: team.color, color: team.textColor, fontSize: '9px', fontWeight: 700 }}>{team.short}</div>
                 </div>

@@ -82,7 +82,7 @@ export default function InjuryPage() {
               }}
             >
               <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: isActive ? `${t.color}44` : 'rgba(255,255,255,0.06)', border: `1px solid ${isActive ? t.color + '66' : 'transparent'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <img src={t.logo} alt={t.short} style={{ width: '70%', height: '70%', objectFit: 'contain', filter: isActive ? 'brightness(0) invert(1)' : 'none' }} onError={e => { e.target.style.display = 'none' }} />
+                <img src={t.logo} alt={t.short} style={{ width: '70%', height: '70%', filter: isActive ? 'brightness(0) invert(1)' : 'none' }} onError={e => { e.target.style.display = 'none' }} />
               </div>
               {t.short}
               {count > 0 && (
@@ -98,7 +98,7 @@ export default function InjuryPage() {
         {/* 카드 헤더 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 20px', background: `linear-gradient(to right, ${team.color}1a, ${G.bgDeep})`, borderBottom: `1px solid ${G.border}` }}>
           <div style={{ width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0, background: team.color, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 12px ${team.color}66` }}>
-            <img src={team.logo} alt={team.short} style={{ width: '70%', height: '70%', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} onError={e => { e.target.style.display = 'none' }} />
+            <img src={team.logo} alt={team.short} style={{ width: '70%', height: '70%', filter: 'brightness(0) invert(1)' }} onError={e => { e.target.style.display = 'none' }} />
           </div>
           <span style={{ fontSize: '14px', fontWeight: 700, color: 'rgba(255,255,255,0.88)' }}>{team.name} 부상 리포트</span>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>

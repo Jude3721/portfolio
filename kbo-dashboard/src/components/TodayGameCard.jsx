@@ -104,7 +104,7 @@ function TeamBlock({ teamKey, score, side, isWinner, status }) {
         <img
           src={team.logo}
           alt={team.name}
-          style={{ width: '70%', height: '70%', objectFit: 'contain' }}
+          style={{ width: '70%', height: '70%' }}
           onError={(e) => {
             e.target.style.display = 'none'
             e.target.nextSibling.style.display = 'flex'
