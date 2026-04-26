@@ -2,14 +2,14 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import TodayGameList from './components/TodayGameList'
 import StandingsTable from './components/StandingsTable'
 import TeamStatsModal from './components/TeamStatsModal'
-import NewsPage from './components/NewsPage'
+import InjuryPage from './components/InjuryPage'
 import { mockGames, mockNextDayGames } from './data/mockGames'
 import { mockStandings } from './data/mockStandings'
 import { fetchTodayGamesWithLineup, fetchStandings, getDisplayDate } from './services/kboApi'
 
 const NAV_TABS = [
-  { id: 'games', label: '경기' },
-  { id: 'news',  label: '뉴스' },
+  { id: 'games',  label: '경기' },
+  { id: 'injury', label: '부상리포트' },
 ]
 
 function App() {
@@ -202,7 +202,7 @@ function App() {
         </>
       )}
 
-      {activeTab === 'news' && <NewsPage />}
+      {activeTab === 'injury' && <InjuryPage />}
 
       {selectedTeam && (
         <TeamStatsModal teamKey={selectedTeam} onClose={() => setSelectedTeam(null)} />
