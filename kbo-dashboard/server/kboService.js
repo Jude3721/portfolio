@@ -81,81 +81,91 @@ async function kboPost(path, params) {
 }
 
 // ─── 부상자 명단 ──────────────────────────────────────────────
-const injuriesCache = new Map() // teamKey → { data, exp }
-const TTL_INJURIES  = 300_000   // 5분
+const TTL_INJURIES = 300_000  // 5분
+let _injuryAllCache = null
+let _injuryAllExpiry = 0
 
-const STATUS_KEYWORDS = {
-  DL:   ['부상자', 'DL', '등록'],
-  재활:  ['재활'],
-  결장:  ['결장', '말소', '일시'],
+const POS_KOR = { '투수': 'P', '포수': 'C', '내야수': 'IF', '외야수': 'OF', '지명타자': 'DH', '선발': 'SP' }
+
+function parseTradeRow(row, status) {
+  const cells = row.row.map(c => c.Text)
+  const [date, , teamRaw, playerRaw, duration] = cells
+  const m = playerRaw?.match(/^(.+)\((.+)\)$/)
+  return {
+    date:     date || '',
+    team:     SITE_NAME_TO_KEY[teamRaw] || teamRaw || '',
+    name:     m ? m[1].trim() : (playerRaw || '').trim(),
+    pos:      m ? (POS_KOR[m[2]] || m[2]) : '',
+    duration: duration || '10일',
+    status,
+  }
 }
 
-function parseStatus(raw = '') {
-  const s = raw.trim()
-  if (STATUS_KEYWORDS['재활'].some(k => s.includes(k))) return '재활'
-  if (STATUS_KEYWORDS['결장'].some(k => s.includes(k))) return '결장'
-  return 'DL'
+function isDlActive(since, durationStr) {
+  const days = parseInt(durationStr) || 10
+  const expiry = new Date(since)
+  expiry.setDate(expiry.getDate() + days + 14)  // 14일 버퍼: 연장 체류 고려
+  return expiry.getTime() >= Date.now()
+}
+
+function computeDlEta(since, durationStr) {
+  const days = parseInt(durationStr) || 10
+  const d = new Date(since)
+  d.setDate(d.getDate() + days)
+  return `${d.getMonth() + 1}/${d.getDate()} 이후 복귀 가능`
+}
+
+async function fetchAllInjuryData() {
+  if (_injuryAllCache && Date.now() < _injuryAllExpiry) return _injuryAllCache
+
+  const season = new Date().getFullYear()
+  const headers = {
+    'User-Agent': UA,
+    'Referer': `${KBO_BASE}/Player/Trade.aspx`,
+    'Accept-Language': 'ko-KR,ko;q=0.9',
+    'X-Requested-With': 'XMLHttpRequest',
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+  }
+  const post = (bdSc) => fetch(`${KBO_BASE}/ws/Player.asmx/GetTradeList`, {
+    method: 'POST', headers,
+    body: new URLSearchParams({ seasonId: season, monthId: 0, bdSc, teamName: '', searchIf: '', pageNo: 1, listCount: 200 }),
+  }).then(r => r.json())
+
+  const [dlJson, rehabJson] = await Promise.all([post(18), post(21)])
+  const all = [
+    ...(dlJson.rows    || []).map(r => parseTradeRow(r, 'DL')),
+    ...(rehabJson.rows || []).map(r => parseTradeRow(r, '재활')),
+  ]
+
+  _injuryAllCache  = all
+  _injuryAllExpiry = Date.now() + TTL_INJURIES
+  return all
 }
 
 export async function fetchInjuries(teamKey) {
-  const cached = injuriesCache.get(teamKey)
-  if (cached && Date.now() < cached.exp) return cached.data
-
-  const teamCode = TEAM_KEY_TO_CODE[teamKey]
-  if (!teamCode) return []
-
-  console.log(`[KBO] 부상자 명단 조회: ${teamKey}(${teamCode})`)
-
   try {
-    const root = await scrapeStatsPage('/Teams/Roster/DisabledList.aspx', teamCode)
+    const all = await fetchAllInjuryData()
 
-    // 다양한 테이블 selector 시도
-    let rows = []
-    for (const sel of [
-      '#cphContents_cphContents_cphContents_udpRecord table tbody tr',
-      'table.tData01 tbody tr',
-      '.tbl_type01 tbody tr',
-      'table tbody tr',
-    ]) {
-      rows = root.querySelectorAll(sel)
-      if (rows.length > 0) break
+    // 팀 필터 후 선수별 최근 등록 유지
+    const playerMap = new Map()
+    for (const row of all.filter(r => r.team === teamKey)) {
+      const ex = playerMap.get(row.name)
+      if (!ex || new Date(row.date) > new Date(ex.date)) playerMap.set(row.name, row)
     }
 
-    console.log(`[KBO] 부상자 원시 rows: ${rows.length}`)
+    const injuries = [...playerMap.values()]
+      .filter(r => isDlActive(r.date, r.duration))
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .map(r => ({
+        name:       r.name,
+        pos:        r.pos,
+        status:     r.status,
+        injuryType: r.duration + (r.status === 'DL' ? ' 부상자명단' : ' 재활명단'),
+        since:      r.date,
+        eta:        computeDlEta(r.date, r.duration),
+      }))
 
-    const injuries = []
-    for (const tr of rows) {
-      const cells = tr.querySelectorAll('td').map(td => td.textContent.trim())
-      if (cells.length < 3) continue
-
-      // 헤더 행 스킵
-      const first = cells[0] || ''
-      if (!first || first === '선수명' || first === '구단') continue
-
-      // KBO 부상자명단 페이지 컬럼 추정:
-      // [0]선수명 [1]포지션 [2]구분(DL/재활) [3]사유 [4]등록일 [5]복귀예정
-      // 구단이 앞에 붙는 경우: [0]구단 [1]선수명 [2]포지션 [3]구분 [4]사유 [5]등록일 [6]복귀예정
-      let name, pos, statusRaw, injuryType, since, eta
-      if (cells.length >= 7 && SITE_NAME_TO_KEY[cells[0]]) {
-        // 구단명이 첫 컬럼인 경우
-        ;[, name, pos, statusRaw, injuryType, since, eta] = cells
-      } else {
-        ;[name, pos, statusRaw, injuryType, since, eta] = cells
-      }
-
-      if (!name) continue
-      injuries.push({
-        name:        name.trim(),
-        pos:         (pos || '').trim(),
-        status:      parseStatus(statusRaw),
-        injuryType:  (injuryType || statusRaw || '').trim(),
-        since:       (since || '').trim(),
-        eta:         (eta || '복귀 미정').trim(),
-      })
-    }
-
-    console.log(`[KBO] ${teamKey} 부상자: ${injuries.length}명`)
-    injuriesCache.set(teamKey, { data: injuries, exp: Date.now() + TTL_INJURIES })
+    console.log(`[KBO] ${teamKey} 현재 부상자: ${injuries.length}명`)
     return injuries
   } catch (err) {
     console.error(`[KBO] 부상자 명단 조회 실패 ${teamKey}:`, err.message)
