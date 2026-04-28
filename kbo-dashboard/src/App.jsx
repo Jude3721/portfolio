@@ -3,6 +3,8 @@ import TodayGameList from './components/TodayGameList'
 import StandingsTable from './components/StandingsTable'
 import TeamStatsModal from './components/TeamStatsModal'
 import InjuryPage from './components/InjuryPage'
+import MovesPage from './components/MovesPage'
+import ThemePicker from './components/ThemePicker'
 import { mockGames, mockNextDayGames } from './data/mockGames'
 import { mockStandings } from './data/mockStandings'
 import { fetchTodayGamesWithLineup, fetchStandings, getDisplayDate } from './services/kboApi'
@@ -10,13 +12,13 @@ import { fetchTodayGamesWithLineup, fetchStandings, getDisplayDate } from './ser
 const NAV_TABS = [
   { id: 'games',  label: '⚾ 경기' },
   { id: 'injury', label: '🩹 부상리포트' },
+  { id: 'moves',  label: '🔄 로스터 무브' },
 ]
 
-const G = {
-  bg:     'rgba(255,255,255,0.05)',
-  border: 'rgba(255,255,255,0.1)',
-  hover:  'rgba(255,255,255,0.09)',
-  blur:   'blur(16px)',
+const N = {
+  raised: '6px 6px 16px var(--neu-sd), -4px -4px 10px var(--neu-sl)',
+  inset:  'inset 2px 2px 6px var(--neu-sd), inset -1px -1px 4px var(--neu-sl)',
+  btn:    '4px 4px 10px var(--neu-sd), -3px -3px 7px var(--neu-sl)',
 }
 
 function App() {
@@ -109,31 +111,21 @@ function App() {
   const timeStr = lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
   return (
+    <>
     <main>
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg) } }
-        @keyframes header-glow {
-          0%,100% { box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.3); }
-          50%      { box-shadow: 0 1px 0 rgba(192,132,252,0.15), 0 8px 32px rgba(0,0,0,0.3); }
-        }
-      `}</style>
-
       {/* ── 헤더 ── */}
       <header style={{
-        background: 'rgba(13,13,26,0.7)',
-        backdropFilter: G.blur,
-        WebkitBackdropFilter: G.blur,
-        borderBottom: `1px solid ${G.border}`,
+        background: 'var(--neu-bg)',
+        boxShadow: '0 4px 14px var(--neu-sd), 0 -2px 6px var(--neu-sl)',
         padding: '14px 24px 0',
         position: 'sticky', top: 0, zIndex: 50,
-        animation: 'header-glow 8s ease-in-out infinite',
       }}>
         {/* 상단 행 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
 
           {/* 로고 + 타이틀 */}
           <span style={{ fontSize: '20px' }}>⚾</span>
-          <span style={{ fontSize: '16px', fontWeight: 800, color: 'rgba(255,255,255,0.92)', letterSpacing: '-0.3px' }}>
+          <span style={{ fontSize: '16px', fontWeight: 800, color: 'rgba(var(--fg-rgb), 0.92)', letterSpacing: '-0.3px' }}>
             KBO 대시보드
           </span>
 
@@ -148,24 +140,42 @@ function App() {
             {isNextDay ? '내일' : '오늘'} {dateStr}
           </span>
 
+          {/* 디자인 프리뷰 링크 — 개발 환경에서만 노출 */}
+          {import.meta.env.DEV && (
+            <a
+              href="/portfolio/kbo-dashboard/design-preview.html"
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '99px',
+                background: 'rgba(var(--fg-rgb), 0.05)', border: '1px solid rgba(var(--fg-rgb), 0.1)',
+                color: 'rgba(var(--fg-rgb), 0.4)', textDecoration: 'none', transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'rgba(var(--fg-rgb), 0.75)'; e.currentTarget.style.borderColor = 'rgba(var(--fg-rgb), 0.25)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'rgba(var(--fg-rgb), 0.4)';  e.currentTarget.style.borderColor = 'rgba(var(--fg-rgb), 0.1)' }}
+            >
+              Design Preview
+            </a>
+          )}
+
           {/* 우측 컨트롤 */}
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             {/* 데이터 소스 */}
             {dataSource === 'live' ? (
               <span className="live-badge"><span className="live-dot" />실시간</span>
             ) : (
-              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.5px' }}>목업 데이터</span>
+              <span style={{ fontSize: '11px', color: 'rgba(var(--fg-rgb), 0.3)', letterSpacing: '0.5px' }}>목업 데이터</span>
             )}
 
             {/* 카운트다운 */}
             {hasLiveGame && countdown > 0 && (
-              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ fontSize: '11px', color: 'rgba(var(--fg-rgb), 0.35)', fontVariantNumeric: 'tabular-nums' }}>
                 {countdown}초 후 갱신
               </span>
             )}
 
             {/* 업데이트 시간 */}
-            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ fontSize: '11px', color: 'rgba(var(--fg-rgb), 0.3)', fontVariantNumeric: 'tabular-nums' }}>
               {timeStr}
             </span>
 
@@ -176,10 +186,10 @@ function App() {
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '6px 14px', borderRadius: '10px',
-                background: G.bg,
-                border: `1px solid ${G.border}`,
-                backdropFilter: 'blur(8px)',
-                color: 'rgba(255,255,255,0.7)',
+                background: 'var(--neu-bg)',
+                border: 'none',
+                boxShadow: isRefreshing ? N.inset : N.btn,
+                color: 'rgba(var(--fg-rgb), 0.65)',
                 fontSize: '12px', fontWeight: 600,
                 cursor: isRefreshing ? 'not-allowed' : 'pointer',
                 opacity: isRefreshing ? 0.5 : 1,
@@ -210,13 +220,10 @@ function App() {
                   borderRadius: '10px 10px 0 0',
                   fontSize: '13px', fontWeight: 600,
                   cursor: 'pointer', border: 'none',
-                  background: isActive ? 'rgba(192,132,252,0.18)' : 'transparent',
-                  color: isActive ? '#c084fc' : 'rgba(255,255,255,0.4)',
-                  borderTop:    isActive ? '1px solid rgba(192,132,252,0.35)' : '1px solid transparent',
-                  borderLeft:   isActive ? '1px solid rgba(192,132,252,0.35)' : '1px solid transparent',
-                  borderRight:  isActive ? '1px solid rgba(192,132,252,0.35)' : '1px solid transparent',
-                  borderBottom: isActive ? '1px solid transparent' : '1px solid transparent',
-                  boxShadow:    isActive ? '0 0 12px rgba(192,132,252,0.15)' : 'none',
+                  background: 'var(--neu-bg)',
+                  color: isActive ? '#c084fc' : 'rgba(var(--fg-rgb), 0.38)',
+                  border: 'none',
+                  boxShadow: isActive ? N.inset : 'none',
                   transition: 'all 0.2s',
                 }}
               >
@@ -235,8 +242,11 @@ function App() {
         </>
       )}
       {activeTab === 'injury' && <InjuryPage />}
+      {activeTab === 'moves'  && <MovesPage />}
       {selectedTeam && <TeamStatsModal teamKey={selectedTeam} onClose={() => setSelectedTeam(null)} />}
     </main>
+    <ThemePicker />
+  </>
   )
 }
 

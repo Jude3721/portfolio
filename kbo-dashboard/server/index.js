@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import express from 'express'
-import { fetchSchedule, fetchLineup, fetchTeamStats, fetchStandings, fetchTeamNews, fetchInjuries } from './kboService.js'
+import { fetchSchedule, fetchLineup, fetchTeamStats, fetchStandings, fetchTeamNews, fetchInjuries, fetchRosterMoves } from './kboService.js'
 
 const ALLOWED_ORIGINS = [
   'https://jude3721.github.io',
@@ -103,6 +103,16 @@ app.get('/api/news/:teamKey', async (req, res) => {
   } catch (err) {
     console.error('[server] news error:', err.message)
     res.json({ news: [], error: err.message }) // 500 대신 빈 배열 반환
+  }
+})
+
+app.get('/api/moves', async (req, res) => {
+  try {
+    const moves = await fetchRosterMoves()
+    res.json({ moves })
+  } catch (err) {
+    console.error('[server] moves error:', err.message)
+    res.json({ moves: [], error: err.message })
   }
 })
 

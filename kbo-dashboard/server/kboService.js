@@ -131,10 +131,11 @@ async function fetchAllInjuryData() {
     body: new URLSearchParams({ seasonId: season, monthId: 0, bdSc, teamName: '', searchIf: '', pageNo: 1, listCount: 200 }),
   }).then(r => r.json())
 
-  const [dlJson, rehabJson] = await Promise.all([post(18), post(21)])
+  const [dlJson, rehabJson, dismissJson] = await Promise.all([post(18), post(21), post(8)])
   const all = [
-    ...(dlJson.rows    || []).map(r => parseTradeRow(r, 'DL')),
-    ...(rehabJson.rows || []).map(r => parseTradeRow(r, '재활')),
+    ...(dlJson.rows      || []).map(r => parseTradeRow(r, 'DL')),
+    ...(rehabJson.rows   || []).map(r => parseTradeRow(r, '재활')),
+    ...(dismissJson.rows || []).map(r => parseTradeRow(r, '임의해지')),
   ]
 
   _injuryAllCache  = all
@@ -154,15 +155,17 @@ export async function fetchInjuries(teamKey) {
     }
 
     const injuries = [...playerMap.values()]
-      .filter(r => isDlActive(r.date, r.duration))
+      .filter(r => r.status === '임의해지' || isDlActive(r.date, r.duration))
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .map(r => ({
         name:       r.name,
         pos:        r.pos,
         status:     r.status,
-        injuryType: r.duration + (r.status === 'DL' ? ' 부상자명단' : ' 재활명단'),
+        injuryType: r.status === '임의해지'
+          ? '임의해지'
+          : r.duration + (r.status === 'DL' ? ' 부상자명단' : ' 재활명단'),
         since:      r.date,
-        eta:        computeDlEta(r.date, r.duration),
+        eta:        r.status === '임의해지' ? null : computeDlEta(r.date, r.duration),
       }))
 
     console.log(`[KBO] ${teamKey} 현재 부상자: ${injuries.length}명`)
@@ -550,4 +553,72 @@ export async function fetchTeamNews(teamKorName) {
   console.log(`[KBO] ${teamKorName} 뉴스 ${news.length}건`)
   newsCache.set(teamKorName, { data: news, exp: Date.now() + TTL_NEWS })
   return news
+}
+
+// ─── 로스터 무브 ──────────────────────────────────────────────
+const movesCache = { data: null, exp: 0 }
+const TTL_MOVES  = 300_000 // 5분
+
+const MOVE_TYPE_MAP = {
+  '소속선수 추가 등록': { label: '1군 등록',    category: 'up',    color: '#4ade80' },
+  '부상자 명단':        { label: '부상자명단',   category: 'dl',    color: '#f87171' },
+  '치료·재활명단':      { label: '재활명단',     category: 'rehab', color: '#fb923c' },
+  '재활선수(외국인 선수)': { label: '재활(외)',  category: 'rehab', color: '#fb923c' },
+  '트레이드':           { label: '트레이드',     category: 'trade', color: '#c084fc' },
+  '임의해지':           { label: '임의해지',     category: 'cut',   color: '#94a3b8' },
+  '자유계약선수':       { label: '자유계약',     category: 'cut',   color: '#94a3b8' },
+  'FA 계약':            { label: 'FA 계약',      category: 'sign',  color: '#60a5fa' },
+  'FA 보상선수':        { label: 'FA 보상',      category: 'sign',  color: '#60a5fa' },
+  '군보류 자유계약선수':{ label: '군보류 FA',    category: 'cut',   color: '#94a3b8' },
+}
+
+export async function fetchRosterMoves() {
+  if (movesCache.data && Date.now() < movesCache.exp) return movesCache.data
+
+  const season = new Date().getFullYear()
+  const headers = {
+    'User-Agent': UA,
+    'Referer': `${KBO_BASE}/Player/Trade.aspx`,
+    'Accept-Language': 'ko-KR,ko;q=0.9',
+    'X-Requested-With': 'XMLHttpRequest',
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+  }
+  const post = (bdSc) => fetch(`${KBO_BASE}/ws/Player.asmx/GetTradeList`, {
+    method: 'POST', headers,
+    body: new URLSearchParams({ seasonId: season, monthId: 0, bdSc, teamName: '', searchIf: '', pageNo: 1, listCount: 200 }),
+  }).then(r => r.json())
+
+  const [regJson, rehabJson, rehabForeignJson, tradeJson, cutJson, faJson, faBonusJson] =
+    await Promise.all([post(5), post(21), post(23), post(11), post(8), post(13), post(16)])
+
+  const parse = (json, typeLabel) => (json.rows || []).map(r => {
+    const cells = r.row.map(c => c.Text)
+    const [date, , teamRaw, playerRaw, note] = cells
+    const m = playerRaw?.match(/^(.+)\((.+)\)$/)
+    const meta = MOVE_TYPE_MAP[typeLabel] || { label: typeLabel, category: 'etc', color: '#94a3b8' }
+    return {
+      date:   date || '',
+      team:   SITE_NAME_TO_KEY[teamRaw] || teamRaw || '',
+      name:   m ? m[1].trim() : (playerRaw || '').trim(),
+      pos:    m ? (POS_KOR[m[2]] || m[2]) : '',
+      note:   note || '',
+      type:   typeLabel,
+      ...meta,
+    }
+  })
+
+  const moves = [
+    ...parse(regJson,         '소속선수 추가 등록'),
+    ...parse(rehabJson,       '치료·재활명단'),
+    ...parse(rehabForeignJson,'재활선수(외국인 선수)'),
+    ...parse(tradeJson,       '트레이드'),
+    ...parse(cutJson,         '임의해지'),
+    ...parse(faJson,          'FA 계약'),
+    ...parse(faBonusJson,     'FA 보상선수'),
+  ].sort((a, b) => new Date(b.date) - new Date(a.date))
+
+  console.log(`[KBO] 로스터 무브: ${moves.length}건`)
+  movesCache.data = moves
+  movesCache.exp  = Date.now() + TTL_MOVES
+  return moves
 }
