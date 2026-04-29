@@ -203,8 +203,8 @@ const TTL_STATS     = 600_000
 const TTL_NEWS      = 300_000 // 5분
 
 // ─── 경기 일정 파싱 ──────────────────────────────────────────
-// KBO GAME_STATE_SC: 0=예정, 1=경기중, 2=경기중(연장 등), 3=종료
-const STATUS_MAP = { '0': 'scheduled', '1': 'live', '2': 'live', '3': 'final' }
+// KBO GAME_STATE_SC: 0=예정, 1=경기 예정(당일 포함), 2=경기중, 3=종료
+const STATUS_MAP = { '0': 'scheduled', '1': 'scheduled', '2': 'live', '3': 'final' }
 
 function parseGameList(gameList, dateStr) {
   if (!Array.isArray(gameList)) return []

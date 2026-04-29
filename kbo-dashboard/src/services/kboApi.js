@@ -7,12 +7,14 @@
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
 /**
- * 22:00 이후에는 다음날 날짜를 반환
+ * 23:30 이후(또는 자정~06:00)에는 다음날 날짜를 반환
+ * KBO 경기: 18:30 시작 + 최대 4시간 = 22:30 종료 원칙
  * @returns {{ year, month, day, dateStr, isNextDay: boolean }}
  */
 export function getDisplayDate() {
   const now = new Date()
-  const isNextDay = now.getHours() >= 22
+  const h = now.getHours(), min = now.getMinutes()
+  const isNextDay = (h === 23 && min >= 30) || h < 6
   const base = isNextDay
     ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
     : now

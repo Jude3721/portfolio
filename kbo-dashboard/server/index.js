@@ -34,7 +34,8 @@ app.use((req, res, next) => {
 
 function getDisplayDateStr() {
   const now = new Date()
-  const isNextDay = now.getHours() >= 22
+  const h = now.getHours(), min = now.getMinutes()
+  const isNextDay = (h === 23 && min >= 30) || h < 6
   const base = isNextDay
     ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
     : now
