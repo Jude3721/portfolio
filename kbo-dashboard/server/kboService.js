@@ -196,20 +196,24 @@ const statsCache     = new Map() // teamCode → { data, exp }
 const newsCache      = new Map() // teamKey  → { data, exp }
 const standingsCache = { data: null, exp: 0 }
 
-const TTL_SCHEDULE  = 60_000
+const TTL_SCHEDULE_DEFAULT = 60_000
+const TTL_SCHEDULE_LIVE    = 25_000  // 라이브 경기 중 — 프론트 30초 폴링보다 짧게
 const TTL_STANDINGS = 60_000
 const TTL_STATS     = 600_000
 const TTL_NEWS      = 300_000 // 5분
 
 // ─── 경기 일정 파싱 ──────────────────────────────────────────
-const STATUS_MAP = { '0': 'scheduled', '1': 'scheduled', '2': 'live', '3': 'final' }
+// KBO GAME_STATE_SC: 0=예정, 1=경기중, 2=경기중(연장 등), 3=종료
+const STATUS_MAP = { '0': 'scheduled', '1': 'live', '2': 'live', '3': 'final' }
 
 function parseGameList(gameList, dateStr) {
   if (!Array.isArray(gameList)) return []
   return gameList
     .filter(g => g.G_DT === dateStr)
     .map(g => {
-      const status = STATUS_MAP[g.GAME_STATE_SC] || 'scheduled'
+      const rawSc = String(g.GAME_STATE_SC ?? '0')
+      const status = STATUS_MAP[rawSc] ?? 'scheduled'
+      console.log(`[KBO] ${g.AWAY_NM}vs${g.HOME_NM} GAME_STATE_SC=${rawSc} → ${status}`)
       const awayScore = status !== 'scheduled' ? (parseInt(g.T_SCORE_CN) ?? null) : null
       const homeScore = status !== 'scheduled' ? (parseInt(g.B_SCORE_CN) ?? null) : null
       const bases = status === 'live'
@@ -229,7 +233,7 @@ function parseGameList(gameList, dateStr) {
         outs: status === 'live' ? (g.OUT_CN ?? null) : null,
         bases,
         lineup: null,
-        cancelSc: g.CANCEL_SC_ID !== '0' ? g.CANCEL_SC_NM : null,
+        cancelSc: g.CANCEL_SC_ID && g.CANCEL_SC_ID !== '0' ? g.CANCEL_SC_NM : null,
       }
     })
 }
@@ -244,8 +248,10 @@ export async function fetchSchedule(dateStr) {
   })
 
   const games = parseGameList(data?.game || [], dateStr)
-  console.log(`[KBO] 경기: ${games.length}개`)
-  scheduleCache.set(dateStr, { data: games, exp: Date.now() + TTL_SCHEDULE })
+  const hasLive = games.some(g => g.status === 'live')
+  const ttl = hasLive ? TTL_SCHEDULE_LIVE : TTL_SCHEDULE_DEFAULT
+  console.log(`[KBO] 경기: ${games.length}개 (라이브: ${hasLive ? 'O' : 'X'}, 캐시 ${ttl/1000}초)`)
+  scheduleCache.set(dateStr, { data: games, exp: Date.now() + ttl })
   return games
 }
 
