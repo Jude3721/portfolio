@@ -517,22 +517,26 @@ function stripHtmlTags(str) {
   return (str || '').replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim()
 }
 
-export async function fetchTeamNews(teamKorName) {
-  const cached = newsCache.get(teamKorName)
+const PAGE_SIZE = 16
+
+export async function fetchTeamNews(teamKorName, page = 1) {
+  const cacheKey = `${teamKorName}:${page}`
+  const cached = newsCache.get(cacheKey)
   if (cached && Date.now() < cached.exp) return cached.data
 
   const query = TEAM_NEWS_QUERY[teamKorName]
-  if (!query) return []
+  if (!query) return { news: [], total: 0 }
 
   const clientId     = process.env.NAVER_CLIENT_ID
   const clientSecret = process.env.NAVER_CLIENT_SECRET
   if (!clientId || !clientSecret) {
     console.warn('[KBO] NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 환경변수 미설정')
-    return []
+    return { news: [], total: 0 }
   }
 
-  console.log(`[KBO] 네이버 뉴스 조회: ${teamKorName}`)
-  const url = `https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(query)}&display=15&sort=date`
+  const start = (page - 1) * PAGE_SIZE + 1
+  console.log(`[KBO] 네이버 뉴스 조회: ${teamKorName} page=${page} start=${start}`)
+  const url = `https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(query)}&display=${PAGE_SIZE}&start=${start}&sort=date`
   const res = await fetch(url, {
     headers: {
       'X-Naver-Client-Id':     clientId,
@@ -546,13 +550,15 @@ export async function fetchTeamNews(teamKorName) {
     title:   stripHtmlTags(item.title),
     link:    item.originallink || item.link,
     pubDate: item.pubDate,
-    source:  '', // Open API 응답에 언론사 없음 → description에서 유추
     desc:    stripHtmlTags(item.description),
   }))
+  // Naver API total은 최대 1000까지만 신뢰할 수 있음
+  const total = Math.min(json.total ?? 0, 1000)
 
-  console.log(`[KBO] ${teamKorName} 뉴스 ${news.length}건`)
-  newsCache.set(teamKorName, { data: news, exp: Date.now() + TTL_NEWS })
-  return news
+  console.log(`[KBO] ${teamKorName} 뉴스 ${news.length}건 (전체 ${total}건)`)
+  const data = { news, total }
+  newsCache.set(cacheKey, { data, exp: Date.now() + TTL_NEWS })
+  return data
 }
 
 // ─── 로스터 무브 ──────────────────────────────────────────────

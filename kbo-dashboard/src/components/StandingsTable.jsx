@@ -11,13 +11,13 @@ const GRID = '2.2rem 2.8rem 1fr 3rem 3rem 3rem 3rem 10rem 5rem'
 
 function RankChange({ delta }) {
   if (!delta) return (
-    <span style={{ fontSize: '11px', color: 'rgba(var(--fg-rgb),0.2)', lineHeight: 1 }}>—</span>
+    <span style={{ fontSize: '12px', color: 'rgba(var(--fg-rgb),0.2)', lineHeight: 1 }}>—</span>
   )
   const up = delta > 0
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: '1px',
-      fontSize: '10px', fontWeight: 800, lineHeight: 1,
+      fontSize: '11px', fontWeight: 800, lineHeight: 1,
       color: up ? '#4ade80' : '#f87171',
     }}>
       {up ? '▲' : '▼'}{Math.abs(delta)}
@@ -32,7 +32,7 @@ function StreakBadge({ streak }) {
   const bg     = isWin ? 'rgba(74,222,128,0.12)' : isLose ? 'rgba(248,113,113,0.12)' : 'rgba(var(--fg-rgb), 0.05)'
   const border = isWin ? 'rgba(74,222,128,0.3)'  : isLose ? 'rgba(248,113,113,0.3)'  : 'rgba(var(--fg-rgb), 0.08)'
   return (
-    <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: '99px', fontSize: '11px', fontWeight: 700, background: bg, color, border: `1px solid ${border}` }}>
+    <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: '99px', fontSize: '12px', fontWeight: 700, background: bg, color, border: `1px solid ${border}` }}>
       {streak}
     </span>
   )
@@ -41,7 +41,7 @@ function StreakBadge({ streak }) {
 function WinRateBar({ winRate, teamColor }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <span style={{ fontSize: '13px', fontVariantNumeric: 'tabular-nums', width: '44px', textAlign: 'right', color: 'rgba(var(--fg-rgb), 0.8)', fontWeight: 600 }}>
+      <span style={{ fontSize: '14px', fontVariantNumeric: 'tabular-nums', width: '44px', textAlign: 'right', color: 'rgba(var(--fg-rgb), 0.8)', fontWeight: 600 }}>
         {winRate.toFixed(3)}
       </span>
       <div style={{ width: '56px', height: '5px', borderRadius: '99px', boxShadow: N.inset, overflow: 'hidden' }}>
@@ -88,14 +88,14 @@ export default function StandingsTable({ standings = [], onTeamClick, dataSource
   return (
     <section style={{ width: '100%', padding: '0 24px 40px' }}>
       <div style={{ marginBottom: '16px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'rgba(var(--fg-rgb), 0.88)', letterSpacing: '-0.3px' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'rgba(var(--fg-rgb), 0.88)', letterSpacing: '-0.3px' }}>
           2026 시즌 순위
         </h2>
         {dataSource === 'live'
-          ? <span className="live-badge" style={{ fontSize: '10px' }}><span className="live-dot" />실시간</span>
-          : <span style={{ fontSize: '11px', color: 'rgba(var(--fg-rgb), 0.3)' }}>목업 데이터</span>
+          ? <span className="live-badge" style={{ fontSize: '11px' }}><span className="live-dot" />실시간</span>
+          : <span style={{ fontSize: '12px', color: 'rgba(var(--fg-rgb), 0.3)' }}>목업 데이터</span>
         }
-        <span style={{ marginLeft: 'auto', fontSize: '11px', color: 'rgba(var(--fg-rgb), 0.3)' }}>
+        <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'rgba(var(--fg-rgb), 0.3)' }}>
           {dateStr} 기준 · 구단 클릭 → 선수 스탯
         </span>
       </div>
@@ -106,7 +106,7 @@ export default function StandingsTable({ standings = [], onTeamClick, dataSource
           display: 'grid', gridTemplateColumns: GRID,
           padding: '12px 18px',
           boxShadow: 'inset 0 -1px 0 rgba(var(--fg-rgb),0.05)',
-          fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px', color: 'rgba(var(--fg-rgb), 0.3)',
+          fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', color: 'rgba(var(--fg-rgb), 0.3)',
         }}>
           <span style={{ textAlign: 'center' }}>순위</span>
           <span style={{ textAlign: 'center' }}>변동</span>
@@ -139,7 +139,7 @@ export default function StandingsTable({ standings = [], onTeamClick, dataSource
               }}
             >
               <span style={{
-                textAlign: 'center', fontSize: '13px', fontWeight: 800, fontVariantNumeric: 'tabular-nums',
+                textAlign: 'center', fontSize: '14px', fontWeight: 800, fontVariantNumeric: 'tabular-nums',
                 color: isTop3 ? '#c084fc' : 'rgba(var(--fg-rgb), 0.35)',
               }}>{row.rank}</span>
 
@@ -153,13 +153,13 @@ export default function StandingsTable({ standings = [], onTeamClick, dataSource
                     onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }} />
                   <div style={{ display: 'none', width: '100%', height: '100%', borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: team.color, color: team.textColor, fontSize: '9px', fontWeight: 700 }}>{team.short}</div>
                 </div>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(var(--fg-rgb), 0.82)' }}>{team.name}</span>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg-rgb), 0.82)' }}>{team.name}</span>
               </div>
 
-              <span style={{ textAlign: 'center', fontSize: '13px', color: 'rgba(var(--fg-rgb), 0.45)', fontVariantNumeric: 'tabular-nums' }}>{row.games}</span>
-              <span style={{ textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#4ade80', fontVariantNumeric: 'tabular-nums' }}>{row.wins}</span>
-              <span style={{ textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#f87171', fontVariantNumeric: 'tabular-nums' }}>{row.losses}</span>
-              <span style={{ textAlign: 'center', fontSize: '13px', color: 'rgba(var(--fg-rgb), 0.35)', fontVariantNumeric: 'tabular-nums' }}>{row.draws}</span>
+              <span style={{ textAlign: 'center', fontSize: '14px', color: 'rgba(var(--fg-rgb), 0.45)', fontVariantNumeric: 'tabular-nums' }}>{row.games}</span>
+              <span style={{ textAlign: 'center', fontSize: '14px', fontWeight: 700, color: '#4ade80', fontVariantNumeric: 'tabular-nums' }}>{row.wins}</span>
+              <span style={{ textAlign: 'center', fontSize: '14px', fontWeight: 700, color: '#f87171', fontVariantNumeric: 'tabular-nums' }}>{row.losses}</span>
+              <span style={{ textAlign: 'center', fontSize: '14px', color: 'rgba(var(--fg-rgb), 0.35)', fontVariantNumeric: 'tabular-nums' }}>{row.draws}</span>
               <div style={{ display: 'flex', justifyContent: 'center' }}><WinRateBar winRate={row.winRate} teamColor={team.color} /></div>
               <div style={{ display: 'flex', justifyContent: 'center' }}><StreakBadge streak={row.streak} /></div>
             </div>

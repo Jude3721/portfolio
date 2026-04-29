@@ -4,6 +4,7 @@ import StandingsTable from './components/StandingsTable'
 import TeamStatsModal from './components/TeamStatsModal'
 import InjuryPage from './components/InjuryPage'
 import MovesPage from './components/MovesPage'
+import NewsPage from './components/NewsPage'
 import ThemePicker from './components/ThemePicker'
 import { mockGames, mockNextDayGames } from './data/mockGames'
 import { mockStandings } from './data/mockStandings'
@@ -13,6 +14,7 @@ const NAV_TABS = [
   { id: 'games',  label: '⚾ 경기' },
   { id: 'injury', label: '🩹 부상리포트' },
   { id: 'moves',  label: '🔄 로스터 무브' },
+  { id: 'news',   label: '📰 구단 뉴스' },
 ]
 
 const N = {
@@ -124,14 +126,14 @@ function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
 
           {/* 로고 + 타이틀 */}
-          <span style={{ fontSize: '20px' }}>⚾</span>
-          <span style={{ fontSize: '16px', fontWeight: 800, color: 'rgba(var(--fg-rgb), 0.92)', letterSpacing: '-0.3px' }}>
+          <span style={{ fontSize: '22px' }}>⚾</span>
+          <span style={{ fontSize: '18px', fontWeight: 800, color: 'rgba(var(--fg-rgb), 0.92)', letterSpacing: '-0.3px' }}>
             KBO 대시보드
           </span>
 
           {/* 날짜 배지 */}
           <span style={{
-            fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px',
+            fontSize: '14px', fontWeight: 700, letterSpacing: '0.5px',
             padding: '3px 10px', borderRadius: '99px',
             background: isNextDay ? 'rgba(99,102,241,0.15)' : 'rgba(74,222,128,0.12)',
             border: `1px solid ${isNextDay ? 'rgba(99,102,241,0.35)' : 'rgba(74,222,128,0.3)'}`,
@@ -147,7 +149,7 @@ function App() {
               target="_blank"
               rel="noreferrer"
               style={{
-                fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '99px',
+                fontSize: '14px', fontWeight: 600, padding: '3px 10px', borderRadius: '99px',
                 background: 'rgba(var(--fg-rgb), 0.05)', border: '1px solid rgba(var(--fg-rgb), 0.1)',
                 color: 'rgba(var(--fg-rgb), 0.4)', textDecoration: 'none', transition: 'all 0.15s',
               }}
@@ -164,18 +166,18 @@ function App() {
             {dataSource === 'live' ? (
               <span className="live-badge"><span className="live-dot" />실시간</span>
             ) : (
-              <span style={{ fontSize: '11px', color: 'rgba(var(--fg-rgb), 0.3)', letterSpacing: '0.5px' }}>목업 데이터</span>
+              <span style={{ fontSize: '14px', color: 'rgba(var(--fg-rgb), 0.3)', letterSpacing: '0.5px' }}>목업 데이터</span>
             )}
 
             {/* 카운트다운 */}
             {hasLiveGame && countdown > 0 && (
-              <span style={{ fontSize: '11px', color: 'rgba(var(--fg-rgb), 0.35)', fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ fontSize: '14px', color: 'rgba(var(--fg-rgb), 0.35)', fontVariantNumeric: 'tabular-nums' }}>
                 {countdown}초 후 갱신
               </span>
             )}
 
             {/* 업데이트 시간 */}
-            <span style={{ fontSize: '11px', color: 'rgba(var(--fg-rgb), 0.3)', fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ fontSize: '14px', color: 'rgba(var(--fg-rgb), 0.3)', fontVariantNumeric: 'tabular-nums' }}>
               {timeStr}
             </span>
 
@@ -190,7 +192,7 @@ function App() {
                 border: 'none',
                 boxShadow: isRefreshing ? N.inset : N.btn,
                 color: 'rgba(var(--fg-rgb), 0.65)',
-                fontSize: '12px', fontWeight: 600,
+                fontSize: '14px', fontWeight: 600,
                 cursor: isRefreshing ? 'not-allowed' : 'pointer',
                 opacity: isRefreshing ? 0.5 : 1,
                 transition: 'all 0.2s',
@@ -218,7 +220,7 @@ function App() {
                 style={{
                   padding: '8px 18px',
                   borderRadius: '10px 10px 0 0',
-                  fontSize: '13px', fontWeight: 600,
+                  fontSize: '14px', fontWeight: 600,
                   cursor: 'pointer', border: 'none',
                   background: 'var(--neu-bg)',
                   color: isActive ? '#c084fc' : 'rgba(var(--fg-rgb), 0.38)',
@@ -243,6 +245,7 @@ function App() {
       )}
       {activeTab === 'injury' && <InjuryPage />}
       {activeTab === 'moves'  && <MovesPage />}
+      {activeTab === 'news'   && <NewsPage />}
       {selectedTeam && <TeamStatsModal teamKey={selectedTeam} onClose={() => setSelectedTeam(null)} />}
     </main>
     <ThemePicker />

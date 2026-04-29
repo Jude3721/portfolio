@@ -70,11 +70,10 @@ export async function fetchRosterMoves() {
   return data?.moves ?? []
 }
 
-/** 팀 인기 뉴스 조회 */
-export async function fetchTeamNews(teamKey) {
-  const res = await fetch(`${API_BASE}/api/news/${encodeURIComponent(teamKey)}`)
-  // 에러 응답도 일단 JSON으로 파싱해서 news 추출 (서버가 200+빈배열 반환)
-  if (!res.ok) return []
+/** 팀 뉴스 조회 (page: 1-based) */
+export async function fetchTeamNews(teamKey, page = 1) {
+  const res = await fetch(`${API_BASE}/api/news/${encodeURIComponent(teamKey)}?page=${page}`)
+  if (!res.ok) return { news: [], total: 0 }
   const data = await res.json()
-  return data?.news ?? []
+  return { news: data?.news ?? [], total: data?.total ?? 0 }
 }

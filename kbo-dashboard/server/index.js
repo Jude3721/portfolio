@@ -98,11 +98,12 @@ app.get('/api/injuries/:teamKey', async (req, res) => {
 
 app.get('/api/news/:teamKey', async (req, res) => {
   try {
-    const news = await fetchTeamNews(decodeURIComponent(req.params.teamKey))
-    res.json({ news })
+    const page = Math.max(1, parseInt(req.query.page) || 1)
+    const result = await fetchTeamNews(decodeURIComponent(req.params.teamKey), page)
+    res.json(result)
   } catch (err) {
     console.error('[server] news error:', err.message)
-    res.json({ news: [], error: err.message }) // 500 대신 빈 배열 반환
+    res.json({ news: [], total: 0, error: err.message })
   }
 })
 

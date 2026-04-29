@@ -27,13 +27,13 @@ function MoveRow({ move, isLast }) {
       boxShadow: isLast ? 'none' : 'inset 0 -1px 0 rgba(var(--fg-rgb),0.04)',
     }}>
       {/* 날짜 */}
-      <span style={{ fontSize: '11px', color: 'rgba(var(--fg-rgb),0.3)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', minWidth: '52px' }}>
+      <span style={{ fontSize: '12px', color: 'rgba(var(--fg-rgb),0.3)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', minWidth: '52px' }}>
         {move.date?.slice(5)}
       </span>
 
       {/* 구분 배지 */}
       <span style={{
-        fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '99px',
+        fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '99px',
         background: `${move.color}18`, color: move.color,
         border: `1px solid ${move.color}44`, whiteSpace: 'nowrap', flexShrink: 0,
       }}>
@@ -47,16 +47,16 @@ function MoveRow({ move, isLast }) {
             <img src={team.logo} alt={team.short} style={{ width: '100%', height: '100%', borderRadius: '50%' }} onError={e => e.target.style.display = 'none'} />
           </div>
         ) : null}
-        <span style={{ fontSize: '12px', fontWeight: 600, color: team?.color ?? 'rgba(var(--fg-rgb),0.6)', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: '13px', fontWeight: 600, color: team?.color ?? 'rgba(var(--fg-rgb),0.6)', whiteSpace: 'nowrap' }}>
           {move.team}
         </span>
       </div>
 
       {/* 선수 이름 + 포지션 */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-        <span style={{ fontSize: '14px', fontWeight: 700, color: 'rgba(var(--fg-rgb),0.85)' }}>{move.name}</span>
+        <span style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(var(--fg-rgb),0.85)' }}>{move.name}</span>
         {move.pos && (
-          <span style={{ fontSize: '10px', fontWeight: 600, padding: '1px 5px', borderRadius: '4px', background: 'rgba(var(--fg-rgb),0.06)', color: 'rgba(var(--fg-rgb),0.4)', flexShrink: 0 }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, padding: '1px 5px', borderRadius: '4px', background: 'rgba(var(--fg-rgb),0.06)', color: 'rgba(var(--fg-rgb),0.4)', flexShrink: 0 }}>
             {move.pos}
           </span>
         )}
@@ -64,7 +64,7 @@ function MoveRow({ move, isLast }) {
 
       {/* 비고 */}
       {move.note && (
-        <span style={{ fontSize: '11px', color: 'rgba(var(--fg-rgb),0.35)', whiteSpace: 'nowrap', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <span style={{ fontSize: '12px', color: 'rgba(var(--fg-rgb),0.35)', whiteSpace: 'nowrap', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {move.note}
         </span>
       )}
@@ -104,16 +104,16 @@ export default function MovesPage() {
       {/* 헤더 */}
       <div style={{ marginBottom: '20px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
         <div>
-          <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'rgba(var(--fg-rgb),0.88)', letterSpacing: '-0.3px', marginBottom: '4px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'rgba(var(--fg-rgb),0.88)', letterSpacing: '-0.3px', marginBottom: '4px' }}>
             로스터 무브
           </h2>
-          <p style={{ fontSize: '12px', color: 'rgba(var(--fg-rgb),0.32)' }}>
+          <p style={{ fontSize: '13px', color: 'rgba(var(--fg-rgb),0.32)' }}>
             1군 등록 · 말소 · 트레이드 · FA · 해지 등 선수 이동 현황
           </p>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {!loading && <span style={{ fontSize: '11px', color: 'rgba(var(--fg-rgb),0.3)' }}>{filtered.length}건</span>}
-          <button onClick={load} style={{ padding: '5px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: 600, border: 'none', cursor: 'pointer', background: 'var(--neu-bg)', boxShadow: N.btn, color: 'rgba(var(--fg-rgb),0.55)' }}>
+          {!loading && <span style={{ fontSize: '12px', color: 'rgba(var(--fg-rgb),0.3)' }}>{filtered.length}건</span>}
+          <button onClick={load} style={{ padding: '5px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, border: 'none', cursor: 'pointer', background: 'var(--neu-bg)', boxShadow: N.btn, color: 'rgba(var(--fg-rgb),0.55)' }}>
             새로고침
           </button>
         </div>
@@ -125,7 +125,7 @@ export default function MovesPage() {
           const isActive = category === c.key
           return (
             <button key={c.key} onClick={() => setCategory(c.key)} style={{
-              padding: '6px 14px', borderRadius: '12px', fontSize: '12px', fontWeight: 700,
+              padding: '6px 14px', borderRadius: '12px', fontSize: '13px', fontWeight: 700,
               border: 'none', cursor: 'pointer',
               background: 'var(--neu-bg)',
               boxShadow: isActive ? N.inset : N.btn,
@@ -141,7 +141,7 @@ export default function MovesPage() {
       {/* 팀 필터 */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
         <button onClick={() => setTeamFilter('all')} style={{
-          padding: '5px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: 700,
+          padding: '5px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: 700,
           border: 'none', cursor: 'pointer', background: 'var(--neu-bg)',
           boxShadow: teamFilter === 'all' ? N.inset : N.subtle,
           color: teamFilter === 'all' ? 'rgba(var(--fg-rgb),0.85)' : 'rgba(var(--fg-rgb),0.4)',
@@ -151,7 +151,7 @@ export default function MovesPage() {
           const isActive = teamFilter === t
           return (
             <button key={t} onClick={() => setTeamFilter(t)} style={{
-              padding: '5px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: 700,
+              padding: '5px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: 700,
               border: isActive ? `1.5px solid ${team?.color ?? '#888'}66` : '1.5px solid transparent',
               cursor: 'pointer', background: 'var(--neu-bg)',
               boxShadow: isActive ? N.inset : N.subtle,
@@ -170,10 +170,10 @@ export default function MovesPage() {
               <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
               <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
             </svg>
-            <span style={{ fontSize: '13px' }}>데이터 조회 중...</span>
+            <span style={{ fontSize: '14px' }}>데이터 조회 중...</span>
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: '56px 0', textAlign: 'center', fontSize: '13px', color: 'rgba(var(--fg-rgb),0.3)' }}>
+          <div style={{ padding: '56px 0', textAlign: 'center', fontSize: '14px', color: 'rgba(var(--fg-rgb),0.3)' }}>
             해당하는 기록이 없습니다
           </div>
         ) : (
@@ -183,7 +183,7 @@ export default function MovesPage() {
               display: 'flex', alignItems: 'center', gap: '14px',
               padding: '10px 20px',
               boxShadow: 'inset 0 -1px 0 rgba(var(--fg-rgb),0.05)',
-              fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px', color: 'rgba(var(--fg-rgb),0.28)',
+              fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', color: 'rgba(var(--fg-rgb),0.28)',
             }}>
               <span style={{ minWidth: '52px' }}>날짜</span>
               <span style={{ minWidth: '64px' }}>구분</span>
