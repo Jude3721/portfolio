@@ -234,6 +234,49 @@ function getCurrentSeason() {
   return `${startYear}-${String(startYear + 1).slice(2)}`
 }
 
+// ─── 팀 로스터 ────────────────────────────────────────────────────
+const rosterCache = new Map() // teamId → { data, exp }
+const TTL_ROSTER  = 600_000  // 10분
+
+export async function fetchRoster(teamId) {
+  const cached = rosterCache.get(teamId)
+  if (cached && Date.now() < cached.exp) return cached.data
+
+  const season = getCurrentSeason()
+  console.log(`[NBA] 로스터 조회: teamId=${teamId} season=${season}`)
+
+  const res = await fetch(
+    `https://stats.nba.com/stats/commonteamroster?Season=${season}&TeamID=${teamId}`,
+    { headers: STATS_HEADERS }
+  )
+  if (!res.ok) throw new Error(`NBA roster ${res.status}`)
+
+  const json    = await res.json()
+  const headers = json?.resultSets?.[0]?.headers ?? []
+  const rows    = json?.resultSets?.[0]?.rowSet   ?? []
+
+  const idx = (name) => headers.indexOf(name)
+  const players = rows.map(r => ({
+    playerId:    r[idx('PLAYER_ID')],
+    name:        r[idx('PLAYER')]      ?? '',
+    num:         r[idx('NUM')]         ?? '',
+    position:    r[idx('POSITION')]    ?? '',
+    height:      r[idx('HEIGHT')]      ?? '',
+    weight:      r[idx('WEIGHT')]      ?? '',
+    age:         r[idx('AGE')]         ?? '',
+    exp:         r[idx('EXP')]         ?? '',
+    school:      r[idx('SCHOOL')]      ?? '',
+    howAcquired: r[idx('HOW_ACQUIRED')] ?? '',
+  }))
+
+  const posOrder = { G: 0, 'G-F': 1, F: 2, 'F-G': 3, 'F-C': 4, C: 5 }
+  players.sort((a, b) => (posOrder[a.position] ?? 9) - (posOrder[b.position] ?? 9))
+
+  console.log(`[NBA] 로스터: ${players.length}명`)
+  rosterCache.set(teamId, { data: players, exp: Date.now() + TTL_ROSTER })
+  return players
+}
+
 // ─── 플레이오프 브래킷 ──────────────────────────────────────────
 const playoffCache = { data: null, exp: 0 }
 const TTL_PLAYOFF  = 120_000 // 2분

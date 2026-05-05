@@ -1,5 +1,5 @@
 import express from 'express'
-import { fetchScoreboard, fetchBoxscore, fetchStandings, fetchPlayoffBracket } from './nbaService.js'
+import { fetchScoreboard, fetchBoxscore, fetchStandings, fetchPlayoffBracket, fetchRoster } from './nbaService.js'
 
 const ALLOWED_ORIGINS = [
   'https://jude3721.github.io',
@@ -47,6 +47,16 @@ app.get('/api/standings', async (req, res) => {
     res.json({ standings })
   } catch (err) {
     console.error('[server] standings error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.get('/api/roster/:teamId', async (req, res) => {
+  try {
+    const players = await fetchRoster(req.params.teamId)
+    res.json({ players })
+  } catch (err) {
+    console.error('[server] roster error:', err.message)
     res.status(500).json({ error: err.message })
   }
 })

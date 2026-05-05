@@ -13,6 +13,13 @@ export async function fetchBoxscore(gameId) {
   return res.json()
 }
 
+export async function fetchRoster(teamId) {
+  const res = await fetch(`${API_BASE}/api/roster/${teamId}`)
+  if (!res.ok) throw new Error(`roster 오류: ${res.status}`)
+  const data = await res.json()
+  return data?.players ?? []
+}
+
 export async function fetchPlayoffBracket() {
   const res = await fetch(`${API_BASE}/api/playoff`)
   if (!res.ok) throw new Error(`playoff 오류: ${res.status}`)
