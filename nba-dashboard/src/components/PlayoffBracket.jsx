@@ -3,7 +3,7 @@ import { NBA_TEAMS } from '../data/nbaTeams'
 
 const SLOT = 180   // R1 카드 1슬롯 높이(px)
 const CARD_W = 196 // 카드 폭(px)
-const LINE   = 'rgba(255,255,255,0.12)'
+
 
 /* ─── 시리즈 카드 ─────────────────────────────────────────────── */
 function SeriesCard({ series }) {
@@ -108,44 +108,8 @@ function PlaceholderCard({ label }) {
   )
 }
 
-/* ─── 연결선 (라운드 → 다음 라운드) ─────────────────────────────── */
-// dir: 'right' (East쪽, 오른쪽으로 연결) | 'left' (West쪽, 왼쪽으로 연결)
-function Connector({ pairCount, dir = 'right' }) {
-  const items = Array.from({ length: pairCount })
-  const bR = dir === 'right' ? '0 4px 4px 0' : '4px 0 0 4px'
-  const bL = dir === 'right' ? '4px 0 0 4px' : '0 4px 4px 0' // unused
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '18px', flexShrink: 0 }}>
-      {items.map((_, i) => {
-        const h = SLOT * 2
-        return (
-          <div key={i} style={{ height: h, position: 'relative', flexShrink: 0 }}>
-            {/* 위쪽 절반 세로선 */}
-            <div style={{
-              position: 'absolute',
-              top: 0, height: '50%',
-              [dir === 'right' ? 'left' : 'right']: 0,
-              width: '1px', background: LINE,
-            }} />
-            {/* 아래쪽 절반 세로선 */}
-            <div style={{
-              position: 'absolute',
-              bottom: 0, height: '50%',
-              [dir === 'right' ? 'left' : 'right']: 0,
-              width: '1px', background: LINE,
-            }} />
-            {/* 가로선 (중앙에서 반대쪽으로) */}
-            <div style={{
-              position: 'absolute',
-              top: '50%', left: 0, right: 0,
-              height: '1px', background: LINE,
-            }} />
-          </div>
-        )
-      })}
-    </div>
-  )
+function Connector() {
+  return <div style={{ width: '8px', flexShrink: 0 }} />
 }
 
 /* ─── 브래킷 컬럼 ─────────────────────────────────────────────── */
@@ -304,21 +268,21 @@ export default function PlayoffBracket() {
 
           {/* ── EAST 1R ── */}
           <BracketCol series={r1E} slotsPerCard={1} />
-          <Connector pairCount={2} dir="right" />
+          <Connector />
 
           {/* ── EAST 2R ── */}
           {hasR2
             ? <BracketCol series={r2E} slotsPerCard={2} />
             : <BracketCol placeholder placeholderLabel="대기 중" placeholderCount={2} slotsPerCard={2} />
           }
-          <Connector pairCount={1} dir="right" />
+          <Connector />
 
           {/* ── EAST CF ── */}
           {hasCF
             ? <BracketCol series={cfE} slotsPerCard={4} />
             : <BracketCol placeholder placeholderLabel="ECF 대기" placeholderCount={1} slotsPerCard={4} />
           }
-          <Connector pairCount={1} dir="right" />
+          <Connector />
 
           {/* ── FINALS ── */}
           {hasFin
@@ -326,21 +290,21 @@ export default function PlayoffBracket() {
             : <BracketCol placeholder placeholderLabel="NBA 파이널" placeholderCount={1} slotsPerCard={4} />
           }
 
-          <Connector pairCount={1} dir="left" />
+          <Connector />
 
           {/* ── WEST CF ── */}
           {hasCF
             ? <BracketCol series={cfW} slotsPerCard={4} />
             : <BracketCol placeholder placeholderLabel="WCF 대기" placeholderCount={1} slotsPerCard={4} />
           }
-          <Connector pairCount={1} dir="left" />
+          <Connector />
 
           {/* ── WEST 2R ── */}
           {hasR2
             ? <BracketCol series={r2W} slotsPerCard={2} />
             : <BracketCol placeholder placeholderLabel="대기 중" placeholderCount={2} slotsPerCard={2} />
           }
-          <Connector pairCount={2} dir="left" />
+          <Connector />
 
           {/* ── WEST 1R ── */}
           <BracketCol series={r1W} slotsPerCard={1} />
