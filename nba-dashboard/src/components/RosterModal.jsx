@@ -107,11 +107,8 @@ export default function RosterModal({ team, teamId, onClose }) {
       .finally(() => setLoading(false))
   }, [teamId])
 
-  const groups = [
-    { label: 'Guards',   pos: ['G', 'G-F'] },
-    { label: 'Forwards', pos: ['F', 'F-G', 'F-C'] },
-    { label: 'Centers',  pos: ['C'] },
-  ]
+  const posOrder = { G: 0, 'G-F': 1, F: 2, 'F-G': 3, 'F-C': 4, C: 5, 'C-F': 6 }
+  const sorted = [...players].sort((a, b) => (posOrder[a.position] ?? 9) - (posOrder[b.position] ?? 9))
 
   return (
     <div
@@ -164,25 +161,9 @@ export default function RosterModal({ team, teamId, onClose }) {
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
           {loading
             ? <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: '14px' }}>로딩 중...</div>
-            : groups.map(g => {
-                const gPlayers = players.filter(p => g.pos.includes(p.position))
-                if (gPlayers.length === 0) return null
-                return (
-                  <div key={g.label} style={{ marginBottom: '20px' }}>
-                    <div style={{
-                      fontSize: '11px', fontWeight: 800, letterSpacing: '1px',
-                      color: 'rgba(255,255,255,0.3)', marginBottom: '8px',
-                    }}>
-                      {g.label.toUpperCase()}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {gPlayers.map(p => (
-                        <PlayerCard key={p.playerId} p={p} teamColor={t.color} />
-                      ))}
-                    </div>
-                  </div>
-                )
-              })
+            : <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {sorted.map(p => <PlayerCard key={p.playerId} p={p} teamColor={t.color} />)}
+              </div>
           }
         </div>
       </div>
