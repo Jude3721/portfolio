@@ -570,8 +570,9 @@ export async function fetchTeamNews(teamKorName, page = 1) {
   if (!res.ok) throw new Error(`Naver Open API ${res.status}`)
 
   const json = await res.json()
+  const allItems = json.items || []
   const cutoff = Date.now() - 5 * 24 * 60 * 60 * 1000
-  const news = (json.items || [])
+  const news = allItems
     .map(item => ({
       title:   stripHtmlTags(item.title),
       link:    item.originallink || item.link,
@@ -579,9 +580,12 @@ export async function fetchTeamNews(teamKorName, page = 1) {
       desc:    stripHtmlTags(item.description),
     }))
     .filter(item => !item.pubDate || new Date(item.pubDate) >= cutoff)
-  // 이 페이지 결과가 PAGE_SIZE 미만이면 마지막 페이지 → 실제 건수 반환
-  const naverTotal = Math.min(json.total ?? 0, 1000)
-  const total = news.length < PAGE_SIZE ? (page - 1) * PAGE_SIZE + news.length : naverTotal
+  // 5일 경계를 넘었거나(일부 필터됨) Naver 마지막 페이지면 정확한 total 반환
+  // 그렇지 않으면 page*PAGE_SIZE+1 → 프론트에서 다음 페이지 버튼만 생성
+  const hitBoundary = news.length < allItems.length || allItems.length < PAGE_SIZE
+  const total = hitBoundary
+    ? (page - 1) * PAGE_SIZE + news.length
+    : page * PAGE_SIZE + 1
 
   console.log(`[KBO] ${teamKorName} 뉴스 ${news.length}건 (전체 ${total}건)`)
   const data = { news, total }
