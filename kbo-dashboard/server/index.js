@@ -68,8 +68,8 @@ app.get('/api/lineup/:gameId', async (req, res) => {
 
 app.get('/api/standings', async (req, res) => {
   try {
-    const standings = await fetchStandings()
-    res.json({ standings })
+    const { standings, prevStandings } = await fetchStandings()
+    res.json({ standings, prevStandings })
   } catch (err) {
     console.error('[server] standings error:', err.message)
     res.status(500).json({ error: err.message })

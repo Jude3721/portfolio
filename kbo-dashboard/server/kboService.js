@@ -195,12 +195,19 @@ const scheduleCache  = new Map() // dateStr → { data, exp }
 const statsCache     = new Map() // teamCode → { data, exp }
 const newsCache      = new Map() // teamKey  → { data, exp }
 const standingsCache = { data: null, exp: 0 }
+// 날짜가 바뀔 때 해당 날의 첫 번째 fetch 값을 저장 → "직전 경기 이전 순위" 기준
+const prevStandingsStore = { data: null, date: '' }
 
 const TTL_SCHEDULE_DEFAULT = 60_000
 const TTL_SCHEDULE_LIVE    = 25_000  // 라이브 경기 중 — 프론트 30초 폴링보다 짧게
 const TTL_STANDINGS = 60_000
 const TTL_STATS     = 600_000
 const TTL_NEWS      = 300_000 // 5분
+
+function getTodayDateStr() {
+  const now = new Date()
+  return `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`
+}
 
 // ─── 경기 일정 파싱 ──────────────────────────────────────────
 // KBO GAME_STATE_SC: 0=예정, 1=경기 예정(당일 포함), 2=경기중, 3=종료
@@ -308,7 +315,9 @@ export async function fetchLineup(gameId) {
 
 // ─── 순위 ─────────────────────────────────────────────────────
 export async function fetchStandings() {
-  if (standingsCache.data && Date.now() < standingsCache.exp) return standingsCache.data
+  if (standingsCache.data && Date.now() < standingsCache.exp) {
+    return { standings: standingsCache.data, prevStandings: prevStandingsStore.data }
+  }
 
   console.log('[KBO] 순위 조회...')
   await getSession()
@@ -366,7 +375,16 @@ export async function fetchStandings() {
   console.log(`[KBO] 순위: ${result.length}팀`)
   standingsCache.data = result
   standingsCache.exp = Date.now() + TTL_STANDINGS
-  return result
+
+  // 날짜가 바뀌면 이 시점의 순위를 "전일 기준"으로 저장
+  const today = getTodayDateStr()
+  if (prevStandingsStore.date !== today) {
+    prevStandingsStore.data = result
+    prevStandingsStore.date = today
+    console.log(`[KBO] 직전 경기 순위 스냅샷 저장: ${today}`)
+  }
+
+  return { standings: result, prevStandings: prevStandingsStore.data }
 }
 
 // ─── 팀 선수 스탯 ────────────────────────────────────────────
@@ -552,14 +570,18 @@ export async function fetchTeamNews(teamKorName, page = 1) {
   if (!res.ok) throw new Error(`Naver Open API ${res.status}`)
 
   const json = await res.json()
-  const news = (json.items || []).map(item => ({
-    title:   stripHtmlTags(item.title),
-    link:    item.originallink || item.link,
-    pubDate: item.pubDate,
-    desc:    stripHtmlTags(item.description),
-  }))
-  // Naver API total은 최대 1000까지만 신뢰할 수 있음
-  const total = Math.min(json.total ?? 0, 1000)
+  const cutoff = Date.now() - 5 * 24 * 60 * 60 * 1000
+  const news = (json.items || [])
+    .map(item => ({
+      title:   stripHtmlTags(item.title),
+      link:    item.originallink || item.link,
+      pubDate: item.pubDate,
+      desc:    stripHtmlTags(item.description),
+    }))
+    .filter(item => !item.pubDate || new Date(item.pubDate) >= cutoff)
+  // 이 페이지 결과가 PAGE_SIZE 미만이면 마지막 페이지 → 실제 건수 반환
+  const naverTotal = Math.min(json.total ?? 0, 1000)
+  const total = news.length < PAGE_SIZE ? (page - 1) * PAGE_SIZE + news.length : naverTotal
 
   console.log(`[KBO] ${teamKorName} 뉴스 ${news.length}건 (전체 ${total}건)`)
   const data = { news, total }

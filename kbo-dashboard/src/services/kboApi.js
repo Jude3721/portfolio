@@ -46,7 +46,10 @@ export async function fetchStandings() {
   const res = await fetch(`${API_BASE}/api/standings`)
   if (!res.ok) throw new Error(`standings 오류: ${res.status}`)
   const data = await res.json()
-  return data?.standings ?? []
+  return {
+    standings:    data?.standings    ?? [],
+    prevStandings: data?.prevStandings ?? null,
+  }
 }
 
 /** 팀 선수 스탯 조회 */

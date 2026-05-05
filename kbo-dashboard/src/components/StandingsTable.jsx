@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useMemo } from 'react'
 import { KBO_TEAMS } from '../data/mockGames'
 
 const N = {
@@ -51,39 +51,21 @@ function WinRateBar({ winRate, teamColor }) {
   )
 }
 
-const STORAGE_KEY = 'kbo-standings-snapshot'
-const SNAPSHOT_TTL = 60 * 60 * 1000 // 1시간마다 스냅샷 갱신
-
-export default function StandingsTable({ standings = [], onTeamClick, dataSource = 'mock' }) {
+export default function StandingsTable({ standings = [], prevStandings = null, onTeamClick, dataSource = 'mock' }) {
   const [hoveredRow, setHoveredRow] = useState(null)
-  const [rankChanges, setRankChanges] = useState({})
-  const didInit = useRef(false)
   const dateStr = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
 
-  useEffect(() => {
-    if (!standings.length || didInit.current) return
-    didInit.current = true
-
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      const snap = raw ? JSON.parse(raw) : null
-
-      if (snap?.ranks) {
-        const changes = {}
-        standings.forEach(s => {
-          const prev = snap.ranks[s.team]
-          changes[s.team] = prev !== undefined ? prev - s.rank : undefined
-        })
-        setRankChanges(changes)
-      }
-
-      // 1시간 이상 지났거나 스냅샷 없으면 현재로 갱신
-      if (!snap || Date.now() - snap.savedAt > SNAPSHOT_TTL) {
-        const ranks = Object.fromEntries(standings.map(s => [s.team, s.rank]))
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ranks, savedAt: Date.now() }))
-      }
-    } catch { /* ignore */ }
-  }, [standings])
+  // 직전 경기 기준 순위 변동: 서버가 날짜 교체 시 저장한 prevStandings와 비교
+  const rankChanges = useMemo(() => {
+    if (!prevStandings?.length) return {}
+    const prevMap = Object.fromEntries(prevStandings.map(s => [s.team, s.rank]))
+    const changes = {}
+    standings.forEach(s => {
+      const prev = prevMap[s.team]
+      if (prev !== undefined) changes[s.team] = prev - s.rank
+    })
+    return changes
+  }, [standings, prevStandings])
 
   return (
     <section style={{ width: '100%', padding: '0 24px 40px' }}>

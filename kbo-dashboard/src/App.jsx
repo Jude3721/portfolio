@@ -28,6 +28,7 @@ function App() {
   const [selectedTeam, setSelectedTeam]       = useState(null)
   const [games, setGames]                     = useState(mockGames)
   const [standings, setStandings]             = useState(mockStandings)
+  const [prevStandings, setPrevStandings]     = useState(null)
   const [standingsSource, setStandingsSource] = useState('mock')
   const [lastUpdated, setLastUpdated]         = useState(new Date())
   const [isRefreshing, setIsRefreshing]       = useState(false)
@@ -70,9 +71,15 @@ function App() {
       setDataSource('mock')
     }
     try {
-      const liveStandings = await fetchStandings()
-      if (liveStandings.length > 0) { setStandings(liveStandings); setStandingsSource('live') }
-      else { setStandings(mockStandings); setStandingsSource('mock') }
+      const { standings: liveStandings, prevStandings: livePrev } = await fetchStandings()
+      if (liveStandings.length > 0) {
+        setStandings(liveStandings)
+        setStandingsSource('live')
+        if (livePrev) setPrevStandings(livePrev)
+      } else {
+        setStandings(mockStandings)
+        setStandingsSource('mock')
+      }
     } catch (err) {
       console.warn('순위 API 오류, mock 사용:', err.message)
       setStandings(mockStandings)
@@ -240,7 +247,7 @@ function App() {
       {activeTab === 'games' && (
         <>
           <TodayGameList games={games} standings={standings} />
-          <StandingsTable standings={standings} onTeamClick={setSelectedTeam} dataSource={standingsSource} />
+          <StandingsTable standings={standings} prevStandings={prevStandings} onTeamClick={setSelectedTeam} dataSource={standingsSource} />
         </>
       )}
       {activeTab === 'injury' && <InjuryPage />}

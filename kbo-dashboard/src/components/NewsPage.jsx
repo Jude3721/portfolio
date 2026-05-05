@@ -136,7 +136,7 @@ export default function NewsPage() {
             구단별 뉴스
           </h2>
           <p style={{ fontSize: '13px', color: 'rgba(var(--fg-rgb),0.32)' }}>
-            구단을 선택하면 최신 뉴스를 확인할 수 있습니다
+            최근 5일 이내 뉴스를 구단별로 확인할 수 있습니다
           </p>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -198,7 +198,7 @@ export default function NewsPage() {
         </div>
         <div style={{ width: '3px', height: '18px', borderRadius: '99px', background: team.color }} />
         <span style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(var(--fg-rgb),0.8)' }}>
-          {team.name} 최신 뉴스
+          {team.name} 최근 5일 뉴스
         </span>
       </div>
 
@@ -220,7 +220,7 @@ export default function NewsPage() {
             뉴스가 없습니다
           </p>
           <p style={{ fontSize: '13px', color: 'rgba(var(--fg-rgb),0.28)' }}>
-            {dataSource === 'error' ? '데이터를 불러올 수 없습니다' : '최신 뉴스가 없습니다'}
+            {dataSource === 'error' ? '데이터를 불러올 수 없습니다' : '최근 5일 이내 뉴스가 없습니다'}
           </p>
         </div>
       )}
