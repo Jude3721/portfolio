@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import GameCard from './components/GameCard'
 import StandingsTable from './components/StandingsTable'
+import PlayoffBracket from './components/PlayoffBracket'
 import { fetchTodayGames, fetchStandings } from './services/nbaApi'
 import './App.css'
 
@@ -141,6 +142,8 @@ export default function App() {
             }
           </section>
         )}
+
+        {activeTab === 'games' && <PlayoffBracket />}
 
         {activeTab === 'standings' && (
           <StandingsTable standings={standings} />

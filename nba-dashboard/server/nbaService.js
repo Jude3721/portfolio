@@ -233,3 +233,91 @@ function getCurrentSeason() {
   const startYear = month >= 10 ? year : year - 1
   return `${startYear}-${String(startYear + 1).slice(2)}`
 }
+
+// ─── 플레이오프 브래킷 ──────────────────────────────────────────
+const playoffCache = { data: null, exp: 0 }
+const TTL_PLAYOFF  = 120_000 // 2분
+
+const ROUND_LABEL = { '01': '1라운드', '02': '컨퍼런스 세미파이널', '03': '컨퍼런스 파이널', '04': 'NBA 파이널' }
+
+export async function fetchPlayoffBracket() {
+  if (playoffCache.data && Date.now() < playoffCache.exp) return playoffCache.data
+
+  const season = getCurrentSeason()
+  console.log(`[NBA] 플레이오프 브래킷 조회: ${season}`)
+
+  // 시리즈 구조 + 경기 결과 병렬 fetch
+  const [seriesRes, logRes] = await Promise.all([
+    fetch(`https://stats.nba.com/stats/commonplayoffseries?LeagueID=00&Season=${season}&SeriesID=`, { headers: STATS_HEADERS }),
+    fetch(`https://stats.nba.com/stats/leaguegamelog?LeagueID=00&Season=${season}&SeasonType=Playoffs&PlayerOrTeam=T&Direction=DESC&Sorter=DATE`, { headers: STATS_HEADERS }),
+  ])
+  if (!seriesRes.ok) throw new Error(`playoff series ${seriesRes.status}`)
+  if (!logRes.ok)    throw new Error(`playoff gamelog ${logRes.status}`)
+
+  const seriesJson = await seriesRes.json()
+  const logJson    = await logRes.json()
+
+  // 시리즈별 팀-게임 매핑
+  const seriesRows = seriesJson.resultSets[0].rowSet ?? []
+  const seriesMap  = new Map() // seriesId → { seriesId, homeId, visitorId, gameIds[] }
+  for (const [gameId, homeId, visitorId, seriesId] of seriesRows) {
+    if (!seriesMap.has(seriesId)) seriesMap.set(seriesId, { seriesId, homeId, visitorId, gameIds: new Set() })
+    seriesMap.get(seriesId).gameIds.add(gameId)
+  }
+
+  // 게임 결과 집계: gameId → { winnerId }
+  const logHeaders = logJson.resultSets[0].headers
+  const logRows    = logJson.resultSets[0].rowSet ?? []
+  const iTeamId    = logHeaders.indexOf('TEAM_ID')
+  const iGameId    = logHeaders.indexOf('GAME_ID')
+  const iWL        = logHeaders.indexOf('WL')
+  const gameWinner = new Map() // gameId → winnerId
+  for (const row of logRows) {
+    if (row[iWL] === 'W') gameWinner.set(row[iGameId], row[iTeamId])
+  }
+
+  // 시리즈별 승수 계산
+  const bracket = {}
+  for (const [seriesId, { homeId, visitorId, gameIds }] of seriesMap) {
+    const roundCode = seriesId.slice(6, 8)  // e.g. '01', '02'
+    const seriesNum = parseInt(seriesId.slice(8), 10)
+    const conf      = roundCode === '01'
+      ? (seriesNum <= 3 ? 'East' : 'West')
+      : (roundCode === '02' ? (seriesNum <= 1 ? 'East' : 'West') : 'Finals')
+
+    let homeWins = 0, visitorWins = 0
+    for (const gId of gameIds) {
+      const winner = gameWinner.get(gId)
+      if (winner === homeId)    homeWins++
+      else if (winner === visitorId) visitorWins++
+    }
+
+    const isComplete = homeWins === 4 || visitorWins === 4
+    const winnerId   = isComplete ? (homeWins === 4 ? homeId : visitorId) : null
+
+    const entry = {
+      seriesId,
+      roundCode,
+      roundLabel: ROUND_LABEL[roundCode] ?? roundCode,
+      conf,
+      home:    { teamId: homeId,    tricode: ID_TO_TRI[homeId]    ?? '', wins: homeWins },
+      visitor: { teamId: visitorId, tricode: ID_TO_TRI[visitorId] ?? '', wins: visitorWins },
+      isComplete,
+      winnerId,
+      winnerTricode: winnerId ? ID_TO_TRI[winnerId] : null,
+    }
+
+    if (!bracket[roundCode]) bracket[roundCode] = []
+    bracket[roundCode].push(entry)
+  }
+
+  // 라운드별 정렬
+  const rounds = ['01', '02', '03', '04']
+    .filter(r => bracket[r])
+    .map(r => ({ code: r, label: ROUND_LABEL[r], series: bracket[r] }))
+
+  console.log(`[NBA] 플레이오프: ${rounds.length}라운드, 총 ${Object.values(bracket).flat().length}시리즈`)
+  playoffCache.data = rounds
+  playoffCache.exp  = Date.now() + TTL_PLAYOFF
+  return rounds
+}
