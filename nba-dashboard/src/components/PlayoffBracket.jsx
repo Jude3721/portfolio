@@ -1,144 +1,90 @@
 import { useEffect, useState } from 'react'
 import { NBA_TEAMS } from '../data/nbaTeams'
 
+const SLOT = 180   // R1 카드 1슬롯 높이(px)
+const CARD_W = 196 // 카드 폭(px)
+const LINE   = 'rgba(255,255,255,0.12)'
+
 /* ─── 시리즈 카드 ─────────────────────────────────────────────── */
 function SeriesCard({ series }) {
-  const ht  = NBA_TEAMS[series.home.tricode]    ?? { color: '#444', logo: '', name: series.home.tricode }
-  const vt  = NBA_TEAMS[series.visitor.tricode] ?? { color: '#444', logo: '', name: series.visitor.tricode }
-  const hw  = series.home.wins
-  const vw  = series.visitor.wins
+  const ht = NBA_TEAMS[series.home.tricode]    ?? { color: '#555', logo: '', name: '' }
+  const vt = NBA_TEAMS[series.visitor.tricode] ?? { color: '#555', logo: '', name: '' }
+  const hw = series.home.wins
+  const vw = series.visitor.wins
 
   const homeWon    = series.isComplete && series.winnerId === series.home.teamId
   const visitorWon = series.isComplete && series.winnerId === series.visitor.teamId
   const active     = !series.isComplete && (hw + vw) > 0
   const upcoming   = !series.isComplete && hw === 0 && vw === 0
+  const leader     = hw > vw ? series.home.tricode : vw > hw ? series.visitor.tricode : null
 
-  const leaderTri = hw > vw ? series.home.tricode : vw > hw ? series.visitor.tricode : null
-  const statusBadge = series.isComplete
-    ? { text: `${series.winnerTricode} 4강 진출`, bg: 'rgba(251,191,36,0.12)', color: '#fbbf24', border: 'rgba(251,191,36,0.3)' }
+  const badge = series.isComplete
+    ? { text: `${series.winnerTricode} 진출 🏆`, bg: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: 'rgba(251,191,36,0.25)' }
     : upcoming
-    ? { text: '대기 중',   bg: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', border: 'rgba(255,255,255,0.08)' }
-    : { text: `${leaderTri} ${Math.max(hw,vw)}-${Math.min(hw,vw)} 리드`, bg: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: 'rgba(96,165,250,0.25)' }
+    ? { text: '대기 중',  bg: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.25)', border: 'rgba(255,255,255,0.07)' }
+    : { text: `${leader} ${Math.max(hw,vw)}-${Math.min(hw,vw)} 리드`, bg: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: 'rgba(96,165,250,0.22)' }
 
   return (
     <div style={{
-      borderRadius: '18px',
+      width: CARD_W, borderRadius: '16px', overflow: 'hidden',
       background: 'rgba(255,255,255,0.04)',
-      border: `1px solid ${active ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.07)'}`,
-      overflow: 'hidden',
-      opacity: series.isComplete ? 0.7 : 1,
-      transition: 'opacity 0.2s',
-      minWidth: '200px',
+      border: `1px solid ${active ? 'rgba(255,255,255,0.13)' : 'rgba(255,255,255,0.07)'}`,
+      opacity: series.isComplete ? 0.72 : 1,
     }}>
-      {/* 상단 컬러 바 */}
-      <div style={{
-        height: '3px',
-        background: `linear-gradient(to right, ${vt.color}, ${ht.color})`,
-      }} />
-
-      <div style={{ padding: '14px 14px 10px' }}>
-        {/* 원정팀 */}
-        <TeamRow
-          team={vt}
-          tricode={series.visitor.tricode}
-          wins={vw}
-          isWinner={visitorWon}
-          isLoser={homeWon}
-          isLive={active}
-        />
-
-        {/* 시리즈 스코어 */}
+      <div style={{ height: '3px', background: `linear-gradient(to right,${vt.color},${ht.color})` }} />
+      <div style={{ padding: '12px 12px 8px' }}>
+        <TeamRow team={vt} tri={series.visitor.tricode} wins={vw} won={visitorWon} lost={homeWon} />
+        {/* 스코어 */}
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: '12px', padding: '8px 0 6px',
-          borderTop: '1px solid rgba(255,255,255,0.05)',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
-          margin: '8px 0',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+          padding: '6px 0', margin: '6px 0',
+          borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)',
         }}>
-          <span style={{
-            fontSize: '28px', fontWeight: 900, letterSpacing: '-1px', lineHeight: 1,
-            color: visitorWon ? '#fbbf24' : upcoming ? 'rgba(255,255,255,0.15)' : vw > hw ? '#fff' : 'rgba(255,255,255,0.3)',
-          }}>{vw}</span>
-          <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.2)', fontWeight: 300 }}>─</span>
-          <span style={{
-            fontSize: '28px', fontWeight: 900, letterSpacing: '-1px', lineHeight: 1,
-            color: homeWon ? '#fbbf24' : upcoming ? 'rgba(255,255,255,0.15)' : hw > vw ? '#fff' : 'rgba(255,255,255,0.3)',
-          }}>{hw}</span>
+          <span style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-1px', lineHeight: 1,
+            color: visitorWon ? '#fbbf24' : upcoming ? 'rgba(255,255,255,0.13)' : vw >= hw ? '#fff' : 'rgba(255,255,255,0.28)' }}>
+            {vw}
+          </span>
+          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.18)' }}>─</span>
+          <span style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-1px', lineHeight: 1,
+            color: homeWon ? '#fbbf24' : upcoming ? 'rgba(255,255,255,0.13)' : hw >= vw ? '#fff' : 'rgba(255,255,255,0.28)' }}>
+            {hw}
+          </span>
         </div>
-
-        {/* 홈팀 */}
-        <TeamRow
-          team={ht}
-          tricode={series.home.tricode}
-          wins={hw}
-          isWinner={homeWon}
-          isLoser={visitorWon}
-          isLive={active}
-        />
+        <TeamRow team={ht} tri={series.home.tricode} wins={hw} won={homeWon} lost={visitorWon} />
       </div>
-
-      {/* 상태 배지 */}
       <div style={{
-        margin: '0 10px 10px',
-        padding: '5px 10px',
-        borderRadius: '8px',
-        background: statusBadge.bg,
-        border: `1px solid ${statusBadge.border}`,
-        textAlign: 'center',
-        fontSize: '11px', fontWeight: 700, letterSpacing: '0.3px',
-        color: statusBadge.color,
-      }}>
-        {series.isComplete && '🏆 '}{statusBadge.text}
-      </div>
+        margin: '0 8px 8px', padding: '4px 8px', borderRadius: '7px', textAlign: 'center',
+        fontSize: '10px', fontWeight: 700, letterSpacing: '0.2px',
+        background: badge.bg, border: `1px solid ${badge.border}`, color: badge.color,
+      }}>{badge.text}</div>
     </div>
   )
 }
 
-function TeamRow({ team, tricode, wins, isWinner, isLoser, isLive }) {
-  const color = team.color
+function TeamRow({ team, tri, wins, won, lost }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: '10px',
-      opacity: isLoser ? 0.28 : 1,
-      transition: 'opacity 0.2s',
-    }}>
-      {/* 로고 */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: lost ? 0.27 : 1 }}>
       <div style={{
-        width: '36px', height: '36px', flexShrink: 0,
-        borderRadius: '50%',
-        background: isWinner ? `${color}22` : 'rgba(255,255,255,0.04)',
+        width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
+        background: won ? `${team.color}22` : 'rgba(255,255,255,0.04)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: isWinner ? `0 0 12px ${color}55` : 'none',
-        transition: 'all 0.3s',
+        boxShadow: won ? `0 0 10px ${team.color}55` : 'none',
       }}>
-        <img src={team.logo} alt={tricode}
-          style={{ width: '78%', height: '78%', objectFit: 'contain' }}
-          onError={e => e.target.style.display = 'none'}
-        />
+        <img src={team.logo} alt={tri} style={{ width: '78%', height: '78%', objectFit: 'contain' }}
+          onError={e => e.target.style.display = 'none'} />
       </div>
-
-      {/* 팀명 */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontSize: '13px', fontWeight: isWinner ? 800 : 600,
-          color: isWinner ? '#fff' : 'rgba(255,255,255,0.75)',
-          letterSpacing: '0.2px',
-        }}>{tricode}</div>
-        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {team.name}
-        </div>
+        <div style={{ fontSize: '12px', fontWeight: won ? 800 : 600,
+          color: won ? '#fff' : 'rgba(255,255,255,0.72)', letterSpacing: '0.2px' }}>{tri}</div>
+        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.27)', marginTop: '1px',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{team.name}</div>
       </div>
-
-      {/* 승수 도트 */}
-      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '3px' }}>
         {[0,1,2,3].map(i => (
           <div key={i} style={{
-            width: '9px', height: '9px', borderRadius: '50%',
-            background: i < wins
-              ? (isWinner ? '#fbbf24' : color)
-              : 'rgba(255,255,255,0.1)',
-            boxShadow: i < wins && isWinner ? `0 0 6px ${color}` : 'none',
-            transition: 'all 0.3s',
+            width: '8px', height: '8px', borderRadius: '50%',
+            background: i < wins ? (won ? '#fbbf24' : team.color) : 'rgba(255,255,255,0.1)',
+            boxShadow: i < wins && won ? `0 0 5px ${team.color}` : 'none',
           }} />
         ))}
       </div>
@@ -146,42 +92,123 @@ function TeamRow({ team, tricode, wins, isWinner, isLoser, isLive }) {
   )
 }
 
-/* ─── 라운드 컬럼 ────────────────────────────────────────────── */
-function RoundColumn({ round, confFilter, showConnector }) {
-  const series = round.series.filter(s =>
-    confFilter === 'all' ? true : s.conf === confFilter
+/* ─── 플레이스홀더 ─────────────────────────────────────────────── */
+function PlaceholderCard({ label }) {
+  return (
+    <div style={{
+      width: CARD_W, borderRadius: '16px', overflow: 'hidden',
+      background: 'rgba(255,255,255,0.02)',
+      border: '1px dashed rgba(255,255,255,0.07)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      gap: '6px', minHeight: '110px',
+    }}>
+      <div style={{ fontSize: '18px', opacity: 0.15 }}>🏀</div>
+      <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.18)', fontWeight: 600 }}>{label}</div>
+    </div>
   )
-  if (series.length === 0) return null
+}
+
+/* ─── 연결선 (라운드 → 다음 라운드) ─────────────────────────────── */
+// dir: 'right' (East쪽, 오른쪽으로 연결) | 'left' (West쪽, 왼쪽으로 연결)
+function Connector({ pairCount, dir = 'right' }) {
+  const items = Array.from({ length: pairCount })
+  const bR = dir === 'right' ? '0 4px 4px 0' : '4px 0 0 4px'
+  const bL = dir === 'right' ? '4px 0 0 4px' : '0 4px 4px 0' // unused
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: '0 0 auto', width: '204px' }}>
-      {series.map((s, i) => (
-        <div key={s.seriesId} style={{ display: 'flex', alignItems: 'center' }}>
-          <SeriesCard series={s} />
-          {showConnector && (
+    <div style={{ display: 'flex', flexDirection: 'column', width: '18px', flexShrink: 0 }}>
+      {items.map((_, i) => {
+        const h = SLOT * 2
+        return (
+          <div key={i} style={{ height: h, position: 'relative', flexShrink: 0 }}>
+            {/* 위쪽 절반 세로선 */}
             <div style={{
-              width: '16px', height: '2px',
-              background: 'rgba(255,255,255,0.08)',
-              flexShrink: 0,
+              position: 'absolute',
+              top: 0, height: '50%',
+              [dir === 'right' ? 'left' : 'right']: 0,
+              width: '1px', background: LINE,
             }} />
-          )}
+            {/* 아래쪽 절반 세로선 */}
+            <div style={{
+              position: 'absolute',
+              bottom: 0, height: '50%',
+              [dir === 'right' ? 'left' : 'right']: 0,
+              width: '1px', background: LINE,
+            }} />
+            {/* 가로선 (중앙에서 반대쪽으로) */}
+            <div style={{
+              position: 'absolute',
+              top: '50%', left: 0, right: 0,
+              height: '1px', background: LINE,
+            }} />
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ─── 브래킷 컬럼 ─────────────────────────────────────────────── */
+function BracketCol({ series, slotsPerCard, placeholder, placeholderLabel, placeholderCount }) {
+  if (placeholder) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+        {Array.from({ length: placeholderCount }).map((_, i) => (
+          <div key={i} style={{
+            height: SLOT * slotsPerCard,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '6px 0',
+          }}>
+            <PlaceholderCard label={placeholderLabel} />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+      {series.map(s => (
+        <div key={s.seriesId} style={{
+          height: SLOT * slotsPerCard,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '6px 0',
+        }}>
+          <SeriesCard series={s} />
         </div>
       ))}
     </div>
   )
 }
 
-/* ─── 메인 컴포넌트 ──────────────────────────────────────────── */
+/* ─── 라운드 헤더 ─────────────────────────────────────────────── */
+function RoundHeader({ label, width, color, active }) {
+  return (
+    <div style={{
+      width, textAlign: 'center', fontSize: '10px', fontWeight: 800,
+      letterSpacing: '0.8px', padding: '4px 0 10px',
+      color: active ? color : 'rgba(255,255,255,0.3)',
+    }}>
+      {label.toUpperCase()}
+      {active && <span style={{
+        display: 'inline-block', width: '5px', height: '5px', borderRadius: '50%',
+        background: color, marginLeft: '5px', verticalAlign: 'middle',
+        boxShadow: `0 0 6px ${color}`,
+      }} />}
+    </div>
+  )
+}
+
+/* ─── 메인 ─────────────────────────────────────────────────────── */
 export default function PlayoffBracket() {
   const [rounds, setRounds]   = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
 
   useEffect(() => {
     fetch('/api/playoff')
       .then(r => r.json())
       .then(d => { setRounds(d.rounds ?? []); setLoading(false) })
-      .catch(e => { setError(e.message); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [])
 
   if (loading) return (
@@ -191,152 +218,134 @@ export default function PlayoffBracket() {
       </div>
     </section>
   )
-  if (error || rounds.length === 0) return null
+  if (rounds.length === 0) return null
 
-  const activeRound = rounds.filter(r => r.series.some(s => !s.isComplete)).at(-1)?.label ?? ''
+  const getConf = (code, conf) => {
+    const r = rounds.find(r => r.code === code)
+    if (!r) return []
+    return r.series.filter(s => s.conf === conf).sort((a, b) => a.seriesId < b.seriesId ? -1 : 1)
+  }
 
-  const ROUND_ORDER = ['01', '02', '03', '04']
-  const orderedRounds = ROUND_ORDER.map(code => rounds.find(r => r.code === code)).filter(Boolean)
+  const r1E  = getConf('01', 'East')
+  const r1W  = getConf('01', 'West')
+  const r2E  = getConf('02', 'East')
+  const r2W  = getConf('02', 'West')
+  const cfE  = getConf('03', 'East')
+  const cfW  = getConf('03', 'West')
+  const fin  = rounds.find(r => r.code === '04')?.series ?? []
 
-  // 플레이스홀더 라운드 (아직 시작 안 한 라운드)
-  const ROUND_LABELS = { '03': '컨퍼런스 파이널', '04': 'NBA 파이널' }
-  const existCodes   = new Set(rounds.map(r => r.code))
-  const placeholder  = ['03', '04'].filter(c => !existCodes.has(c)).map(c => ({
-    code: c, label: ROUND_LABELS[c], series: [], placeholder: true,
-  }))
-  const allRounds = [...orderedRounds, ...placeholder]
+  const hasR2  = r2E.length > 0 || r2W.length > 0
+  const hasCF  = cfE.length > 0 || cfW.length > 0
+  const hasFin = fin.length > 0
+
+  const activeCode = rounds.filter(r => r.series.some(s => !s.isComplete)).at(-1)?.code
+  const isActive = (code) => code === activeCode
+
+  const totalH = SLOT * 4   // R1×4 = 4슬롯
+  const EAST_COLOR = '#4FC3F7'
+  const WEST_COLOR = '#FF8A65'
+  const GOLD_COLOR = '#fbbf24'
+
+  // 헤더 행 너비 계산
+  const colW  = CARD_W        // 카드 컬럼
+  const conW  = 18            // 커넥터 컬럼
+  const gapW  = 0
 
   return (
     <section style={{ padding: '0 24px 48px' }}>
-      {/* 헤더 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#fff', letterSpacing: '-0.3px' }}>
-          🏆 플레이오프 브래킷
-        </h2>
-        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)' }}>
-          2025-26 시즌
-        </span>
-        {activeRound && (
-          <span style={{
-            marginLeft: 'auto',
-            fontSize: '11px', fontWeight: 700, padding: '3px 10px',
-            borderRadius: '99px', letterSpacing: '0.3px',
-            background: 'rgba(96,165,250,0.12)', color: '#60a5fa',
-            border: '1px solid rgba(96,165,250,0.25)',
-          }}>
-            ● {activeRound} 진행 중
-          </span>
-        )}
-      </div>
-
-      {/* 컨퍼런스 레이블 */}
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
-        <div style={{
-          flex: 1, padding: '6px 14px', borderRadius: '8px',
-          background: 'rgba(79,195,247,0.07)', border: '1px solid rgba(79,195,247,0.15)',
-          fontSize: '11px', fontWeight: 800, letterSpacing: '1px', color: '#4FC3F7',
-        }}>
-          ⬛ EASTERN CONFERENCE
-        </div>
-        <div style={{
-          flex: 1, padding: '6px 14px', borderRadius: '8px',
-          background: 'rgba(255,138,101,0.07)', border: '1px solid rgba(255,138,101,0.15)',
-          fontSize: '11px', fontWeight: 800, letterSpacing: '1px', color: '#FF8A65',
-        }}>
-          ⬛ WESTERN CONFERENCE
+      {/* 섹션 헤더 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#fff' }}>🏆 플레이오프 브래킷</h2>
+        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)' }}>2025-26 시즌</span>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: EAST_COLOR, fontWeight: 700 }}>◀ EAST</span>
+          <span style={{ fontSize: '11px', color: GOLD_COLOR, fontWeight: 700 }}>FINALS</span>
+          <span style={{ fontSize: '11px', color: WEST_COLOR, fontWeight: 700 }}>WEST ▶</span>
         </div>
       </div>
 
-      {/* 브래킷 래퍼 */}
       <div style={{ overflowX: 'auto', paddingBottom: '8px' }}>
-        {/* EAST 행 */}
-        <ConferenceRow rounds={allRounds} conf="East" color="#4FC3F7" />
-        <div style={{ height: '16px' }} />
-        {/* WEST 행 */}
-        <ConferenceRow rounds={allRounds} conf="West" color="#FF8A65" />
+        {/* ── 라운드 헤더 행 ── */}
+        <div style={{ display: 'flex', marginBottom: '0', alignItems: 'center' }}>
+          {/* East side headers */}
+          <RoundHeader label="1라운드" width={colW} color={EAST_COLOR} active={isActive('01')} />
+          <div style={{ width: conW }} />
+          <RoundHeader label="세미파이널" width={colW} color={EAST_COLOR} active={isActive('02')} />
+          <div style={{ width: conW }} />
+          <RoundHeader label="컨퍼런스 파이널" width={colW} color={EAST_COLOR} active={isActive('03')} />
+          <div style={{ width: conW }} />
+          {/* Finals */}
+          <RoundHeader label="NBA 파이널" width={colW} color={GOLD_COLOR} active={isActive('04')} />
+          <div style={{ width: conW }} />
+          {/* West side headers */}
+          <RoundHeader label="컨퍼런스 파이널" width={colW} color={WEST_COLOR} active={isActive('03')} />
+          <div style={{ width: conW }} />
+          <RoundHeader label="세미파이널" width={colW} color={WEST_COLOR} active={isActive('02')} />
+          <div style={{ width: conW }} />
+          <RoundHeader label="1라운드" width={colW} color={WEST_COLOR} active={isActive('01')} />
+        </div>
+
+        {/* ── 컨퍼런스 레이블 ── */}
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
+          <div style={{
+            flex: 1, padding: '5px 12px', borderRadius: '8px',
+            background: 'rgba(79,195,247,0.07)', border: '1px solid rgba(79,195,247,0.14)',
+            fontSize: '10px', fontWeight: 800, letterSpacing: '1px', color: EAST_COLOR,
+          }}>EASTERN CONFERENCE</div>
+          <div style={{
+            flex: 1, padding: '5px 12px', borderRadius: '8px',
+            background: 'rgba(255,138,101,0.07)', border: '1px solid rgba(255,138,101,0.14)',
+            fontSize: '10px', fontWeight: 800, letterSpacing: '1px', color: WEST_COLOR, textAlign: 'right',
+          }}>WESTERN CONFERENCE</div>
+        </div>
+
+        {/* ── 브래킷 본체 ── */}
+        <div style={{ display: 'flex', alignItems: 'stretch' }}>
+
+          {/* ── EAST 1R ── */}
+          <BracketCol series={r1E} slotsPerCard={1} />
+          <Connector pairCount={2} dir="right" />
+
+          {/* ── EAST 2R ── */}
+          {hasR2
+            ? <BracketCol series={r2E} slotsPerCard={2} />
+            : <BracketCol placeholder placeholderLabel="대기 중" placeholderCount={2} slotsPerCard={2} />
+          }
+          <Connector pairCount={1} dir="right" />
+
+          {/* ── EAST CF ── */}
+          {hasCF
+            ? <BracketCol series={cfE} slotsPerCard={4} />
+            : <BracketCol placeholder placeholderLabel="ECF 대기" placeholderCount={1} slotsPerCard={4} />
+          }
+          <Connector pairCount={1} dir="right" />
+
+          {/* ── FINALS ── */}
+          {hasFin
+            ? <BracketCol series={fin} slotsPerCard={4} />
+            : <BracketCol placeholder placeholderLabel="NBA 파이널" placeholderCount={1} slotsPerCard={4} />
+          }
+
+          <Connector pairCount={1} dir="left" />
+
+          {/* ── WEST CF ── */}
+          {hasCF
+            ? <BracketCol series={cfW} slotsPerCard={4} />
+            : <BracketCol placeholder placeholderLabel="WCF 대기" placeholderCount={1} slotsPerCard={4} />
+          }
+          <Connector pairCount={1} dir="left" />
+
+          {/* ── WEST 2R ── */}
+          {hasR2
+            ? <BracketCol series={r2W} slotsPerCard={2} />
+            : <BracketCol placeholder placeholderLabel="대기 중" placeholderCount={2} slotsPerCard={2} />
+          }
+          <Connector pairCount={2} dir="left" />
+
+          {/* ── WEST 1R ── */}
+          <BracketCol series={r1W} slotsPerCard={1} />
+        </div>
       </div>
     </section>
-  )
-}
-
-/* ─── 컨퍼런스 행 ────────────────────────────────────────────── */
-function ConferenceRow({ rounds, conf, color }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
-      {rounds.map((round, ri) => {
-        const isFinals = round.code === '04'
-        const series   = isFinals
-          ? round.series
-          : round.series.filter(s => s.conf === conf)
-        const isLast   = ri === rounds.length - 1
-
-        return (
-          <div key={round.code} style={{ display: 'flex', alignItems: 'center' }}>
-            {/* 라운드 컬럼 */}
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {/* 라운드 헤더 */}
-              <div style={{
-                fontSize: '10px', fontWeight: 700, letterSpacing: '0.8px',
-                color: round.placeholder ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.4)',
-                textAlign: 'center',
-                marginBottom: '8px',
-                padding: '4px 6px',
-                borderRadius: '6px',
-                background: round.placeholder ? 'transparent' : 'rgba(255,255,255,0.04)',
-              }}>
-                {round.label.toUpperCase()}
-              </div>
-
-              {/* 시리즈 카드 or 플레이스홀더 */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '204px' }}>
-                {round.placeholder || series.length === 0
-                  ? <PlaceholderCard conf={conf} round={round.label} color={color} />
-                  : series.map(s => <SeriesCard key={s.seriesId} series={s} />)
-                }
-              </div>
-            </div>
-
-            {/* 라운드 간 화살표 */}
-            {!isLast && (
-              <div style={{
-                width: '24px', height: '2px', flexShrink: 0, alignSelf: 'center',
-                background: `linear-gradient(to right, rgba(255,255,255,0.1), ${color}44)`,
-                position: 'relative',
-                marginTop: '24px',
-              }}>
-                <div style={{
-                  position: 'absolute', right: '-4px', top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: 0, height: 0,
-                  borderTop: '4px solid transparent',
-                  borderBottom: '4px solid transparent',
-                  borderLeft: `6px solid ${color}55`,
-                }} />
-              </div>
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-function PlaceholderCard({ conf, round, color }) {
-  return (
-    <div style={{
-      borderRadius: '18px',
-      background: 'rgba(255,255,255,0.02)',
-      border: '1px dashed rgba(255,255,255,0.07)',
-      minWidth: '204px',
-      padding: '20px 14px',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      gap: '6px',
-      minHeight: '110px',
-    }}>
-      <div style={{ fontSize: '20px', opacity: 0.2 }}>🏀</div>
-      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', fontWeight: 600, textAlign: 'center' }}>
-        {round} 대기 중
-      </div>
-    </div>
   )
 }
