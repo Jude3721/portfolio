@@ -219,9 +219,14 @@ export default function PlayoffBracket() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchPlayoffBracket()
-      .then(rounds => { setRounds(rounds); setLoading(false) })
-      .catch(() => setLoading(false))
+    const load = () =>
+      fetchPlayoffBracket()
+        .then(rounds => { setRounds(rounds); setLoading(false) })
+        .catch(() => setLoading(false))
+
+    load()
+    const id = setInterval(load, 120_000)
+    return () => clearInterval(id)
   }, [])
 
   if (loading) return (
