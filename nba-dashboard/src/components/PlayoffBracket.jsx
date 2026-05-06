@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NBA_TEAMS } from '../data/nbaTeams'
+import { fetchPlayoffBracket } from '../services/nbaApi'
 
 const SLOT   = 180
 const CARD_W = 196
@@ -218,9 +219,8 @@ export default function PlayoffBracket() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/playoff')
-      .then(r => r.json())
-      .then(d => { setRounds(d.rounds ?? []); setLoading(false) })
+    fetchPlayoffBracket()
+      .then(rounds => { setRounds(rounds); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
 
