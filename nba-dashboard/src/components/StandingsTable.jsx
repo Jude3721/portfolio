@@ -67,8 +67,7 @@ export default function StandingsTable({ standings = [] }) {
     <section style={{ padding: '0 24px 40px' }}>
       {selected && (
         <RosterModal
-          team={selected.tricode}
-          teamId={selected.teamId}
+          teams={[{ tricode: selected.tricode, teamId: selected.teamId }]}
           onClose={() => setSelected(null)}
         />
       )}

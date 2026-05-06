@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NBA_TEAMS } from '../data/nbaTeams'
 import BoxscoreModal from './BoxscoreModal'
+import RosterModal from './RosterModal'
 
 function StatusBadge({ status, statusText }) {
   if (status === 'live')  return <span className="live-badge"><span className="live-dot" />LIVE</span>
@@ -45,7 +46,8 @@ function TeamBlock({ tricode, score, isWinner, status }) {
 }
 
 export default function GameCard({ game }) {
-  const [showBox, setShowBox] = useState(false)
+  const [showBox, setShowBox]       = useState(false)
+  const [showRoster, setShowRoster] = useState(false)
   const { status, period, gameClock, timeKST, awayTeam, homeTeam } = game
 
   const awayWins = status === 'final' && awayTeam.score > homeTeam.score
@@ -58,8 +60,17 @@ export default function GameCard({ game }) {
   return (
     <>
       {showBox && <BoxscoreModal gameId={game.gameId} game={game} onClose={() => setShowBox(false)} />}
+      {showRoster && (
+        <RosterModal
+          teams={[
+            { tricode: awayTeam.tricode, teamId: awayTeam.teamId },
+            { tricode: homeTeam.tricode, teamId: homeTeam.teamId },
+          ]}
+          onClose={() => setShowRoster(false)}
+        />
+      )}
       <div
-        onClick={() => setShowBox(true)}
+        onClick={() => status === 'scheduled' ? setShowRoster(true) : setShowBox(true)}
         style={{
           position: 'relative', borderRadius: '20px', padding: '20px',
           cursor: 'pointer', overflow: 'hidden',
@@ -111,7 +122,7 @@ export default function GameCard({ game }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
           fontSize: '12px', color: 'rgba(255,255,255,0.28)',
         }}>
-          {status === 'scheduled' && <span style={{ fontWeight: 700, fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>{timeKST} KST</span>}
+          {status === 'scheduled' && <><span style={{ fontWeight: 700, fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>{timeKST} KST</span><span>· 라인업 보기</span></>}
           {status === 'live'      && <span>{awayTeam.wins}-{awayTeam.losses} @ {homeTeam.wins}-{homeTeam.losses}</span>}
           {status === 'final'     && <span>클릭하여 박스스코어 보기</span>}
         </div>

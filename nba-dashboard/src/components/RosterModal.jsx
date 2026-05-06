@@ -25,7 +25,6 @@ function PlayerCard({ p, teamColor }) {
       onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
       onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
     >
-      {/* 선수 사진 */}
       <div style={{
         width: '44px', height: '44px', borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
         background: `${teamColor}22`,
@@ -49,7 +48,6 @@ function PlayerCard({ p, teamColor }) {
         </div>
       </div>
 
-      {/* 번호 */}
       <div style={{
         width: '28px', textAlign: 'right', flexShrink: 0,
         fontSize: '13px', fontWeight: 700, color: 'rgba(255,255,255,0.3)',
@@ -57,7 +55,6 @@ function PlayerCard({ p, teamColor }) {
         #{p.num}
       </div>
 
-      {/* 이름 */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {p.name}
@@ -67,7 +64,6 @@ function PlayerCard({ p, teamColor }) {
         </div>
       </div>
 
-      {/* 포지션 */}
       <div style={{
         padding: '3px 8px', borderRadius: '6px', flexShrink: 0,
         fontSize: '11px', fontWeight: 800, letterSpacing: '0.3px',
@@ -77,13 +73,11 @@ function PlayerCard({ p, teamColor }) {
         {p.position}
       </div>
 
-      {/* 나이 */}
       <div style={{ width: '30px', textAlign: 'center', flexShrink: 0 }}>
         <div style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>{p.age}</div>
         <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)' }}>AGE</div>
       </div>
 
-      {/* 경력 */}
       <div style={{ width: '28px', textAlign: 'center', flexShrink: 0 }}>
         <div style={{ fontSize: '12px', fontWeight: 600,
           color: expLabel === 'R' ? '#fbbf24' : 'rgba(255,255,255,0.5)' }}>
@@ -95,20 +89,30 @@ function PlayerCard({ p, teamColor }) {
   )
 }
 
-export default function RosterModal({ team, teamId, onClose }) {
-  const [players, setPlayers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const t = NBA_TEAMS[team] ?? { name: team, color: '#888', logo: '' }
+const POS_ORDER = { G: 0, 'G-F': 1, F: 2, 'F-G': 3, 'F-C': 4, C: 5, 'C-F': 6 }
+
+// teams: [{ tricode, teamId }, ...]
+export default function RosterModal({ teams, onClose }) {
+  const [activeIdx, setActiveIdx]   = useState(0)
+  const [rosterMap, setRosterMap]   = useState({})
+  const [loadingId, setLoadingId]   = useState(null)
+
+  const activeTeam = teams[activeIdx]
+  const t          = NBA_TEAMS[activeTeam.tricode] ?? { name: activeTeam.tricode, color: '#888', logo: '' }
+  const players    = rosterMap[activeTeam.teamId] ?? []
+  const isLoading  = loadingId === activeTeam.teamId || (rosterMap[activeTeam.teamId] === undefined && loadingId === null)
 
   useEffect(() => {
+    const { teamId } = teams[activeIdx]
+    if (rosterMap[teamId] !== undefined) return
+    setLoadingId(teamId)
     fetchRoster(teamId)
-      .then(setPlayers)
-      .catch(err => console.warn('roster 오류:', err.message))
-      .finally(() => setLoading(false))
-  }, [teamId])
+      .then(data => setRosterMap(prev => ({ ...prev, [teamId]: data })))
+      .catch(() => setRosterMap(prev => ({ ...prev, [teamId]: [] })))
+      .finally(() => setLoadingId(null))
+  }, [activeIdx])
 
-  const posOrder = { G: 0, 'G-F': 1, F: 2, 'F-G': 3, 'F-C': 4, C: 5, 'C-F': 6 }
-  const sorted = [...players].sort((a, b) => (posOrder[a.position] ?? 9) - (posOrder[b.position] ?? 9))
+  const sorted = [...players].sort((a, b) => (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9))
 
   return (
     <div
@@ -138,7 +142,7 @@ export default function RosterModal({ team, teamId, onClose }) {
             background: `${t.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: `0 0 16px ${t.color}44`,
           }}>
-            <img src={t.logo} alt={team}
+            <img src={t.logo} alt={activeTeam.tricode}
               style={{ width: '78%', height: '78%', objectFit: 'contain' }}
               onError={e => e.target.style.display = 'none'}
             />
@@ -146,7 +150,7 @@ export default function RosterModal({ team, teamId, onClose }) {
           <div>
             <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff' }}>{t.name}</div>
             <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>
-              {loading ? '로딩 중...' : `${players.length}명 로스터 · 2025-26`}
+              {isLoading ? '로딩 중...' : `${players.length}명 로스터 · 2025-26`}
             </div>
           </div>
           <button onClick={onClose} style={{
@@ -157,9 +161,36 @@ export default function RosterModal({ team, teamId, onClose }) {
           }}>✕</button>
         </div>
 
+        {/* 팀 탭 (2팀 이상일 때만) */}
+        {teams.length > 1 && (
+          <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            {teams.map((team, idx) => {
+              const teamInfo = NBA_TEAMS[team.tricode] ?? { color: '#888' }
+              const isActive = idx === activeIdx
+              return (
+                <button
+                  key={team.tricode}
+                  onClick={() => setActiveIdx(idx)}
+                  style={{
+                    flex: 1, padding: '12px', border: 'none', cursor: 'pointer',
+                    background: 'transparent',
+                    color: isActive ? '#fff' : 'rgba(255,255,255,0.35)',
+                    fontWeight: isActive ? 700 : 400,
+                    fontSize: '14px',
+                    borderBottom: isActive ? `2px solid ${teamInfo.color}` : '2px solid transparent',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {team.tricode} {idx === 0 ? '(원정)' : '(홈)'}
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         {/* 바디 */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
-          {loading
+          {isLoading
             ? <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: '14px' }}>로딩 중...</div>
             : <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {sorted.map(p => <PlayerCard key={p.playerId} p={p} teamColor={t.color} />)}
