@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KBO Dashboard — Design Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0d0d1a;
+    color: #e2e8f0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── 섹션 공통 ── */
+  .section {
+    padding: 60px 40px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .section-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #aa3bff;
+    background: rgba(170,59,255,0.12);
+    border: 1px solid rgba(170,59,255,0.3);
+    padding: 4px 12px;
+    border-radius: 99px;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #f1f5f9;
+  }
+  .section-desc {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 36px;
+  }
+
+  /* ══════════════════════════════════════════
+     예시 1 — Glassmorphism Cards
+  ══════════════════════════════════════════ */
+  #ex1 { background: linear-gradient(135deg, #0d0d1a 0%, #1a0a2e 50%, #0a1628 100%); }
+
+  .glass-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 960px;
+  }
+
+  .glass-card {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .glass-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glow);
+    opacity: 0.07;
+    border-radius: inherit;
+  }
+
+  .card-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    margin-bottom: 16px;
+  }
+
+  .live-dot {
+    width: 7px; height: 7px;
+    background: #ff4d4d;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #ff4d4d;
+    animation: blink 1.4s infinite;
+  }
+  @keyframes blink {
+    0%,100% { opacity:1; } 50% { opacity:0.2; }
+  }
+
+  .teams-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .team-block { text-align: center; }
+  .team-logo {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 900;
+    margin: 0 auto 6px;
+    color: #fff;
+  }
+  .team-name { font-size: 13px; color: #94a3b8; }
+  .score {
+    font-size: 42px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -2px;
+    color: #f1f5f9;
+  }
+  .vs-badge {
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 4px 8px;
+  }
+
+  /* 승률 바 */
+  .win-bar-wrap { margin-top: 14px; }
+  .win-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-bottom: 5px;
+  }
+  .win-bar-track {
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+  }
+  .win-bar-away, .win-bar-home {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 1s ease;
+  }
+
+  /* ══════════════════════════════════════════
+     예시 2 — Aurora Header
+  ══════════════════════════════════════════ */
+  #ex2 { background: #0d0d1a; }
+
+  .aurora-header {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    padding: 40px 36px;
+    max-width: 800px;
+    background: #0d0d1a;
+  }
+  .aurora-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 60% at 20% -10%, rgba(170,59,255,0.45), transparent),
+      radial-gradient(ellipse 50% 50% at 85% 10%,  rgba(56,182,255,0.35), transparent),
+      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(255,77,200,0.2),  transparent);
+    animation: aurora-move 8s ease-in-out infinite alternate;
+  }
+  @keyframes aurora-move {
+    0%   { opacity: 0.8; transform: scale(1); }
+    100% { opacity: 1;   transform: scale(1.05); }
+  }
+  .aurora-content { position: relative; z-index: 1; }
+  .aurora-title {
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, #fff 30%, #c084fc 70%, #38b6ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .aurora-sub { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 24px; }
+  .aurora-badges { display: flex; gap: 10px; flex-wrap: wrap; }
+  .aurora-badge {
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+  }
+  .badge-live-glow {
+    background: rgba(255,77,77,0.15);
+    border: 1px solid rgba(255,77,77,0.4);
+    color: #ff8080;
+    box-shadow: 0 0 12px rgba(255,77,77,0.3);
+    animation: neon-pulse-red 2s ease-in-out infinite;
+  }
+  @keyframes neon-pulse-red {
+    0%,100% { box-shadow: 0 0 8px rgba(255,77,77,0.4); }
+    50%      { box-shadow: 0 0 20px rgba(255,77,77,0.7); }
+  }
+  .badge-date {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #cbd5e1;
+  }
+  .badge-refresh {
+    background: rgba(170,59,255,0.15);
+    border: 1px solid rgba(170,59,255,0.4);
+    color: #c084fc;
+  }
+
+  /* nav tabs */
+  .aurora-tabs { display: flex; gap: 4px; margin-top: 24px; }
+  .a-tab {
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .a-tab.active {
+    background: rgba(170,59,255,0.25);
+    color: #c084fc;
+    border: 1px solid rgba(170,59,255,0.4);
+  }
+  .a-tab:not(.active) {
+    background: rgba(255,255,255,0.05);
+    color: #64748b;
+    border: 1px solid transparent;
+  }
+
+  /* ══════════════════════════════════════════
+     예시 3 — Bento Grid
+  ══════════════════════════════════════════ */
+  #ex3 { background: #111118; }
+
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto auto;
+    gap: 14px;
+    max-width: 960px;
+  }
+  .bento-card {
+    background: #1a1a28;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    padding: 22px;
+    transition: all 0.25s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .bento-card:hover {
+    border-color: rgba(170,59,255,0.3);
+    background: #1f1f32;
+    transform: translateY(-2px);
+  }
+  .bento-featured {
+    grid-column: span 2;
+    grid-row: span 2;
+    background: linear-gradient(145deg, #1a0a2e, #0a1020);
+    border-color: rgba(170,59,255,0.2);
+  }
+  .bento-featured:hover { border-color: rgba(170,59,255,0.5); }
+
+  .featured-score {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    margin: 30px 0 20px;
+  }
+  .big-score {
+    font-size: 72px;
+    font-weight: 900;
+    letter-spacing: -4px;
+    color: #f1f5f9;
+    line-height: 1;
+  }
+  .big-vs { font-size: 18px; color: #475569; font-weight: 700; }
+  .big-team-name { text-align: center; font-size: 16px; font-weight: 700; color: #cbd5e1; }
+
+  .mini-score { font-size: 20px; font-weight: 800; color: #f1f5f9; letter-spacing: -1px; }
+  .mini-teams { font-size: 12px; color: #64748b; margin-bottom: 6px; }
+  .mini-status { font-size: 10px; }
+
+  /* ══════════════════════════════════════════
+     예시 4 — Neon Glow LIVE
+  ══════════════════════════════════════════ */
+  #ex4 { background: #0a0a12; }
+
+  .neon-grid {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    max-width: 800px;
+  }
+  .neon-badge {
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .neon-live {
+    color: #ff4d4d;
+    background: rgba(255,77,77,0.08);
+    border: 1px solid rgba(255,77,77,0.5);
+    box-shadow: 0 0 8px rgba(255,77,77,0.5), 0 0 20px rgba(255,77,77,0.2), inset 0 0 8px rgba(255,77,77,0.08);
+    animation: neon-live-pulse 2s ease-in-out infinite;
+  }
+  @keyframes neon-live-pulse {
+    0%,100% { box-shadow: 0 0 8px rgba(255,77,77,0.5), 0 0 20px rgba(255,77,77,0.2); }
+    50%      { box-shadow: 0 0 16px rgba(255,77,77,0.8), 0 0 40px rgba(255,77,77,0.4); }
+  }
+  .neon-done {
+    color: #64748b;
+    background: rgba(100,116,139,0.08);
+    border: 1px solid rgba(100,116,139,0.2);
+  }
+  .neon-sched {
+    color: #60a5fa;
+    background: rgba(96,165,250,0.08);
+    border: 1px solid rgba(96,165,250,0.3);
+    box-shadow: 0 0 8px rgba(96,165,250,0.2);
+  }
+
+  .neon-card-demo {
+    background: #111120;
+    border: 1px solid rgba(255,77,77,0.25);
+    border-radius: 20px;
+    padding: 22px;
+    width: 300px;
+    box-shadow: 0 0 30px rgba(255,77,77,0.08);
+  }
+  .neon-card-title {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 16px;
+  }
+
+  /* ══════════════════════════════════════════
+     예시 5 — Animated Gradient Win Bar
+  ══════════════════════════════════════════ */
+  #ex5 { background: #0d0d1a; }
+
+  .winbar-demos { display: flex; flex-direction: column; gap: 28px; max-width: 600px; }
+  .winbar-item { }
+  .winbar-matchup {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+  .winbar-team { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+  .team-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .winbar-pct { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  .winbar-track {
+    height: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+  }
+  .wb-away {
+    height: 100%;
+    border-radius: 99px 0 0 99px;
+    transition: width 1.2s cubic-bezier(.4,0,.2,1);
+  }
+  .wb-home {
+    height: 100%;
+    border-radius: 0 99px 99px 0;
+    margin-left: auto;
+    transition: width 1.2s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ══════════════════════════════════════════
+     Top nav bar
+  ══════════════════════════════════════════ */
+  .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(13,13,26,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .top-bar-logo {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #c084fc;
+  }
+  .top-bar-nav { display: flex; gap: 6px; }
+  .nav-pill {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    color: #64748b;
+    transition: all 0.15s;
+  }
+  .nav-pill:hover { color: #c084fc; background: rgba(170,59,255,0.1); }
+  .nav-pill.active { color: #c084fc; background: rgba(170,59,255,0.15); }
+
+  /* ══ Neumorphism ══ */
+  #ex6 { background: #1a1a2e; }
+  .neu-grid { display: flex; flex-wrap: wrap; gap: 24px; max-width: 900px; }
+  .neu-card {
+    background: #1e1e35;
+    border-radius: 24px;
+    padding: 24px;
+    width: 280px;
+    box-shadow: 6px 6px 14px #12121f, -4px -4px 10px #2a2a4a;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .neu-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 99px; font-size: 11px; font-weight: 700;
+    background: #1a1a30;
+    box-shadow: 3px 3px 7px #12121f, -2px -2px 5px #242440;
+    margin-bottom: 16px;
+  }
+  .neu-logo {
+    width: 52px; height: 52px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 900; color: #fff;
+    box-shadow: 4px 4px 10px #12121f, -2px -2px 6px #282844;
+  }
+  .neu-score {
+    font-size: 44px; font-weight: 900; letter-spacing: -2px; color: #e2e8f0;
+    text-shadow: 2px 2px 4px #12121f;
+  }
+  .neu-progress-track {
+    height: 8px; border-radius: 99px;
+    background: #1a1a30;
+    box-shadow: inset 2px 2px 4px #12121f, inset -1px -1px 3px #242440;
+    overflow: hidden; display: flex;
+  }
+
+  /* ══ LED Scoreboard ══ */
+  #ex7 {
+    background: #0a0a0a;
+    background-image: radial-gradient(circle at 50% 0%, rgba(255,100,0,0.06), transparent 60%);
+  }
+  @font-face { font-family: 'LCD'; src: local('Courier New'); }
+  .led-board {
+    background: #0d0d0d;
+    border: 2px solid #1a1a1a;
+    border-radius: 12px;
+    padding: 28px 32px;
+    max-width: 700px;
+    box-shadow: 0 0 40px rgba(255,80,0,0.1), inset 0 0 40px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+  }
+  .led-board::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none;
+  }
+  .led-header {
+    font-family: 'Courier New', monospace;
+    font-size: 11px; letter-spacing: 3px; font-weight: 700;
+    color: #ff6600; text-align: center; margin-bottom: 20px;
+    text-shadow: 0 0 8px #ff660088;
+  }
+  .led-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; border-bottom: 1px solid #1a1a1a;
+  }
+  .led-team {
+    font-family: 'Courier New', monospace;
+    font-size: 18px; font-weight: 700; letter-spacing: 2px;
+  }
+  .led-score-val {
+    font-family: 'Courier New', monospace;
+    font-size: 32px; font-weight: 900; letter-spacing: -1px;
+    min-width: 50px; text-align: center;
+  }
+  .led-score-live { color: #ff6600; text-shadow: 0 0 12px #ff660099; }
+  .led-score-done { color: #ffcc00; text-shadow: 0 0 8px #ffcc0066; }
+  .led-score-sched { color: #334; }
+  .led-status {
+    font-family: 'Courier New', monospace;
+    font-size: 10px; letter-spacing: 2px;
+    min-width: 80px; text-align: right;
+  }
+  .led-live { color: #ff6600; animation: led-blink 1s step-end infinite; }
+  @keyframes led-blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+  .led-done  { color: #4a4a2a; }
+  .led-sched { color: #1a3a3a; }
+
+  /* ══ Minimal Typography ══ */
+  #ex8 { background: #fafafa; color: #1a1a2e; }
+  #ex8 .section-label { color: #6366f1; background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.2); }
+  #ex8 .section-title { color: #1a1a2e; }
+  #ex8 .section-desc  { color: #64748b; }
+  .min-grid { display: flex; flex-wrap: wrap; gap: 1px; background: #e2e8f0; max-width: 800px; border-radius: 20px; overflow: hidden; }
+  .min-card {
+    background: #fff; padding: 24px 28px; flex: 1; min-width: 220px;
+    display: flex; flex-direction: column; gap: 12px;
+    transition: background 0.15s;
+  }
+  .min-card:hover { background: #f8faff; }
+  .min-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .min-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; }
+  .min-teams-row { display: flex; align-items: center; gap: 10px; }
+  .min-team { font-size: 20px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; }
+  .min-sep { font-size: 14px; color: #cbd5e1; font-weight: 300; }
+  .min-score-row { display: flex; align-items: baseline; gap: 6px; }
+  .min-score { font-size: 48px; font-weight: 900; letter-spacing: -3px; color: #0f172a; line-height: 1; }
+  .min-score-sep { font-size: 28px; color: #e2e8f0; font-weight: 300; }
+  .min-bar { height: 3px; border-radius: 99px; background: #f1f5f9; overflow: hidden; }
+  .min-bar-fill { height: 100%; border-radius: 99px; }
+  .min-footer { font-size: 11px; color: #94a3b8; }
+  .min-standings {
+    background: #fff; border-radius: 20px; overflow: hidden;
+    border: 1px solid #e2e8f0; max-width: 480px; margin-top: 0;
+  }
+  .min-rank-row {
+    display: grid; grid-template-columns: 2rem 1fr auto auto;
+    align-items: center; gap: 12px;
+    padding: 14px 20px; border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s; cursor: pointer;
+  }
+  .min-rank-row:last-child { border-bottom: none; }
+  .min-rank-row:hover { background: #f8faff; }
+  .min-rank-num { font-size: 12px; font-weight: 800; color: #cbd5e1; text-align: center; }
+  .min-rank-num.top { color: #6366f1; }
+  .min-rank-team { font-size: 14px; font-weight: 700; color: #1e293b; }
+  .min-rank-wr { font-size: 13px; font-weight: 600; color: #475569; font-variant-numeric: tabular-nums; }
+  .min-rank-streak { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+
+  /* ══ Mobile Compact ══ */
+  #ex9 { background: #0f0f1a; }
+  .mobile-frame {
+    width: 360px;
+    background: #161622;
+    border-radius: 36px;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .mob-header {
+    background: rgba(10,10,20,0.9);
+    padding: 16px 20px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(10px);
+  }
+  .mob-title { font-size: 16px; font-weight: 800; color: #f1f5f9; }
+  .mob-date { font-size: 11px; color: rgba(255,255,255,0.35); }
+  .mob-tab-bar {
+    display: flex; background: rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .mob-tab {
+    flex: 1; text-align: center; padding: 10px 4px; font-size: 12px; font-weight: 600; cursor: pointer;
+    border-bottom: 2px solid transparent; color: rgba(255,255,255,0.35);
+  }
+  .mob-tab.active { color: #c084fc; border-bottom-color: #c084fc; }
+  .mob-game {
+    display: flex; align-items: center; padding: 14px 16px; gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;
+  }
+  .mob-game:active { background: rgba(255,255,255,0.04); }
+  .mob-badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px; }
+  .mob-teams { flex: 1; }
+  .mob-matchup { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.9); margin-bottom: 3px; }
+  .mob-meta { font-size: 11px; color: rgba(255,255,255,0.3); }
+  .mob-score { font-size: 18px; font-weight: 900; color: #f1f5f9; letter-spacing: -1px; min-width: 44px; text-align: right; }
+  .mob-score-sched { color: rgba(255,255,255,0.2); font-size: 13px; font-weight: 400; }
+  .mob-bottom-bar {
+    display: flex; padding: 12px 16px; background: rgba(255,255,255,0.03);
+    justify-content: space-around;
+  }
+  .mob-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+  .mob-nav-icon { font-size: 18px; }
+  .mob-nav-label { font-size: 9px; color: rgba(255,255,255,0.3); font-weight: 600; letter-spacing: 0.5px; }
+  .mob-nav-item.active .mob-nav-label { color: #c084fc; }
+</style>
+</head>
+<body>
+
+<!-- Top Navigation -->
+<div class="top-bar">
+  <span class="top-bar-logo">⚾ KBO Dashboard — Design Preview</span>
+  <nav class="top-bar-nav">
+    <a href="#ex1" class="nav-pill active">① Glass</a>
+    <a href="#ex2" class="nav-pill">② Aurora</a>
+    <a href="#ex3" class="nav-pill">③ Bento</a>
+    <a href="#ex4" class="nav-pill">④ Neon</a>
+    <a href="#ex5" class="nav-pill">⑤ Win Bar</a>
+    <a href="#ex6" class="nav-pill">⑥ Neumorphism</a>
+    <a href="#ex7" class="nav-pill">⑦ LED Board</a>
+    <a href="#ex8" class="nav-pill">⑧ Minimal</a>
+    <a href="#ex9" class="nav-pill">⑨ Mobile</a>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════
+     Example 1: Glassmorphism Cards
+════════════════════════════════════════ -->
+<section class="section" id="ex1">
+  <div class="section-label">예시 ①</div>
+  <div class="section-title">Glassmorphism 경기 카드</div>
+  <div class="section-desc">팀 컬러 그라디언트 위에 유리 질감 카드 — 고급스럽고 깊이감 있는 UI</div>
+
+  <div class="glass-grid">
+    <!-- LIVE 경기 -->
+    <div class="glass-card" style="--glow: linear-gradient(135deg, #CE0E2D, #074CA1);">
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,#CE0E2D22,#074CA122);border-radius:inherit;"></div>
+      <div style="position:relative;">
+        <div class="card-status" style="color:#ff6b6b;">
+          <div class="live-dot"></div>
+          LIVE · 7회 초
+        </div>
+        <div class="teams-row">
+          <div class="team-block">
+            <div class="team-logo" style="background:#CE0E2D;">SSG</div>
+            <div class="team-name">SSG</div>
+          </div>
+          <div>
+            <div class="score" style="color:#f8f8f8;">5</div>
+          </div>
+          <div class="vs-badge">VS</div>
+          <div>
+            <div class="score" style="color:#f8f8f8;">3</div>
+          </div>
+          <div class="team-block">
+            <div class="team-logo" style="background:#074CA1;">삼성</div>
+            <div class="team-name">삼성</div>
+          </div>
+        </div>
+        <div class="win-bar-wrap">
+          <div class="win-bar-labels">
+            <span>SSG 62%</span>
+            <span>삼성 38%</span>
+          </div>
+          <div class="win-bar-track">
+            <div class="win-bar-away" style="width:62%;background:linear-gradient(to right,#CE0E2D,#ff6b6b);box-shadow:0 0 8px #CE0E2D88;"></div>
+            <div class="win-bar-home" style="width:38%;background:linear-gradient(to left,#074CA1,#60a5fa);box-shadow:0 0 8px #074CA188;margin-left:auto;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 종료 경기 -->
+    <div class="glass-card" style="--glow: linear-gradient(135deg, #131230, #C30452);">
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,#13123022,#C3045222);border-radius:inherit;"></div>
+      <div style="position:relative;">
+        <div class="card-status" style="color:#64748b;">
+          ● 경기 종료
+        </div>
+        <div class="teams-row">
+          <div class="team-block">
+            <div class="team-logo" style="background:#131230;">두산</div>
+            <div class="team-name">두산</div>
+          </div>
+          <div><div class="score">7</div></div>
+          <div class="vs-badge">VS</div>
+          <div><div class="score">4</div></div>
+          <div class="team-block">
+            <div class="team-logo" style="background:#C30452;">LG</div>
+            <div class="team-name">LG</div>
+          </div>
+        </div>
+        <div style="text-align:center;font-size:12px;color:#475569;margin-top:8px;">두산 승 · 잠실구장</div>
+      </div>
+    </div>
+
+    <!-- 예정 경기 -->
+    <div class="glass-card">
+      <div style="position:relative;">
+        <div class="card-status" style="color:#60a5fa;">
+          ○ 18:30 예정
+        </div>
+        <div class="teams-row">
+          <div class="team-block">
+            <div class="team-logo" style="background:#F37321;">한화</div>
+            <div class="team-name">한화</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:28px;color:#1e293b;">-</div>
+          </div>
+          <div class="vs-badge">VS</div>
+          <div style="text-align:center;">
+            <div style="font-size:28px;color:#1e293b;">-</div>
+          </div>
+          <div class="team-block">
+            <div class="team-logo" style="background:#EA0029;">KIA</div>
+            <div class="team-name">KIA</div>
+          </div>
+        </div>
+        <div style="text-align:center;font-size:12px;color:#475569;margin-top:8px;">한화생명이글스파크</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Example 2: Aurora Header
+════════════════════════════════════════ -->
+<section class="section" id="ex2">
+  <div class="section-label">예시 ②</div>
+  <div class="section-title">Aurora Gradient 헤더</div>
+  <div class="section-desc">Vercel · Apple 스타일 — 빛이 번지는 그라디언트 배경으로 브랜드 임팩트 강화</div>
+
+  <div class="aurora-header">
+    <div class="aurora-bg"></div>
+    <div class="aurora-content">
+      <div class="aurora-badges">
+        <span class="aurora-badge badge-live-glow"><span class="live-dot"></span> 3경기 진행 중</span>
+        <span class="aurora-badge badge-date">2025년 5월 10일 토요일</span>
+        <span class="aurora-badge badge-refresh">↻ 30초 후 갱신</span>
+      </div>
+      <div class="aurora-title" style="margin-top:20px;">KBO 오늘의 경기</div>
+      <div class="aurora-sub">실시간 경기 스코어 · 승률 예측 · 선발 라인업</div>
+      <div class="aurora-tabs">
+        <button class="a-tab active">⚾ 오늘의 경기</button>
+        <button class="a-tab">🩹 부상자 리포트</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Example 3: Bento Grid
+════════════════════════════════════════ -->
+<section class="section" id="ex3">
+  <div class="section-label">예시 ③</div>
+  <div class="section-title">Bento Grid 레이아웃</div>
+  <div class="section-desc">Apple 스타일 — LIVE 경기는 크게, 나머지는 작게 배치하여 시선 계층 형성</div>
+
+  <div class="bento-grid">
+    <!-- Featured LIVE -->
+    <div class="bento-card bento-featured">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:1.5px;color:#ff6b6b;margin-bottom:4px;">
+        <div class="live-dot"></div> LIVE · 9회 말 2사
+      </div>
+      <div style="font-size:12px;color:#475569;">잠실구장 · 2루에 주자</div>
+
+      <div class="featured-score">
+        <div>
+          <div class="team-logo" style="background:#C30452;width:56px;height:56px;font-size:20px;margin:0 auto 6px;">LG</div>
+          <div class="big-team-name">LG</div>
+        </div>
+        <div class="big-score">6</div>
+        <div class="big-vs">:</div>
+        <div class="big-score">5</div>
+        <div>
+          <div class="team-logo" style="background:#131230;width:56px;height:56px;font-size:20px;margin:0 auto 6px;">두산</div>
+          <div class="big-team-name">두산</div>
+        </div>
+      </div>
+
+      <div style="margin-top:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-bottom:6px;">
+          <span>LG 58%</span><span>두산 42%</span>
+        </div>
+        <div class="win-bar-track" style="height:8px;">
+          <div style="width:58%;height:100%;background:linear-gradient(to right,#C30452,#ff6b6b);border-radius:99px 0 0 99px;box-shadow:0 0 10px #C3045288;"></div>
+          <div style="width:42%;height:100%;background:linear-gradient(to left,#131230,#6366f1);border-radius:0 99px 99px 0;margin-left:auto;box-shadow:0 0 10px #13123088;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Small cards -->
+    <div class="bento-card">
+      <div class="mini-status" style="color:#64748b;margin-bottom:8px;">● 종료</div>
+      <div class="mini-teams">SSG vs KT</div>
+      <div class="mini-score">4 : 2</div>
+      <div style="font-size:11px;color:#475569;margin-top:6px;">SSG 승</div>
+    </div>
+    <div class="bento-card">
+      <div class="mini-status" style="color:#60a5fa;margin-bottom:8px;">○ 18:30</div>
+      <div class="mini-teams">한화 vs KIA</div>
+      <div style="font-size:16px;font-weight:700;color:#475569;margin-top:4px;">- : -</div>
+    </div>
+    <div class="bento-card">
+      <div class="mini-status" style="color:#ff6b6b;display:flex;align-items:center;gap:4px;margin-bottom:8px;"><div class="live-dot"></div>LIVE 5회</div>
+      <div class="mini-teams">NC vs 롯데</div>
+      <div class="mini-score">2 : 3</div>
+    </div>
+    <div class="bento-card" style="background:linear-gradient(135deg,rgba(170,59,255,0.08),transparent);">
+      <div style="font-size:11px;color:#c084fc;font-weight:700;margin-bottom:8px;">📊 순위</div>
+      <div style="font-size:12px;color:#94a3b8;line-height:1.8;">
+        <div><span style="color:#c084fc;font-weight:700;">1</span> &nbsp;KIA &nbsp;&nbsp;.641</div>
+        <div><span style="color:#94a3b8;">2</span> &nbsp;삼성 &nbsp;.600</div>
+        <div><span style="color:#94a3b8;">3</span> &nbsp;LG &nbsp;&nbsp;.571</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Example 4: Neon Glow
+════════════════════════════════════════ -->
+<section class="section" id="ex4">
+  <div class="section-label">예시 ④</div>
+  <div class="section-title">Neon Glow 배지 & 카드</div>
+  <div class="section-desc">스포츠 게임 앱 감성 — 상태에 따라 빛나는 배지로 시각적 긴장감 표현</div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px;align-items:center;">
+    <div class="neon-badge neon-live"><div class="live-dot"></div> LIVE</div>
+    <div class="neon-badge neon-sched">○ 18:30 예정</div>
+    <div class="neon-badge neon-done">● 경기 종료</div>
+    <div class="neon-badge" style="color:#fb923c;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.4);box-shadow:0 0 8px rgba(251,146,60,0.25);">DL</div>
+    <div class="neon-badge" style="color:#facc15;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.3);box-shadow:0 0 8px rgba(234,179,8,0.2);">재활</div>
+    <div class="neon-badge" style="color:#4ade80;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.3);box-shadow:0 0 8px rgba(74,222,128,0.2);">복귀 임박</div>
+  </div>
+
+  <div class="neon-card-demo">
+    <div class="neon-card-title">현재 진행 경기</div>
+    <div class="card-status" style="color:#ff6b6b;">
+      <div class="live-dot"></div> LIVE · 7회 초 1사
+    </div>
+    <div class="teams-row" style="margin-top:12px;">
+      <div class="team-block">
+        <div class="team-logo" style="background:#CE0E2D;">SSG</div>
+        <div class="team-name">SSG</div>
+      </div>
+      <div><div class="score" style="text-shadow:0 0 20px rgba(248,248,248,0.3);">5</div></div>
+      <div class="vs-badge">VS</div>
+      <div><div class="score" style="text-shadow:0 0 20px rgba(248,248,248,0.3);">3</div></div>
+      <div class="team-block">
+        <div class="team-logo" style="background:#074CA1;">삼성</div>
+        <div class="team-name">삼성</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Example 5: Animated Gradient Win Bar
+════════════════════════════════════════ -->
+<section class="section" id="ex5">
+  <div class="section-label">예시 ⑤</div>
+  <div class="section-title">Animated Gradient 승률 바</div>
+  <div class="section-desc">두 팀 컬러가 맞부딪히는 그라디언트 게이지 — 단색보다 훨씬 역동적인 표현</div>
+
+  <div class="winbar-demos">
+
+    <div class="winbar-item">
+      <div class="winbar-matchup">
+        <div class="winbar-team">
+          <div class="team-dot" style="background:#CE0E2D;box-shadow:0 0 6px #CE0E2D;"></div>
+          SSG
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;">
+          <span class="winbar-pct" style="color:#CE0E2D;">62%</span>
+          <span style="color:#475569;font-size:12px;">vs</span>
+          <span class="winbar-pct" style="color:#074CA1;">38%</span>
+        </div>
+        <div class="winbar-team" style="flex-direction:row-reverse;">
+          <div class="team-dot" style="background:#074CA1;box-shadow:0 0 6px #074CA1;"></div>
+          삼성
+        </div>
+      </div>
+      <div class="winbar-track">
+        <div class="wb-away" style="width:62%;background:linear-gradient(to right,#CE0E2D,#ff8080);box-shadow:0 0 8px #CE0E2D88;"></div>
+        <div class="wb-home" style="width:38%;background:linear-gradient(to left,#074CA1,#60a5fa);box-shadow:0 0 8px #074CA188;"></div>
+      </div>
+    </div>
+
+    <div class="winbar-item">
+      <div class="winbar-matchup">
+        <div class="winbar-team">
+          <div class="team-dot" style="background:#C30452;box-shadow:0 0 6px #C30452;"></div>
+          LG
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;">
+          <span class="winbar-pct" style="color:#C30452;">55%</span>
+          <span style="color:#475569;font-size:12px;">vs</span>
+          <span class="winbar-pct" style="color:#6b7280;">45%</span>
+        </div>
+        <div class="winbar-team" style="flex-direction:row-reverse;">
+          <div class="team-dot" style="background:#131230;"></div>
+          두산
+        </div>
+      </div>
+      <div class="winbar-track">
+        <div class="wb-away" style="width:55%;background:linear-gradient(to right,#C30452,#f87171);box-shadow:0 0 8px #C3045288;"></div>
+        <div class="wb-home" style="width:45%;background:linear-gradient(to left,#131230,#6366f1);box-shadow:0 0 6px #13123066;"></div>
+      </div>
+    </div>
+
+    <div class="winbar-item">
+      <div class="winbar-matchup">
+        <div class="winbar-team">
+          <div class="team-dot" style="background:#F37321;box-shadow:0 0 6px #F37321;"></div>
+          한화
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;">
+          <span class="winbar-pct" style="color:#F37321;">48%</span>
+          <span style="color:#475569;font-size:12px;">vs</span>
+          <span class="winbar-pct" style="color:#EA0029;">52%</span>
+        </div>
+        <div class="winbar-team" style="flex-direction:row-reverse;">
+          <div class="team-dot" style="background:#EA0029;box-shadow:0 0 6px #EA0029;"></div>
+          KIA
+        </div>
+      </div>
+      <div class="winbar-track">
+        <div class="wb-away" style="width:48%;background:linear-gradient(to right,#F37321,#fdba74);box-shadow:0 0 8px #F3732188;"></div>
+        <div class="wb-home" style="width:52%;background:linear-gradient(to left,#EA0029,#f87171);box-shadow:0 0 8px #EA002988;"></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Combination Preview
+════════════════════════════════════════ -->
+<section class="section" id="combo" style="background:linear-gradient(180deg,#0d0d1a,#110a1e);">
+  <div class="section-label">추천 조합</div>
+  <div class="section-title">전체 통합 미리보기</div>
+  <div class="section-desc">① Glass + ② Aurora + ④ Neon + ⑤ Win Bar 조합 — 다크 테마 완성형</div>
+
+  <!-- Aurora Header -->
+  <div class="aurora-header" style="max-width:860px;margin-bottom:28px;">
+    <div class="aurora-bg"></div>
+    <div class="aurora-content">
+      <div class="aurora-badges">
+        <span class="aurora-badge badge-live-glow"><span class="live-dot"></span> 3경기 진행 중</span>
+        <span class="aurora-badge badge-date">2025년 5월 10일</span>
+        <span class="aurora-badge badge-refresh">↻ 28초 후 갱신</span>
+      </div>
+      <div class="aurora-title" style="margin-top:16px;font-size:36px;">KBO 오늘의 경기</div>
+      <div class="aurora-tabs" style="margin-top:16px;">
+        <button class="a-tab active">⚾ 오늘의 경기</button>
+        <button class="a-tab">🩹 부상자 리포트</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Glass Cards -->
+  <div class="glass-grid" style="max-width:860px;">
+    <div class="glass-card">
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,#CE0E2D22,#074CA122);border-radius:inherit;"></div>
+      <div style="position:relative;">
+        <div class="card-status neon-live" style="display:inline-flex;padding:4px 10px;border-radius:99px;margin-bottom:12px;font-size:11px;">
+          <div class="live-dot"></div> LIVE · 7회
+        </div>
+        <div class="teams-row">
+          <div class="team-block">
+            <div class="team-logo" style="background:#CE0E2D;">SSG</div>
+            <div class="team-name">SSG</div>
+          </div>
+          <div><div class="score">5</div></div>
+          <div class="vs-badge">VS</div>
+          <div><div class="score">3</div></div>
+          <div class="team-block">
+            <div class="team-logo" style="background:#074CA1;">삼성</div>
+            <div class="team-name">삼성</div>
+          </div>
+        </div>
+        <div class="winbar-track" style="height:7px;margin-top:12px;">
+          <div class="wb-away" style="width:62%;background:linear-gradient(to right,#CE0E2D,#ff8080);box-shadow:0 0 8px #CE0E2D88;"></div>
+          <div class="wb-home" style="width:38%;background:linear-gradient(to left,#074CA1,#60a5fa);box-shadow:0 0 8px #074CA188;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-top:5px;">
+          <span>SSG 62%</span><span>삼성 38%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,#C3045222,#13123022);border-radius:inherit;"></div>
+      <div style="position:relative;">
+        <div style="font-size:11px;color:#475569;margin-bottom:12px;">● 경기 종료</div>
+        <div class="teams-row">
+          <div class="team-block">
+            <div class="team-logo" style="background:#C30452;">LG</div>
+            <div class="team-name">LG</div>
+          </div>
+          <div><div class="score">6</div></div>
+          <div class="vs-badge">VS</div>
+          <div><div class="score">5</div></div>
+          <div class="team-block">
+            <div class="team-logo" style="background:#131230;">두산</div>
+            <div class="team-name">두산</div>
+          </div>
+        </div>
+        <div style="text-align:center;font-size:12px;color:#475569;margin-top:8px;">LG 승 · 잠실구장</div>
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div style="position:relative;">
+        <div class="neon-badge neon-sched" style="font-size:10px;display:inline-flex;margin-bottom:12px;">○ 18:30 예정</div>
+        <div class="teams-row">
+          <div class="team-block">
+            <div class="team-logo" style="background:#F37321;">한화</div>
+            <div class="team-name">한화</div>
+          </div>
+          <div style="text-align:center;color:#1e293b;font-size:28px;">-</div>
+          <div class="vs-badge">VS</div>
+          <div style="text-align:center;color:#1e293b;font-size:28px;">-</div>
+          <div class="team-block">
+            <div class="team-logo" style="background:#EA0029;">KIA</div>
+            <div class="team-name">KIA</div>
+          </div>
+        </div>
+        <div style="text-align:center;font-size:12px;color:#475569;margin-top:8px;">한화생명이글스파크</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Example 6: Neumorphism
+════════════════════════════════════════ -->
+<section class="section" id="ex6">
+  <div class="section-label">예시 ⑥</div>
+  <div class="section-title">Neumorphism 소프트 UI</div>
+  <div class="section-desc">안쪽·바깥쪽 그림자로 만드는 입체감 — 버튼·카드가 표면에 부각되는 느낌</div>
+
+  <div class="neu-grid">
+    <!-- LIVE 카드 -->
+    <div class="neu-card">
+      <div class="neu-badge" style="color:#ff6b6b;">
+        <div class="live-dot"></div> LIVE · 6회 말
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="text-align:center;">
+          <div class="neu-logo" style="background:linear-gradient(135deg,#CE0E2D,#ff6b6b);">SSG</div>
+          <div style="font-size:12px;color:#64748b;margin-top:6px;">SSG</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="neu-score" style="color:#f43f5e;">5</div>
+            <div style="font-size:20px;color:#334155;font-weight:300;">:</div>
+            <div class="neu-score" style="color:#94a3b8;">3</div>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <div class="neu-logo" style="background:linear-gradient(135deg,#074CA1,#60a5fa);">삼성</div>
+          <div style="font-size:12px;color:#64748b;margin-top:6px;">삼성</div>
+        </div>
+      </div>
+      <div class="neu-progress-track">
+        <div style="width:62%;height:100%;background:linear-gradient(to right,#CE0E2D,#f43f5e);box-shadow:0 0 6px #CE0E2D88;"></div>
+        <div style="width:38%;height:100%;background:linear-gradient(to left,#074CA1,#60a5fa);margin-left:auto;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#475569;margin-top:6px;">
+        <span>SSG 62%</span><span>삼성 38%</span>
+      </div>
+    </div>
+
+    <!-- 예정 카드 -->
+    <div class="neu-card">
+      <div class="neu-badge" style="color:#60a5fa;">○ 18:30 예정</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div style="text-align:center;">
+          <div class="neu-logo" style="background:linear-gradient(135deg,#F37321,#fdba74);">한화</div>
+          <div style="font-size:12px;color:#64748b;margin-top:6px;">한화</div>
+        </div>
+        <div style="font-size:22px;font-weight:200;color:#2a2a44;">VS</div>
+        <div style="text-align:center;">
+          <div class="neu-logo" style="background:linear-gradient(135deg,#EA0029,#f87171);">KIA</div>
+          <div style="font-size:12px;color:#64748b;margin-top:6px;">KIA</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:12px;color:#475569;">한화생명이글스파크</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Example 7: LED Scoreboard
+════════════════════════════════════════ -->
+<section class="section" id="ex7">
+  <div class="section-label">예시 ⑦</div>
+  <div class="section-title">LED 전광판 스타일</div>
+  <div class="section-desc">야구장 전광판 감성 — 모노스페이스 폰트와 스캔라인으로 레트로 디지털 느낌</div>
+
+  <div class="led-board">
+    <div class="led-header">⚾ KBO SCOREBOARD · 2026.04.28 ⚾</div>
+
+    <div class="led-row">
+      <div class="led-team" style="color:#ff6600;">SSG<span style="color:#ff660055;font-size:12px;"> vs </span>삼성</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="led-score-val led-score-live">5</div>
+        <div style="color:#331a00;font-size:20px;font-family:monospace;">:</div>
+        <div class="led-score-val led-score-live">3</div>
+      </div>
+      <div class="led-status led-live">▶ 7회초</div>
+    </div>
+
+    <div class="led-row">
+      <div class="led-team" style="color:#ffcc00;">LG<span style="color:#ffcc0044;font-size:12px;"> vs </span>두산</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="led-score-val led-score-done">6</div>
+        <div style="color:#2a2a00;font-size:20px;font-family:monospace;">:</div>
+        <div class="led-score-val led-score-done">5</div>
+      </div>
+      <div class="led-status led-done">■ 종료</div>
+    </div>
+
+    <div class="led-row" style="border-bottom:none;">
+      <div class="led-team" style="color:#1a3a3a;">한화<span style="color:#0a2020;font-size:12px;"> vs </span>KIA</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="led-score-val led-score-sched">-</div>
+        <div style="color:#0d0d0d;font-size:20px;font-family:monospace;">:</div>
+        <div class="led-score-val led-score-sched">-</div>
+      </div>
+      <div class="led-status led-sched">○ 18:30</div>
+    </div>
+
+    <div style="text-align:right;font-family:'Courier New',monospace;font-size:9px;color:#1a1a0a;margin-top:14px;letter-spacing:2px;">
+      AUTO REFRESH 30S · JAMSIL STADIUM OPEN
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Example 8: Minimal Typography
+════════════════════════════════════════ -->
+<section class="section" id="ex8">
+  <div class="section-label">예시 ⑧</div>
+  <div class="section-title">미니멀 타이포그래피</div>
+  <div class="section-desc">화이트 배경 + 강한 타이포 계층 — 정보 밀도는 높이고 시각 노이즈는 최소화</div>
+
+  <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;">
+    <!-- 경기 카드 그리드 -->
+    <div class="min-grid" style="flex:1;min-width:300px;">
+      <!-- LIVE -->
+      <div class="min-card">
+        <div class="min-label"><span class="min-dot" style="background:#ef4444;box-shadow:0 0 4px #ef444488;"></span> &nbsp;LIVE · 7회 초</div>
+        <div class="min-teams-row">
+          <div class="min-team">SSG</div>
+          <div class="min-sep">vs</div>
+          <div class="min-team">삼성</div>
+        </div>
+        <div class="min-score-row">
+          <div class="min-score" style="color:#ef4444;">5</div>
+          <div class="min-score-sep">:</div>
+          <div class="min-score">3</div>
+        </div>
+        <div class="min-bar"><div class="min-bar-fill" style="width:62%;background:#ef4444;"></div></div>
+        <div class="min-footer">인천SSG랜더스필드 · SSG 62% 우세</div>
+      </div>
+
+      <!-- 종료 -->
+      <div class="min-card">
+        <div class="min-label"><span class="min-dot" style="background:#94a3b8;"></span> &nbsp;경기 종료</div>
+        <div class="min-teams-row">
+          <div class="min-team">LG</div>
+          <div class="min-sep">vs</div>
+          <div class="min-team">두산</div>
+        </div>
+        <div class="min-score-row">
+          <div class="min-score">6</div>
+          <div class="min-score-sep">:</div>
+          <div class="min-score" style="color:#cbd5e1;">5</div>
+        </div>
+        <div class="min-bar"><div class="min-bar-fill" style="width:55%;background:#6366f1;"></div></div>
+        <div class="min-footer">잠실구장 · LG 승</div>
+      </div>
+
+      <!-- 예정 -->
+      <div class="min-card">
+        <div class="min-label"><span class="min-dot" style="background:#6366f1;"></span> &nbsp;18:30 예정</div>
+        <div class="min-teams-row">
+          <div class="min-team">한화</div>
+          <div class="min-sep">vs</div>
+          <div class="min-team">KIA</div>
+        </div>
+        <div class="min-score-row">
+          <div class="min-score" style="color:#e2e8f0;">-</div>
+          <div class="min-score-sep">:</div>
+          <div class="min-score" style="color:#e2e8f0;">-</div>
+        </div>
+        <div class="min-bar"></div>
+        <div class="min-footer">한화생명이글스파크</div>
+      </div>
+    </div>
+
+    <!-- 순위표 -->
+    <div class="min-standings" style="min-width:280px;">
+      <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;">
+        <div style="font-size:13px;font-weight:800;color:#0f172a;">2026 시즌 순위</div>
+      </div>
+      <div class="min-rank-row">
+        <div class="min-rank-num top">1</div>
+        <div class="min-rank-team">KIA</div>
+        <div class="min-rank-wr">.641</div>
+        <div class="min-rank-streak" style="background:#dcfce7;color:#16a34a;">6연승</div>
+      </div>
+      <div class="min-rank-row">
+        <div class="min-rank-num top">2</div>
+        <div class="min-rank-team">삼성</div>
+        <div class="min-rank-wr">.600</div>
+        <div class="min-rank-streak" style="background:#f1f5f9;color:#64748b;">1승</div>
+      </div>
+      <div class="min-rank-row">
+        <div class="min-rank-num top">3</div>
+        <div class="min-rank-team">LG</div>
+        <div class="min-rank-wr">.571</div>
+        <div class="min-rank-streak" style="background:#f1f5f9;color:#64748b;">2승</div>
+      </div>
+      <div class="min-rank-row">
+        <div class="min-rank-num">4</div>
+        <div class="min-rank-team">SSG</div>
+        <div class="min-rank-wr">.536</div>
+        <div class="min-rank-streak" style="background:#fef2f2;color:#ef4444;">3연패</div>
+      </div>
+      <div class="min-rank-row">
+        <div class="min-rank-num">5</div>
+        <div class="min-rank-team">두산</div>
+        <div class="min-rank-wr">.517</div>
+        <div class="min-rank-streak" style="background:#f1f5f9;color:#64748b;">1패</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     Example 9: Mobile Compact
+════════════════════════════════════════ -->
+<section class="section" id="ex9">
+  <div class="section-label">예시 ⑨</div>
+  <div class="section-title">모바일 앱 컴팩트</div>
+  <div class="section-desc">스마트폰 최적화 레이아웃 — 리스트 기반 스크롤, 하단 탭 네비게이션</div>
+
+  <div class="mobile-frame">
+    <!-- 상단 헤더 -->
+    <div class="mob-header">
+      <div>
+        <div class="mob-title">⚾ KBO</div>
+        <div class="mob-date">2026.04.28 토요일</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div class="live-dot"></div>
+        <span style="font-size:11px;color:#ff6b6b;font-weight:700;">3경기 진행</span>
+      </div>
+    </div>
+
+    <!-- 탭 바 -->
+    <div class="mob-tab-bar">
+      <div class="mob-tab active">경기</div>
+      <div class="mob-tab">순위</div>
+      <div class="mob-tab">부상</div>
+    </div>
+
+    <!-- 경기 목록 -->
+    <div class="mob-game">
+      <div>
+        <div class="mob-badge" style="background:rgba(255,77,77,0.12);color:#ff6b6b;border:1px solid rgba(255,77,77,0.3);">LIVE</div>
+      </div>
+      <div class="mob-teams" style="flex:1;padding:0 12px;">
+        <div class="mob-matchup">SSG vs 삼성</div>
+        <div class="mob-meta">7회 초 · 인천</div>
+      </div>
+      <div class="mob-score" style="color:#f43f5e;">5 : 3</div>
+    </div>
+
+    <div class="mob-game">
+      <div>
+        <div class="mob-badge" style="background:rgba(255,77,77,0.12);color:#ff6b6b;border:1px solid rgba(255,77,77,0.3);">LIVE</div>
+      </div>
+      <div class="mob-teams" style="flex:1;padding:0 12px;">
+        <div class="mob-matchup">LG vs 두산</div>
+        <div class="mob-meta">9회 말 · 잠실</div>
+      </div>
+      <div class="mob-score">6 : 5</div>
+    </div>
+
+    <div class="mob-game">
+      <div>
+        <div class="mob-badge" style="background:rgba(100,116,139,0.1);color:#64748b;border:1px solid rgba(100,116,139,0.2);">종료</div>
+      </div>
+      <div class="mob-teams" style="flex:1;padding:0 12px;">
+        <div class="mob-matchup">KT vs NC</div>
+        <div class="mob-meta">수원</div>
+      </div>
+      <div class="mob-score" style="color:#475569;">4 : 7</div>
+    </div>
+
+    <div class="mob-game" style="border-bottom:none;">
+      <div>
+        <div class="mob-badge" style="background:rgba(96,165,250,0.1);color:#60a5fa;border:1px solid rgba(96,165,250,0.25);">예정</div>
+      </div>
+      <div class="mob-teams" style="flex:1;padding:0 12px;">
+        <div class="mob-matchup">한화 vs KIA</div>
+        <div class="mob-meta">18:30 · 대전</div>
+      </div>
+      <div class="mob-score mob-score-sched">- : -</div>
+    </div>
+
+    <!-- 하단 탭 바 -->
+    <div class="mob-bottom-bar">
+      <div class="mob-nav-item active">
+        <div class="mob-nav-icon">⚾</div>
+        <div class="mob-nav-label" style="color:#c084fc;">경기</div>
+      </div>
+      <div class="mob-nav-item">
+        <div class="mob-nav-icon">📊</div>
+        <div class="mob-nav-label">순위</div>
+      </div>
+      <div class="mob-nav-item">
+        <div class="mob-nav-icon">🩹</div>
+        <div class="mob-nav-label">부상</div>
+      </div>
+      <div class="mob-nav-item">
+        <div class="mob-nav-icon">⚙️</div>
+        <div class="mob-nav-label">설정</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div style="padding:40px;text-align:center;color:#1e293b;font-size:12px;">
+  KBO Dashboard Design Preview — jdkim-project
+</div>
+
+</body>
+</html>
