@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+  <defs>
+    <radialGradient id="nbaBg" cx="30%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#0a0a1e"/>
+      <stop offset="100%" stop-color="#050510"/>
+    </radialGradient>
+    <radialGradient id="nbaGlow1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F4A261" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#F4A261" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nbaGlow2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#4FC3F7" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#4FC3F7" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="nbaText" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#F4A261"/>
+      <stop offset="100%" stop-color="#FF8A65"/>
+    </linearGradient>
+    <linearGradient id="nbaBar1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#007AC1"/>
+      <stop offset="100%" stop-color="#007AC1" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="nbaBar2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#007A33"/>
+      <stop offset="100%" stop-color="#007A33" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="nbaBar3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#552583"/>
+      <stop offset="100%" stop-color="#552583" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="nbaBar4" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#CE1141"/>
+      <stop offset="100%" stop-color="#CE1141" stop-opacity="0.3"/>
+    </linearGradient>
+    <filter id="nbaGlowFilter">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- 배경 -->
+  <rect width="600" height="600" fill="url(#nbaBg)"/>
+
+  <!-- Aurora glow -->
+  <ellipse cx="150" cy="180" rx="240" ry="200" fill="url(#nbaGlow1)"/>
+  <ellipse cx="480" cy="130" rx="180" ry="150" fill="url(#nbaGlow2)"/>
+
+  <!-- 상단 라벨 -->
+  <text x="52" y="88" font-family="'Courier New', monospace" font-size="13" font-weight="700"
+        fill="rgba(255,255,255,0.3)" letter-spacing="3">DASHBOARD · 2025-26</text>
+  <line x1="52" y1="96" x2="548" y2="96" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+  <!-- NBA 메인 텍스트 -->
+  <text x="46" y="250" font-family="'Segoe UI', system-ui, sans-serif" font-size="148"
+        font-weight="900" letter-spacing="-6" fill="url(#nbaText)" filter="url(#nbaGlowFilter)">NBA</text>
+
+  <!-- 서브 텍스트 -->
+  <text x="54" y="295" font-family="'Segoe UI', system-ui, sans-serif" font-size="18"
+        font-weight="400" fill="rgba(255,255,255,0.35)" letter-spacing="2">미프로농구 실시간 대시보드</text>
+
+  <!-- 구분선 -->
+  <line x1="52" y1="330" x2="548" y2="330" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+  <!-- 섹션 레이블 -->
+  <text x="52" y="362" font-family="'Courier New', monospace" font-size="11"
+        font-weight="700" fill="rgba(255,255,255,0.25)" letter-spacing="2">STANDINGS</text>
+
+  <!-- OKC -->
+  <text x="52" y="392" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="700"
+        fill="rgba(255,255,255,0.5)">OKC</text>
+  <rect x="104" y="381" width="316" height="7" rx="3" fill="rgba(255,255,255,0.05)"/>
+  <rect x="104" y="381" width="272" height="7" rx="3" fill="url(#nbaBar1)"/>
+  <text x="430" y="392" font-family="'Courier New', monospace" font-size="12"
+        fill="rgba(255,255,255,0.3)">.756</text>
+
+  <!-- BOS -->
+  <text x="52" y="420" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="700"
+        fill="rgba(255,255,255,0.5)">BOS</text>
+  <rect x="104" y="409" width="316" height="7" rx="3" fill="rgba(255,255,255,0.05)"/>
+  <rect x="104" y="409" width="232" height="7" rx="3" fill="url(#nbaBar2)"/>
+  <text x="430" y="420" font-family="'Courier New', monospace" font-size="12"
+        fill="rgba(255,255,255,0.3)">.634</text>
+
+  <!-- LAL -->
+  <text x="52" y="448" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="700"
+        fill="rgba(255,255,255,0.5)">LAL</text>
+  <rect x="104" y="437" width="316" height="7" rx="3" fill="rgba(255,255,255,0.05)"/>
+  <rect x="104" y="437" width="200" height="7" rx="3" fill="url(#nbaBar3)"/>
+  <text x="430" y="448" font-family="'Courier New', monospace" font-size="12"
+        fill="rgba(255,255,255,0.3)">.573</text>
+
+  <!-- MIA -->
+  <text x="52" y="476" font-family="'Segoe UI', sans-serif" font-size="13" font-weight="700"
+        fill="rgba(255,255,255,0.5)">MIA</text>
+  <rect x="104" y="465" width="316" height="7" rx="3" fill="rgba(255,255,255,0.05)"/>
+  <rect x="104" y="465" width="170" height="7" rx="3" fill="url(#nbaBar4)"/>
+  <text x="430" y="476" font-family="'Courier New', monospace" font-size="12"
+        fill="rgba(255,255,255,0.3)">.512</text>
+
+  <!-- 구분선 -->
+  <line x1="52" y1="510" x2="548" y2="510" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+  <!-- 하단 뱃지 -->
+  <rect x="52" y="526" width="58" height="24" rx="12" fill="rgba(255,77,77,0.15)"
+        stroke="rgba(255,77,77,0.4)" stroke-width="1"/>
+  <circle cx="67" cy="538" r="4" fill="#ff4d4d">
+    <animate attributeName="opacity" values="1;0.2;1" dur="1.4s" repeatCount="indefinite"/>
+  </circle>
+  <text x="76" y="543" font-family="'Courier New', monospace" font-size="11" font-weight="700"
+        fill="#ff8080" letter-spacing="0.5">LIVE</text>
+
+  <rect x="122" y="526" width="64" height="24" rx="12" fill="rgba(97,218,251,0.1)"
+        stroke="rgba(97,218,251,0.3)" stroke-width="1"/>
+  <text x="140" y="543" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="700"
+        fill="rgba(97,218,251,0.7)">React</text>
+
+  <rect x="198" y="526" width="72" height="24" rx="12" fill="rgba(104,159,56,0.1)"
+        stroke="rgba(104,159,56,0.3)" stroke-width="1"/>
+  <text x="215" y="543" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="700"
+        fill="rgba(104,159,56,0.7)">Node.js</text>
+
+  <!-- 우측 농구공 아이콘 -->
+  <circle cx="490" cy="490" r="60" fill="rgba(244,162,97,0.06)" stroke="rgba(244,162,97,0.15)" stroke-width="1"/>
+  <text x="490" y="510" font-family="'Segoe UI', sans-serif" font-size="56"
+        text-anchor="middle" dominant-baseline="middle">🏀</text>
+</svg>

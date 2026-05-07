@@ -26,7 +26,7 @@
         </li>
 
         <li @click="goToLink(kbo)">
-          <div class="project-img kbo-img">
+          <div class="project-img dark-img">
             <img src="../../assets/images/img/kbo_img.svg" alt="KBO 대시보드" />
             <div class="project-dim">
               <span class="dim-label">VIEW →</span>
@@ -41,6 +41,22 @@
           </div>
         </li>
 
+        <li @click="goToLink(nba)">
+          <div class="project-img dark-img">
+            <img src="../../assets/images/img/nba_img.svg" alt="NBA 대시보드" />
+            <div class="project-dim">
+              <span class="dim-label">VIEW →</span>
+            </div>
+          </div>
+          <div class="project-info">
+            <span class="project-num">03</span>
+            <div>
+              <h4 class="project-title">NBA 대시보드</h4>
+              <p class="project-meta">개인 프로젝트 · React, Node.js</p>
+            </div>
+          </div>
+        </li>
+
         <li @click="goToLink(golfstory)">
           <div class="project-img">
             <img src="../../assets/images/img/golfStory_img.png" alt="스마트스코어 앱" />
@@ -49,7 +65,7 @@
             </div>
           </div>
           <div class="project-info">
-            <span class="project-num">03</span>
+            <span class="project-num">04</span>
             <div>
               <h4 class="project-title">스마트스코어 앱</h4>
               <p class="project-meta">약 10일 · 웹 앱</p>
@@ -65,7 +81,7 @@
             </div>
           </div>
           <div class="project-info">
-            <span class="project-num">04</span>
+            <span class="project-num">05</span>
             <div>
               <h4 class="project-title">DID 대기화면</h4>
               <p class="project-meta">약 4일 · UHD 해상도</p>
@@ -81,7 +97,7 @@
             </div>
           </div>
           <div class="project-info">
-            <span class="project-num">05</span>
+            <span class="project-num">06</span>
             <div>
               <h4 class="project-title">파타고니아 KR</h4>
               <p class="project-meta">약 3개월 · 반응형 웹</p>
@@ -97,7 +113,7 @@
             </div>
           </div>
           <div class="project-info">
-            <span class="project-num">06</span>
+            <span class="project-num">07</span>
             <div>
               <h4 class="project-title">광동상회 웹 페이지</h4>
               <p class="project-meta">약 2개월 · 반응형 웹</p>
@@ -113,7 +129,7 @@
             </div>
           </div>
           <div class="project-info">
-            <span class="project-num">07</span>
+            <span class="project-num">08</span>
             <div>
               <h4 class="project-title">제주삼다수 웹 페이지</h4>
               <p class="project-meta">약 1개월 · 반응형 웹</p>
@@ -143,6 +159,7 @@ const patagonia   = 'https://faint-fox-278.notion.site/d0db8940be454a0082cbeb945
 const kwangdong   = 'https://faint-fox-278.notion.site/7efcb67ee90649adbdf6f34d46dca31e';
 const samdasoo    = 'https://faint-fox-278.notion.site/28f6934d6deb4945be55774f68cb4222';
 const kbo         = 'https://jude3721.github.io/portfolio/kbo-dashboard/';
+const nba         = 'https://jude3721.github.io/portfolio/nba-dashboard/';
 
 const handleScroll = () => {
   const section = document.getElementById('PortfolioList');
@@ -247,7 +264,7 @@ li {
   overflow: hidden;
   background: rgba(0, 0, 0, 0.04);
 
-  &.kbo-img { background: #0d0d1a; }
+  &.dark-img { background: #0d0d1a; }
 
   img {
     width: 100%;
