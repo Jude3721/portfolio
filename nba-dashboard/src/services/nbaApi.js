@@ -33,3 +33,10 @@ export async function fetchStandings() {
   const data = await res.json()
   return data?.standings ?? []
 }
+
+export async function fetchTeamNews(tri) {
+  const res = await fetch(`${API_BASE}/api/news/${tri}`)
+  if (!res.ok) throw new Error(`news 오류: ${res.status}`)
+  const data = await res.json()
+  return data?.items ?? []
+}

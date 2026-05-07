@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback } from 'react'
 import GameCard from './components/GameCard'
 import StandingsTable from './components/StandingsTable'
 import PlayoffBracket from './components/PlayoffBracket'
+import TeamNews from './components/TeamNews'
 import { fetchTodayGames, fetchStandings } from './services/nbaApi'
 import './App.css'
 
 const TABS = [
   { id: 'games',     label: '🏀 오늘 경기' },
   { id: 'standings', label: '📊 순위' },
+  { id: 'news',      label: '📰 팀 뉴스' },
 ]
 
 const REFRESH_MS = 30_000
@@ -148,6 +150,8 @@ export default function App() {
         {activeTab === 'standings' && (
           <StandingsTable standings={standings} />
         )}
+
+        {activeTab === 'news' && <TeamNews />}
       </main>
     </div>
   )

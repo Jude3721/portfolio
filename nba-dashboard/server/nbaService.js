@@ -11,6 +11,24 @@ const ID_TO_TRI = {
   1610612762:'UTA', 1610612764:'WAS',
 }
 
+const EAST_TEAM_IDS = new Set([
+  1610612737, // ATL
+  1610612738, // BOS
+  1610612751, // BKN
+  1610612766, // CHA
+  1610612741, // CHI
+  1610612739, // CLE
+  1610612765, // DET
+  1610612754, // IND
+  1610612748, // MIA
+  1610612749, // MIL
+  1610612752, // NYK
+  1610612753, // ORL
+  1610612755, // PHI
+  1610612761, // TOR
+  1610612764, // WAS
+])
+
 const CDN_HEADERS = {
   'User-Agent': UA,
   'Accept': 'application/json, text/plain, */*',
@@ -303,12 +321,15 @@ export async function fetchPlayoffBracket() {
   // 시리즈별 팀-게임 매핑
   const seriesRows = seriesJson.resultSets[0].rowSet ?? []
   const seriesMap  = new Map() // seriesId → { seriesId, homeId, visitorId, gameIds[] }
-  for (const [gameId, homeId, visitorId, seriesId] of seriesRows) {
+  for (const [rawGameId, rawHomeId, rawVisitorId, seriesId] of seriesRows) {
+    const gameId    = String(rawGameId)
+    const homeId    = Number(rawHomeId)
+    const visitorId = Number(rawVisitorId)
     if (!seriesMap.has(seriesId)) seriesMap.set(seriesId, { seriesId, homeId, visitorId, gameIds: new Set() })
     seriesMap.get(seriesId).gameIds.add(gameId)
   }
 
-  // 게임 결과 집계: gameId → { winnerId }
+  // 게임 결과 집계: gameId → winnerId
   const logHeaders = logJson.resultSets[0].headers
   const logRows    = logJson.resultSets[0].rowSet ?? []
   const iTeamId    = logHeaders.indexOf('TEAM_ID')
@@ -316,17 +337,15 @@ export async function fetchPlayoffBracket() {
   const iWL        = logHeaders.indexOf('WL')
   const gameWinner = new Map() // gameId → winnerId
   for (const row of logRows) {
-    if (row[iWL] === 'W') gameWinner.set(row[iGameId], row[iTeamId])
+    if (row[iWL] === 'W') gameWinner.set(String(row[iGameId]), Number(row[iTeamId]))
   }
 
   // 시리즈별 승수 계산
   const bracket = {}
   for (const [seriesId, { homeId, visitorId, gameIds }] of seriesMap) {
     const roundCode = seriesId.slice(6, 8)  // e.g. '01', '02'
-    const seriesNum = parseInt(seriesId.slice(8), 10)
-    const conf      = roundCode === '01'
-      ? (seriesNum <= 3 ? 'East' : 'West')
-      : (roundCode === '02' ? (seriesNum <= 1 ? 'East' : 'West') : 'Finals')
+    const conf      = roundCode === '04' ? 'Finals'
+      : (EAST_TEAM_IDS.has(homeId) ? 'East' : 'West')
 
     let homeWins = 0, visitorWins = 0
     for (const gId of gameIds) {
@@ -363,4 +382,79 @@ export async function fetchPlayoffBracket() {
   playoffCache.data = rounds
   playoffCache.exp  = Date.now() + TTL_PLAYOFF
   return rounds
+}
+
+// ─── 팀 뉴스 ───────────────────────────────────────────────────
+const TRI_TO_QUERY = {
+  ATL:'Atlanta Hawks',         BOS:'Boston Celtics',        BKN:'Brooklyn Nets',
+  CHA:'Charlotte Hornets',     CHI:'Chicago Bulls',         CLE:'Cleveland Cavaliers',
+  DAL:'Dallas Mavericks',      DEN:'Denver Nuggets',        DET:'Detroit Pistons',
+  GSW:'Golden State Warriors', HOU:'Houston Rockets',       IND:'Indiana Pacers',
+  LAC:'LA Clippers',           LAL:'Los Angeles Lakers',    MEM:'Memphis Grizzlies',
+  MIA:'Miami Heat',            MIL:'Milwaukee Bucks',       MIN:'Minnesota Timberwolves',
+  NOP:'New Orleans Pelicans',  NYK:'New York Knicks',       OKC:'Oklahoma City Thunder',
+  ORL:'Orlando Magic',         PHI:'Philadelphia 76ers',    PHX:'Phoenix Suns',
+  POR:'Portland Trail Blazers',SAC:'Sacramento Kings',      SAS:'San Antonio Spurs',
+  TOR:'Toronto Raptors',       UTA:'Utah Jazz',             WAS:'Washington Wizards',
+}
+
+const newsCache = new Map() // tri → { data, exp }
+const TTL_NEWS  = 600_000   // 10분
+
+export async function fetchTeamNews(tri) {
+  const cached = newsCache.get(tri)
+  if (cached && Date.now() < cached.exp) return cached.data
+
+  const query = TRI_TO_QUERY[tri]
+  if (!query) throw new Error(`Unknown team: ${tri}`)
+
+  const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query + ' NBA')}&hl=en-US&gl=US&ceid=US:en`
+  const res  = await fetch(url, { headers: CDN_HEADERS })
+  if (!res.ok) throw new Error(`news fetch ${res.status}`)
+
+  const xml        = await res.text()
+  const rawItems   = parseRSS(xml).slice(0, 20)
+  const translated = await translateTitles(rawItems.map(i => i.title))
+  const items      = rawItems.map((item, i) => ({ ...item, title: translated[i] ?? item.title }))
+
+  console.log(`[NBA] 뉴스: ${tri} ${items.length}건 (번역 완료)`)
+  newsCache.set(tri, { data: items, exp: Date.now() + TTL_NEWS })
+  return items
+}
+
+async function translateTitle(text) {
+  try {
+    const url  = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(text)}`
+    const res  = await fetch(url, { headers: { 'User-Agent': UA } })
+    if (!res.ok) return text
+    const data = await res.json()
+    return (data[0] ?? []).map(s => s[0]).join('').trim() || text
+  } catch {
+    return text
+  }
+}
+
+async function translateTitles(titles) {
+  const results = await Promise.allSettled(titles.map(t => translateTitle(t)))
+  return results.map((r, i) => r.status === 'fulfilled' ? r.value : titles[i])
+}
+
+function parseRSS(xml) {
+  const getCDATA = s => s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim()
+  const getTag   = (s, tag) => {
+    const m = s.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`))
+    return m ? getCDATA(m[1]).trim() : ''
+  }
+  const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+  const items = []
+  for (const [, body] of xml.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
+    const source  = getTag(body, 'source')
+    let   title   = getTag(body, 'title')
+    if (source) title = title.replace(new RegExp(`\\s*[-–]\\s*${escRe(source)}\\s*$`), '').trim()
+    const link    = body.match(/<link>([\s\S]*?)<\/link>/)?.[1]?.trim() ?? ''
+    const pubDate = getTag(body, 'pubDate')
+    if (title) items.push({ title, link, source, pubDate })
+  }
+  return items
 }

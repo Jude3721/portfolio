@@ -24,9 +24,8 @@ module.exports = {
     {
       name: 'nba-frontend',
       cwd: 'C:/source/jdkim/nba-dashboard',
-      script: 'node_modules/vite/bin/vite.js',
+      script: 'scripts/start-dev.mjs',
       interpreter: 'node',
-      args: '--port 5174',
       watch: false,
       autorestart: true,
       restart_delay: 2000,
