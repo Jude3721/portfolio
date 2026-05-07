@@ -4,6 +4,7 @@ import StandingsTable from './components/StandingsTable'
 import PlayoffBracket from './components/PlayoffBracket'
 import TeamNews from './components/TeamNews'
 import TradeNews from './components/TradeNews'
+import UpcomingGames from './components/UpcomingGames'
 import { fetchTodayGames, fetchStandings } from './services/nbaApi'
 import './App.css'
 
@@ -147,6 +148,7 @@ export default function App() {
           </section>
         )}
 
+        {activeTab === 'games' && <UpcomingGames />}
         {activeTab === 'games' && <PlayoffBracket />}
 
         {activeTab === 'standings' && (

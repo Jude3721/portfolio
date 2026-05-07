@@ -1,5 +1,5 @@
 import express from 'express'
-import { fetchScoreboard, fetchBoxscore, fetchStandings, fetchPlayoffBracket, fetchRoster, fetchTeamNews, fetchTradeNews } from './nbaService.js'
+import { fetchScoreboard, fetchBoxscore, fetchStandings, fetchPlayoffBracket, fetchRoster, fetchTeamNews, fetchTradeNews, fetchUpcomingGames } from './nbaService.js'
 
 const ALLOWED_ORIGINS = [
   'https://jude3721.github.io',
@@ -67,6 +67,17 @@ app.get('/api/playoff', async (req, res) => {
     res.json({ rounds })
   } catch (err) {
     console.error('[server] playoff error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.get('/api/schedule', async (req, res) => {
+  try {
+    const days  = Math.min(parseInt(req.query.days ?? '7'), 14)
+    const dates = await fetchUpcomingGames(days)
+    res.json({ dates })
+  } catch (err) {
+    console.error('[server] schedule error:', err.message)
     res.status(500).json({ error: err.message })
   }
 })

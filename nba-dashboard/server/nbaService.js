@@ -46,6 +46,70 @@ const STATS_HEADERS = {
   'Origin': 'https://stats.nba.com',
 }
 
+// ─── 경기 일정 ─────────────────────────────────────────────────
+const scheduleCache = { data: null, exp: 0 }
+const TTL_SCHEDULE  = 3_600_000 // 1시간
+
+export async function fetchUpcomingGames(days = 7) {
+  if (scheduleCache.data && Date.now() < scheduleCache.exp) {
+    return sliceUpcoming(scheduleCache.data, days)
+  }
+
+  const res = await fetch(
+    'https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json',
+    { headers: CDN_HEADERS }
+  )
+  if (!res.ok) throw new Error(`schedule ${res.status}`)
+
+  const json = await res.json()
+  const gameDates = json?.leagueSchedule?.gameDates ?? []
+
+  console.log(`[NBA] 시즌 일정: ${gameDates.length}일`)
+  scheduleCache.data = gameDates
+  scheduleCache.exp  = Date.now() + TTL_SCHEDULE
+  return sliceUpcoming(gameDates, days)
+}
+
+function sliceUpcoming(gameDates, days) {
+  const now    = Date.now()
+  const cutoff = now + days * 86_400_000
+
+  // gameId → entry 로 KST 날짜 기준 머지
+  const byDate = new Map()
+
+  for (const { games } of gameDates) {
+    for (const g of games) {
+      if (g.gameStatus !== 1) continue                       // 예정 경기만
+      const gameMs = new Date(g.gameDateTimeUTC).getTime()
+      if (gameMs <= now || gameMs >= cutoff) continue        // 이미 지났거나 너무 먼 미래 제외
+
+      // KST 기준 날짜 키
+      const kst    = new Date(gameMs + 9 * 3_600_000)
+      const key    = `${kst.getUTCFullYear()}-${String(kst.getUTCMonth()+1).padStart(2,'0')}-${String(kst.getUTCDate()).padStart(2,'0')}`
+      const hh     = String(kst.getUTCHours()).padStart(2, '0')
+      const mm     = String(kst.getUTCMinutes()).padStart(2, '0')
+
+      if (!byDate.has(key)) byDate.set(key, { dateStr: key, dateKR: formatDateKR(kst), games: [] })
+      byDate.get(key).games.push({
+        gameId:   g.gameId,
+        timeKST:  `${hh}:${mm}`,
+        awayTeam: { tricode: g.awayTeam.teamTricode, name: g.awayTeam.teamName, city: g.awayTeam.teamCity },
+        homeTeam: { tricode: g.homeTeam.teamTricode, name: g.homeTeam.teamName, city: g.homeTeam.teamCity },
+      })
+    }
+  }
+
+  return [...byDate.values()].sort((a, b) => a.dateStr < b.dateStr ? -1 : 1)
+}
+
+function formatDateKR(date) {
+  const days = ['일', '월', '화', '수', '목', '금', '토']
+  const m  = date.getUTCMonth() + 1
+  const d  = date.getUTCDate()
+  const wd = days[date.getUTCDay()]
+  return `${m}월 ${d}일 (${wd})`
+}
+
 // ─── 캐시 ─────────────────────────────────────────────────────
 const scoreboardCache = { data: null, exp: 0 }
 const boxscoreCache   = new Map()  // gameId → { data, exp }

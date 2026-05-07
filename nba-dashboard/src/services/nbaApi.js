@@ -34,6 +34,13 @@ export async function fetchStandings() {
   return data?.standings ?? []
 }
 
+export async function fetchUpcomingGames(days = 7) {
+  const res = await fetch(`${API_BASE}/api/schedule?days=${days}`)
+  if (!res.ok) throw new Error(`schedule 오류: ${res.status}`)
+  const data = await res.json()
+  return data?.dates ?? []
+}
+
 export async function fetchTradeNews(category = 'all') {
   const res = await fetch(`${API_BASE}/api/trades?category=${category}`)
   if (!res.ok) throw new Error(`trades 오류: ${res.status}`)
