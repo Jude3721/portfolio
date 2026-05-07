@@ -262,6 +262,46 @@ export async function fetchSchedule(dateStr) {
   return games
 }
 
+// ─── 다가오는 경기 일정 ────────────────────────────────────────
+const upcomingCache = { data: null, exp: 0 }
+const TTL_UPCOMING  = 3_600_000 // 1시간
+
+export async function fetchUpcomingSchedule(days = 7) {
+  if (upcomingCache.data && Date.now() < upcomingCache.exp) return upcomingCache.data
+
+  const dates = []
+  for (let i = 1; i <= days; i++) {
+    const d = new Date()
+    d.setDate(d.getDate() + i)
+    const dateStr = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`
+    dates.push({ dateStr, label: formatDateKR(d) })
+  }
+
+  const fetched = await Promise.allSettled(
+    dates.map(({ dateStr }) => fetchSchedule(dateStr))
+  )
+
+  const result = dates
+    .map(({ dateStr, label }, i) => ({
+      dateStr,
+      dateKR: label,
+      games:  fetched[i].status === 'fulfilled' ? fetched[i].value : [],
+    }))
+    .filter(d => d.games.length > 0)
+
+  console.log(`[KBO] 다가오는 경기 일정: ${result.length}일`)
+  upcomingCache.data = result
+  upcomingCache.exp  = Date.now() + TTL_UPCOMING
+  return result
+}
+
+function formatDateKR(date) {
+  const days = ['일', '월', '화', '수', '목', '금', '토']
+  const m = date.getMonth() + 1
+  const d = date.getDate()
+  return `${m}월 ${d}일 (${days[date.getDay()]})`
+}
+
 // ─── 라인업 ──────────────────────────────────────────────────
 export async function fetchLineup(gameId) {
   await getSession()

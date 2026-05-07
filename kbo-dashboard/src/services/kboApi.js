@@ -75,6 +75,14 @@ export async function fetchRosterMoves() {
   return data?.moves ?? []
 }
 
+/** 다가오는 경기 일정 조회 */
+export async function fetchUpcomingSchedule(days = 7) {
+  const res = await fetch(`${API_BASE}/api/upcoming?days=${days}`)
+  if (!res.ok) throw new Error(`upcoming 오류: ${res.status}`)
+  const data = await res.json()
+  return data?.dates ?? []
+}
+
 /** 팀 뉴스 조회 (page: 1-based) */
 export async function fetchTeamNews(teamKey, page = 1) {
   const res = await fetch(`${API_BASE}/api/news/${encodeURIComponent(teamKey)}?page=${page}`)

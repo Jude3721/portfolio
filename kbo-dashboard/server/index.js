@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import express from 'express'
-import { fetchSchedule, fetchLineup, fetchTeamStats, fetchStandings, fetchTeamNews, fetchInjuries, fetchRosterMoves } from './kboService.js'
+import { fetchSchedule, fetchLineup, fetchTeamStats, fetchStandings, fetchTeamNews, fetchInjuries, fetchRosterMoves, fetchUpcomingSchedule } from './kboService.js'
 
 const ALLOWED_ORIGINS = [
   'https://jude3721.github.io',
@@ -52,6 +52,17 @@ app.get('/api/schedule', async (req, res) => {
     res.json({ games, date })
   } catch (err) {
     console.error('[server] schedule error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.get('/api/upcoming', async (req, res) => {
+  try {
+    const days  = Math.min(parseInt(req.query.days ?? '7'), 14)
+    const dates = await fetchUpcomingSchedule(days)
+    res.json({ dates })
+  } catch (err) {
+    console.error('[server] upcoming error:', err.message)
     res.status(500).json({ error: err.message })
   }
 })

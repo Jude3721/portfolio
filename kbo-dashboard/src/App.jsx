@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import TodayGameList from './components/TodayGameList'
 import StandingsTable from './components/StandingsTable'
 import TeamStatsModal from './components/TeamStatsModal'
+import UpcomingSchedule from './components/UpcomingSchedule'
 import InjuryPage from './components/InjuryPage'
 import MovesPage from './components/MovesPage'
 import NewsPage from './components/NewsPage'
@@ -247,6 +248,7 @@ function App() {
       {activeTab === 'games' && (
         <>
           <TodayGameList games={games} standings={standings} />
+          <UpcomingSchedule />
           <StandingsTable standings={standings} prevStandings={prevStandings} onTeamClick={setSelectedTeam} dataSource={standingsSource} />
         </>
       )}
