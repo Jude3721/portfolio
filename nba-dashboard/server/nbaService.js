@@ -39,11 +39,17 @@ const CDN_HEADERS = {
 
 const STATS_HEADERS = {
   ...CDN_HEADERS,
-  'Host': 'stats.nba.com',
   'x-nba-stats-token': 'true',
   'x-nba-stats-origin': 'stats',
   'Referer': 'https://stats.nba.com/',
   'Origin': 'https://stats.nba.com',
+}
+
+const TRI_TO_ESPN_ID = {
+  ATL:1,  BOS:2,  BKN:17, CHA:30, CHI:4,  CLE:5,  DAL:6,  DEN:7,
+  DET:8,  GSW:9,  HOU:10, IND:11, LAC:12, LAL:13, MEM:29, MIA:14,
+  MIL:15, MIN:16, NOP:3,  NYK:18, OKC:25, ORL:19, PHI:20, PHX:21,
+  POR:22, SAC:23, SAS:24, TOR:28, UTA:26, WAS:27,
 }
 
 // ─── 경기 일정 ─────────────────────────────────────────────────
@@ -327,6 +333,20 @@ export async function fetchRoster(teamId) {
   const season = getCurrentSeason()
   console.log(`[NBA] 로스터 조회: teamId=${teamId} season=${season}`)
 
+  let players
+  try {
+    players = await fetchRosterFromNBA(teamId, season)
+  } catch (err) {
+    console.warn(`[NBA] stats.nba.com 실패(${err.message}), ESPN 폴백`)
+    players = await fetchRosterFromESPN(teamId)
+  }
+
+  console.log(`[NBA] 로스터: ${players.length}명`)
+  rosterCache.set(teamId, { data: players, exp: Date.now() + TTL_ROSTER })
+  return players
+}
+
+async function fetchRosterFromNBA(teamId, season) {
   const res = await fetch(
     `https://stats.nba.com/stats/commonteamroster?Season=${season}&TeamID=${teamId}`,
     { headers: STATS_HEADERS }
@@ -336,26 +356,54 @@ export async function fetchRoster(teamId) {
   const json    = await res.json()
   const headers = json?.resultSets?.[0]?.headers ?? []
   const rows    = json?.resultSets?.[0]?.rowSet   ?? []
+  const idx     = name => headers.indexOf(name)
 
-  const idx = (name) => headers.indexOf(name)
   const players = rows.map(r => ({
     playerId:    r[idx('PLAYER_ID')],
-    name:        r[idx('PLAYER')]      ?? '',
-    num:         r[idx('NUM')]         ?? '',
-    position:    r[idx('POSITION')]    ?? '',
-    height:      r[idx('HEIGHT')]      ?? '',
-    weight:      r[idx('WEIGHT')]      ?? '',
-    age:         r[idx('AGE')]         ?? '',
-    exp:         r[idx('EXP')]         ?? '',
-    school:      r[idx('SCHOOL')]      ?? '',
+    name:        r[idx('PLAYER')]       ?? '',
+    num:         r[idx('NUM')]          ?? '',
+    position:    r[idx('POSITION')]     ?? '',
+    height:      r[idx('HEIGHT')]       ?? '',
+    weight:      r[idx('WEIGHT')]       ?? '',
+    age:         r[idx('AGE')]          ?? '',
+    exp:         r[idx('EXP')]          ?? '',
+    school:      r[idx('SCHOOL')]       ?? '',
     howAcquired: r[idx('HOW_ACQUIRED')] ?? '',
   }))
 
   const posOrder = { G: 0, 'G-F': 1, F: 2, 'F-G': 3, 'F-C': 4, C: 5 }
   players.sort((a, b) => (posOrder[a.position] ?? 9) - (posOrder[b.position] ?? 9))
+  return players
+}
 
-  console.log(`[NBA] 로스터: ${players.length}명`)
-  rosterCache.set(teamId, { data: players, exp: Date.now() + TTL_ROSTER })
+async function fetchRosterFromESPN(teamId) {
+  const tri    = ID_TO_TRI[teamId]
+  const espnId = TRI_TO_ESPN_ID[tri]
+  if (!espnId) throw new Error(`ESPN ID 없음: ${tri}`)
+
+  const res = await fetch(
+    `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${espnId}/roster`,
+    { headers: { 'User-Agent': UA, 'Accept': 'application/json' } }
+  )
+  if (!res.ok) throw new Error(`ESPN roster ${res.status}`)
+
+  const json    = await res.json()
+  // athletes는 flat 배열
+  const players = (json.athletes ?? []).map(p => ({
+    playerId:    p.id,
+    name:        p.fullName                  ?? '',
+    num:         p.jersey                    ?? '',
+    position:    p.position?.abbreviation    ?? '',
+    height:      p.displayHeight             ?? '',
+    weight:      String(p.weight             ?? ''),
+    age:         p.age                       ?? '',
+    exp:         String(p.experience?.years  ?? '0'),
+    school:      p.college?.name             ?? '',
+    howAcquired: '',
+  }))
+
+  const posOrder = { G: 0, 'G-F': 1, F: 2, 'F-G': 3, 'F-C': 4, C: 5 }
+  players.sort((a, b) => (posOrder[a.position] ?? 9) - (posOrder[b.position] ?? 9))
   return players
 }
 
