@@ -34,6 +34,20 @@ export async function fetchStandings() {
   return data?.standings ?? []
 }
 
+export async function fetchTradeNews(category = 'all') {
+  const res = await fetch(`${API_BASE}/api/trades?category=${category}`)
+  if (!res.ok) throw new Error(`trades 오류: ${res.status}`)
+  const data = await res.json()
+  return data?.items ?? []
+}
+
+export async function fetchTeamTrades(tri) {
+  const res = await fetch(`${API_BASE}/api/trades/${tri}`)
+  if (!res.ok) throw new Error(`team trades 오류: ${res.status}`)
+  const data = await res.json()
+  return data?.items ?? []
+}
+
 export async function fetchTeamNews(tri) {
   const res = await fetch(`${API_BASE}/api/news/${tri}`)
   if (!res.ok) throw new Error(`news 오류: ${res.status}`)

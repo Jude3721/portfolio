@@ -439,6 +439,44 @@ async function translateTitles(titles) {
   return results.map((r, i) => r.status === 'fulfilled' ? r.value : titles[i])
 }
 
+// ─── 트레이드 뉴스 ─────────────────────────────────────────────
+const TRADE_QUERIES = {
+  all:     'NBA trade 2026',
+  rumors:  'NBA trade rumor 2026',
+  done:    'NBA trade deal agreed 2026',
+}
+
+const tradeCache = new Map() // key → { data, exp }
+const TTL_TRADE  = 300_000   // 5분
+
+export async function fetchTradeNews(category = 'all', tri = null) {
+  const key    = tri ? `team:${tri}` : `cat:${category}`
+  const cached = tradeCache.get(key)
+  if (cached && Date.now() < cached.exp) return cached.data
+
+  let query
+  if (tri) {
+    const teamName = TRI_TO_QUERY[tri]
+    if (!teamName) throw new Error(`Unknown team: ${tri}`)
+    query = `"${teamName}" trade rumor 2026`
+  } else {
+    query = TRADE_QUERIES[category] ?? TRADE_QUERIES.all
+  }
+
+  const url  = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`
+  const res  = await fetch(url, { headers: CDN_HEADERS })
+  if (!res.ok) throw new Error(`trade news fetch ${res.status}`)
+
+  const xml        = await res.text()
+  const rawItems   = parseRSS(xml).slice(0, 20)
+  const translated = await translateTitles(rawItems.map(i => i.title))
+  const items      = rawItems.map((item, i) => ({ ...item, title: translated[i] ?? item.title }))
+
+  console.log(`[NBA] 트레이드 뉴스: ${key} ${items.length}건`)
+  tradeCache.set(key, { data: items, exp: Date.now() + TTL_TRADE })
+  return items
+}
+
 function parseRSS(xml) {
   const getCDATA = s => s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim()
   const getTag   = (s, tag) => {

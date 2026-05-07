@@ -1,5 +1,5 @@
 import express from 'express'
-import { fetchScoreboard, fetchBoxscore, fetchStandings, fetchPlayoffBracket, fetchRoster, fetchTeamNews } from './nbaService.js'
+import { fetchScoreboard, fetchBoxscore, fetchStandings, fetchPlayoffBracket, fetchRoster, fetchTeamNews, fetchTradeNews } from './nbaService.js'
 
 const ALLOWED_ORIGINS = [
   'https://jude3721.github.io',
@@ -67,6 +67,26 @@ app.get('/api/playoff', async (req, res) => {
     res.json({ rounds })
   } catch (err) {
     console.error('[server] playoff error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.get('/api/trades', async (req, res) => {
+  try {
+    const items = await fetchTradeNews(req.query.category ?? 'all')
+    res.json({ items })
+  } catch (err) {
+    console.error('[server] trades error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.get('/api/trades/:tri', async (req, res) => {
+  try {
+    const items = await fetchTradeNews('all', req.params.tri.toUpperCase())
+    res.json({ items })
+  } catch (err) {
+    console.error('[server] trades error:', err.message)
     res.status(500).json({ error: err.message })
   }
 })
