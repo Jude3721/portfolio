@@ -525,7 +525,7 @@ export async function fetchTeamNews(tri) {
   if (!res.ok) throw new Error(`news fetch ${res.status}`)
 
   const xml        = await res.text()
-  const rawItems   = parseRSS(xml).slice(0, 20)
+  const rawItems   = parseRSS(xml).sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate)).slice(0, 20)
   const translated = await translateTitles(rawItems.map(i => i.title))
   const items      = rawItems.map((item, i) => ({ ...item, title: translated[i] ?? item.title }))
 
@@ -580,7 +580,7 @@ export async function fetchTradeNews(category = 'all', tri = null) {
   if (!res.ok) throw new Error(`trade news fetch ${res.status}`)
 
   const xml        = await res.text()
-  const rawItems   = parseRSS(xml).slice(0, 20)
+  const rawItems   = parseRSS(xml).sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate)).slice(0, 20)
   const translated = await translateTitles(rawItems.map(i => i.title))
   const items      = rawItems.map((item, i) => ({ ...item, title: translated[i] ?? item.title }))
 
