@@ -16,11 +16,19 @@ function TeamBadge({ teamKey, size = 24 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%', flexShrink: 0,
-      background: team.color,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.33, fontWeight: 800, color: '#fff',
+      background: `${team.color}22`,
+      border: `1px solid ${team.color}50`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
     }}>
-      {team.short.slice(0, 2)}
+      <img
+        src={team.logo} alt={team.short}
+        style={{ width: size * 0.8, height: size * 0.8, objectFit: 'contain' }}
+        onError={e => {
+          e.target.style.display = 'none'
+          e.target.parentElement.innerHTML = `<span style="font-size:${size*0.32}px;font-weight:800;color:#fff">${team.short.slice(0,2)}</span>`
+          e.target.parentElement.style.background = team.color
+        }}
+      />
     </div>
   )
 }

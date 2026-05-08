@@ -6,7 +6,6 @@ import UpcomingSchedule from './components/UpcomingSchedule'
 import InjuryPage from './components/InjuryPage'
 import MovesPage from './components/MovesPage'
 import NewsPage from './components/NewsPage'
-import ThemePicker from './components/ThemePicker'
 import WishTeamModal from './components/WishTeamModal'
 import ChatRoom from './components/ChatRoom'
 import { KBO_TEAMS } from './data/kboTeams'
@@ -40,14 +39,27 @@ function App() {
   const [countdown, setCountdown]             = useState(0)
   const intervalRef  = useRef(null)
   const countdownRef = useRef(null)
-  const [wishTeam, setWishTeam]         = useState(() => localStorage.getItem('kbo_wish_team') || null)
+  const [wishTeam, setWishTeam]           = useState(() => localStorage.getItem('kbo_wish_team') || null)
   const [showWishModal, setShowWishModal] = useState(false)
+  const [isDark, setIsDark]               = useState(() => (localStorage.getItem('kbo-theme') || 'violet') !== 'snow')
 
   const handleWishSelect = team => {
     if (team) localStorage.setItem('kbo_wish_team', team)
     else localStorage.removeItem('kbo_wish_team')
     setWishTeam(team)
   }
+
+  const toggleTheme = () => {
+    const next = isDark ? 'snow' : 'violet'
+    setIsDark(!isDark)
+    localStorage.setItem('kbo-theme', next)
+    document.documentElement.dataset.theme = next === 'violet' ? '' : next
+  }
+
+  useEffect(() => {
+    const saved = localStorage.getItem('kbo-theme') || 'violet'
+    document.documentElement.dataset.theme = saved === 'violet' ? '' : saved
+  }, [])
 
   const hasLiveGame      = games.some((g) => g.status === 'live')
   const REFRESH_INTERVAL = hasLiveGame ? 30 : 60
@@ -142,7 +154,7 @@ function App() {
     )}
     <ChatRoom wishTeam={wishTeam} />
     <main>
-      {/* ── 헤더 (NBA 스타일) ── */}
+      {/* ── 헤더 ── */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 100,
         background: 'rgba(10,10,20,0.94)', backdropFilter: 'blur(12px)',
@@ -151,6 +163,7 @@ function App() {
       }}>
         {/* 상단 행 */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+
           {/* 좌측: 로고 + 날짜 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '22px', fontWeight: 900, letterSpacing: '-0.5px', color: '#fff' }}>
@@ -168,8 +181,7 @@ function App() {
           </div>
 
           {/* 우측: 컨트롤 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {/* 실시간 / 카운트다운 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {dataSource === 'live'
               ? <span className="live-badge"><span className="live-dot" />실시간</span>
               : null
@@ -187,28 +199,38 @@ function App() {
               title="응원 팀 선택"
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '5px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                padding: '4px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
                 background: wishTeam ? `${KBO_TEAMS[wishTeam]?.color}25` : 'rgba(255,255,255,0.06)',
                 outline: wishTeam ? `1px solid ${KBO_TEAMS[wishTeam]?.color}60` : '1px solid rgba(255,255,255,0.1)',
-                color: wishTeam ? '#fff' : 'rgba(255,255,255,0.5)',
-                fontSize: '12px', fontWeight: 700, transition: 'all 0.15s',
+                color: '#fff', fontSize: '12px', fontWeight: 700, transition: 'all 0.15s',
               }}
             >
               {wishTeam ? (
                 <>
-                  <span style={{
-                    width: '16px', height: '16px', borderRadius: '50%',
-                    background: KBO_TEAMS[wishTeam]?.color,
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '7px', fontWeight: 800, color: '#fff', flexShrink: 0,
-                  }}>
-                    {KBO_TEAMS[wishTeam]?.short.slice(0, 2)}
-                  </span>
+                  <img
+                    src={KBO_TEAMS[wishTeam]?.logo} alt={wishTeam}
+                    style={{ height: '20px', objectFit: 'contain' }}
+                    onError={e => e.target.style.display = 'none'}
+                  />
                   {KBO_TEAMS[wishTeam]?.short}
                 </>
               ) : (
                 <span>⭐ 내 팀</span>
               )}
+            </button>
+
+            {/* 다크모드 토글 */}
+            <button
+              onClick={toggleTheme}
+              title={isDark ? '라이트 모드' : '다크 모드'}
+              style={{
+                padding: '5px 10px', borderRadius: '8px', fontSize: '15px',
+                border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+                background: 'rgba(255,255,255,0.06)', transition: 'all 0.15s',
+                display: 'flex', alignItems: 'center',
+              }}
+            >
+              {isDark ? '☀️' : '🌙'}
             </button>
 
             {/* 새로고침 버튼 */}
@@ -234,7 +256,7 @@ function App() {
           </div>
         </div>
 
-        {/* 탭 내비게이션 */}
+        {/* 탭 */}
         <nav style={{ display: 'flex', gap: '4px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           {NAV_TABS.map(tab => {
             const isActive = activeTab === tab.id
@@ -271,7 +293,6 @@ function App() {
       {activeTab === 'news'   && <NewsPage />}
       {selectedTeam && <TeamStatsModal teamKey={selectedTeam} onClose={() => setSelectedTeam(null)} />}
     </main>
-    <ThemePicker />
   </>
   )
 }
