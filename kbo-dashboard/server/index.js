@@ -1,3 +1,4 @@
+// KBO 백엔드 서버
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import express from 'express'
