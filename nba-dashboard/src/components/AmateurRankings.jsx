@@ -6,14 +6,14 @@ const POS_COLOR = {
 }
 const POSITIONS = ['ALL', 'PG', 'SG', 'SF', 'PF', 'C']
 
-function Stars({ count }) {
-  return (
-    <span style={{ letterSpacing: '-1px', fontSize: '13px' }}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <span key={i} style={{ color: i < count ? '#F4A261' : 'rgba(255,255,255,0.1)' }}>★</span>
-      ))}
-    </span>
-  )
+function timeAgo(pubDate) {
+  if (!pubDate) return ''
+  const diff = Date.now() - new Date(pubDate).getTime()
+  const m = Math.floor(diff / 60000)
+  if (m < 60)  return `${m}분 전`
+  const h = Math.floor(m / 60)
+  if (h < 24)  return `${h}시간 전`
+  return `${Math.floor(h / 24)}일 전`
 }
 
 function PosTag({ pos }) {
@@ -51,8 +51,8 @@ function CollegeTable({ players, posFilter }) {
 
   return (
     <>
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', alignSelf: 'center', marginRight: '4px' }}>정렬</span>
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginRight: '4px' }}>정렬</span>
         <SortBtn k="pts" label="득점" />
         <SortBtn k="reb" label="리바운드" />
         <SortBtn k="ast" label="어시스트" />
@@ -64,9 +64,8 @@ function CollegeTable({ players, posFilter }) {
         background: 'rgba(255,255,255,0.03)', borderRadius: '16px',
         border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden',
       }}>
-        {/* 헤더 */}
         <div style={{
-          display: 'grid', gridTemplateColumns: '48px 1fr 70px 1fr 56px 56px 56px',
+          display: 'grid', gridTemplateColumns: '48px 1fr 72px 1fr 56px 56px 56px',
           padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)',
           fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.3)',
           textTransform: 'uppercase', letterSpacing: '0.5px',
@@ -82,13 +81,13 @@ function CollegeTable({ players, posFilter }) {
 
         {filtered.length === 0 ? (
           <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: '13px' }}>
-            데이터가 없습니다
+            해당 포지션 데이터가 없습니다
           </div>
         ) : filtered.map((p, i) => (
           <div
             key={i}
             style={{
-              display: 'grid', gridTemplateColumns: '48px 1fr 70px 1fr 56px 56px 56px',
+              display: 'grid', gridTemplateColumns: '48px 1fr 72px 1fr 56px 56px 56px',
               padding: '12px 16px', alignItems: 'center',
               borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
               background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)',
@@ -100,26 +99,22 @@ function CollegeTable({ players, posFilter }) {
             }}>
               {p.rank}
             </span>
-
             <span style={{ fontSize: '14px', fontWeight: 700 }}>{p.name}</span>
-
             <div style={{ textAlign: 'center' }}><PosTag pos={p.position} /></div>
-
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {p.schoolLogo && (
                 <img src={p.schoolLogo} alt="" style={{ height: '20px', objectFit: 'contain', flexShrink: 0 }} />
               )}
-              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {p.school}
               </span>
             </div>
-
-            {[p.pts, p.reb, p.ast].map((val, vi) => (
-              <span key={vi} style={{
+            {['pts', 'reb', 'ast'].map(k => (
+              <span key={k} style={{
                 textAlign: 'right', fontSize: '13px', fontWeight: 700,
-                color: vi === ['pts','reb','ast'].indexOf(sortKey) ? '#4FC3F7' : 'rgba(255,255,255,0.7)',
+                color: sortKey === k ? '#4FC3F7' : 'rgba(255,255,255,0.7)',
               }}>
-                {val.toFixed(1)}
+                {(p[k] ?? 0).toFixed(1)}
               </span>
             ))}
           </div>
@@ -129,88 +124,50 @@ function CollegeTable({ players, posFilter }) {
   )
 }
 
-function HsTable({ players, posFilter }) {
-  const filtered = posFilter === 'ALL' ? players : players.filter(p => p.position === posFilter)
-
-  if (filtered.length === 0) return (
-    <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: '13px' }}>
-      데이터가 없습니다
+function HsNewsList({ items }) {
+  if (items.length === 0) return (
+    <div style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: '13px' }}>
+      리크루팅 뉴스를 불러올 수 없습니다
     </div>
   )
 
   return (
-    <div style={{
-      background: 'rgba(255,255,255,0.03)', borderRadius: '16px',
-      border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden',
-    }}>
-      {/* 헤더 */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '48px 1fr 70px 100px 1fr 1fr',
-        padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)',
-        fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.3)',
-        textTransform: 'uppercase', letterSpacing: '0.5px',
-      }}>
-        <span>#</span>
-        <span>선수</span>
-        <span style={{ textAlign: 'center' }}>포지션</span>
-        <span style={{ textAlign: 'center' }}>등급</span>
-        <span>출신지</span>
-        <span>커밋 학교</span>
-      </div>
-
-      {filtered.map((p, i) => (
-        <div
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {items.map((item, i) => (
+        <a
           key={i}
+          href={item.link}
+          target="_blank"
+          rel="noreferrer"
           style={{
-            display: 'grid', gridTemplateColumns: '48px 1fr 70px 100px 1fr 1fr',
-            padding: '12px 16px', alignItems: 'center',
-            borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-            background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)',
+            display: 'block', textDecoration: 'none',
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: '12px', padding: '14px 16px',
+            transition: 'background 0.15s',
           }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
         >
-          <span style={{
-            fontSize: '14px', fontWeight: 900,
-            color: p.rank <= 5 ? '#F4A261' : p.rank <= 20 ? '#fff' : 'rgba(255,255,255,0.45)',
-          }}>
-            {p.rank}
-          </span>
-
-          <span style={{ fontSize: '14px', fontWeight: 700 }}>{p.name}</span>
-
-          <div style={{ textAlign: 'center' }}><PosTag pos={p.position} /></div>
-
-          <div style={{ textAlign: 'center' }}>
-            {p.stars > 0
-              ? <Stars count={p.stars} />
-              : <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>-</span>
-            }
+          <p style={{ fontSize: '13px', fontWeight: 600, color: '#fff', lineHeight: 1.5, marginBottom: '6px' }}>
+            {item.title}
+          </p>
+          <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
+            {item.source && <span>{item.source}</span>}
+            {item.pubDate && <span>· {timeAgo(item.pubDate)}</span>}
           </div>
-
-          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>{p.hometown}</span>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {p.committedLogo && (
-              <img src={p.committedLogo} alt="" style={{ height: '20px', objectFit: 'contain', flexShrink: 0 }} />
-            )}
-            <span style={{
-              fontSize: '12px', fontWeight: p.committed ? 600 : 400,
-              color: p.committed ? '#4ade80' : 'rgba(255,255,255,0.25)',
-            }}>
-              {p.committed ?? '미정'}
-            </span>
-          </div>
-        </div>
+        </a>
       ))}
     </div>
   )
 }
 
 export default function AmateurRankings() {
-  const [data, setData]       = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
-  const [tab, setTab]         = useState('college')      // 'college' | 'hs'
-  const [hsClass, setHsClass] = useState(null)           // 클래스 연도 (hs만)
+  const [data, setData]           = useState(null)
+  const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState(null)
+  const [tab, setTab]             = useState('college')
+  const [hsClass, setHsClass]     = useState(null)
   const [posFilter, setPosFilter] = useState('ALL')
 
   useEffect(() => {
@@ -237,11 +194,11 @@ export default function AmateurRankings() {
     </div>
   )
 
-  const college     = data?.college ?? []
-  const hsClasses   = Object.keys(data?.hs ?? {}).map(Number).sort((a, b) => b - a)
-  const hsPlayers   = hsClass ? (data?.hs?.[hsClass] ?? []) : []
+  const college   = data?.college ?? []
+  const hsClasses = Object.keys(data?.hs ?? {}).map(Number).sort((a, b) => b - a)
+  const hsItems   = hsClass ? (data?.hs?.[hsClass] ?? []) : []
 
-  const Tab = ({ id, label, count }) => (
+  const Tab = ({ id, label }) => (
     <button
       onClick={() => { setTab(id); setPosFilter('ALL') }}
       style={{
@@ -254,72 +211,63 @@ export default function AmateurRankings() {
       }}
     >
       {label}
-      {count != null && (
-        <span style={{ marginLeft: '6px', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-          {count}
-        </span>
-      )}
     </button>
   )
 
   return (
     <div style={{ padding: '0 24px 40px' }}>
-      {/* 헤더 */}
       <div style={{ marginBottom: '20px' }}>
-        <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>
-          아마추어 랭킹
-        </h2>
+        <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>아마추어 랭킹</h2>
         <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.28)' }}>
-          대학 선수 시즌 스탯 · 고교 리크루팅 랭킹
+          대학 시즌 스탯 랭킹 · 고교 리크루팅 뉴스
         </p>
       </div>
 
       {/* 탭 */}
-      <div style={{
-        display: 'flex', gap: '2px', marginBottom: '20px',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-      }}>
-        <Tab id="college" label="🎓 대학생" count={college.length} />
-        <Tab id="hs"      label="🏫 고등학생" count={hsPlayers.length} />
+      <div style={{ display: 'flex', gap: '2px', marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <Tab id="college" label={`🎓 대학생 ${college.length > 0 ? `(${college.length})` : ''}`} />
+        <Tab id="hs"      label="🏫 고등학생" />
       </div>
 
-      {/* 포지션 필터 */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        {POSITIONS.map(pos => (
-          <button
-            key={pos}
-            onClick={() => setPosFilter(pos)}
-            style={{
-              padding: '5px 13px', borderRadius: '20px', fontSize: '12px', fontWeight: 700,
-              border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-              background: posFilter === pos ? (POS_COLOR[pos] ?? '#F4A261') : 'rgba(255,255,255,0.07)',
-              color: posFilter === pos ? '#000' : 'rgba(255,255,255,0.45)',
-            }}
-          >
-            {pos}
-          </button>
-        ))}
+      {/* 대학 탭: 포지션 필터 */}
+      {tab === 'college' && (
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          {POSITIONS.map(pos => (
+            <button
+              key={pos}
+              onClick={() => setPosFilter(pos)}
+              style={{
+                padding: '5px 13px', borderRadius: '20px', fontSize: '12px', fontWeight: 700,
+                border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                background: posFilter === pos ? (POS_COLOR[pos] ?? '#F4A261') : 'rgba(255,255,255,0.07)',
+                color: posFilter === pos ? '#000' : 'rgba(255,255,255,0.45)',
+              }}
+            >
+              {pos}
+            </button>
+          ))}
+        </div>
+      )}
 
-        {/* 고교 클래스 선택 */}
-        {tab === 'hs' && hsClasses.length > 1 && (
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
-            {hsClasses.map(yr => (
-              <button
-                key={yr}
-                onClick={() => setHsClass(yr)}
-                style={{
-                  padding: '5px 13px', borderRadius: '20px', fontSize: '12px', fontWeight: 700,
-                  border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-                  background: hsClass === yr ? '#4ade80' : 'rgba(255,255,255,0.07)',
-                  color: hsClass === yr ? '#000' : 'rgba(255,255,255,0.45)',
-                }}
-              >
-                {yr}클래스
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* 고교 탭: 클래스 선택 */}
+      {tab === 'hs' && hsClasses.length > 1 && (
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          {hsClasses.map(yr => (
+            <button
+              key={yr}
+              onClick={() => setHsClass(yr)}
+              style={{
+                padding: '5px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700,
+                border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                background: hsClass === yr ? '#4ade80' : 'rgba(255,255,255,0.07)',
+                color: hsClass === yr ? '#000' : 'rgba(255,255,255,0.45)',
+              }}
+            >
+              {yr} 클래스
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* 콘텐츠 */}
       {tab === 'college' && (
@@ -330,13 +278,7 @@ export default function AmateurRankings() {
           : <CollegeTable players={college} posFilter={posFilter} />
       )}
 
-      {tab === 'hs' && (
-        hsPlayers.length === 0
-          ? <div style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: '13px' }}>
-              고교 선수 데이터를 불러올 수 없습니다
-            </div>
-          : <HsTable players={hsPlayers} posFilter={posFilter} />
-      )}
+      {tab === 'hs' && <HsNewsList items={hsItems} />}
     </div>
   )
 }

@@ -657,73 +657,93 @@ export async function fetchDraftProspects() {
 const amateurCache = { data: null, exp: 0 }
 const TTL_AMATEUR  = 3_600_000 // 1시간
 
-async function fetchCollegeStats() {
-  const season = new Date().getFullYear()
-  const url    = `https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/statistics/athletes?limit=50&sort=points%3Adesc&season=${season}`
-  const res    = await fetch(url, { headers: CDN_HEADERS })
-  if (!res.ok) throw new Error(`college stats ${res.status}`)
+// ESPN 대학농구 득점 리더 (검증된 공개 API)
+async function fetchCollegeLeaders() {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/leaders?limit=25`
+  const res = await fetch(url, { headers: CDN_HEADERS })
+  if (!res.ok) throw new Error(`college leaders ${res.status}`)
   const json = await res.json()
 
-  const athletes = json?.athletes ?? json?.items ?? []
-  return athletes.map((entry, idx) => {
-    const a       = entry.athlete ?? entry
-    const rawStats = entry.stats ?? []
+  const categories = json?.categories ?? []
+  const byName = name => categories.find(c => c.name === name || c.displayName?.toLowerCase().includes(name))
+
+  const scoringCat = byName('scoringAverage') ?? byName('scoring') ?? categories[0]
+  const rebCat     = byName('reboundingAverage') ?? byName('rebound') ?? categories[1]
+  const astCat     = byName('assistsPerGame')    ?? byName('assist')  ?? categories[2]
+  const stlCat     = byName('stealsPerGame')     ?? byName('steal')
+  const blkCat     = byName('blocksPerGame')     ?? byName('block')
+
+  const toMap = cat => new Map(
+    (cat?.leaders ?? []).map(l => [l.athlete?.id, l.value ?? parseFloat(l.displayValue) || 0])
+  )
+  const rebMap = toMap(rebCat)
+  const astMap = toMap(astCat)
+  const stlMap = toMap(stlCat)
+  const blkMap = toMap(blkCat)
+
+  return (scoringCat?.leaders ?? []).map((entry, idx) => {
+    const a  = entry.athlete ?? {}
+    const id = a.id
     return {
       rank:       idx + 1,
       name:       a.displayName ?? '알 수 없음',
       position:   a.position?.abbreviation ?? '-',
-      school:     a.team?.displayName ?? a.team?.name ?? '-',
+      school:     a.team?.displayName ?? '-',
       schoolLogo: a.team?.logos?.[0]?.href ?? null,
-      pts:        parseFloat(rawStats[0]) || 0,
-      reb:        parseFloat(rawStats[1]) || 0,
-      ast:        parseFloat(rawStats[2]) || 0,
-      stl:        parseFloat(rawStats[3]) || 0,
-      blk:        parseFloat(rawStats[4]) || 0,
+      pts:        entry.value ?? parseFloat(entry.displayValue) || 0,
+      reb:        rebMap.get(id) ?? 0,
+      ast:        astMap.get(id) ?? 0,
+      stl:        stlMap.get(id) ?? 0,
+      blk:        blkMap.get(id) ?? 0,
     }
-  }).filter(p => p.pts > 0)
+  })
 }
 
-async function fetchHsClass(classYear) {
-  const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/recruiting/athletes?limit=60&class=${classYear}`
-  const res = await fetch(url, { headers: CDN_HEADERS })
-  if (!res.ok) throw new Error(`hs class ${classYear} ${res.status}`)
-  const json = await res.json()
-
-  const athletes = json?.athletes ?? []
-  return athletes.slice(0, 50).map((a, idx) => ({
-    rank:          a.rank ?? idx + 1,
-    name:          a.displayName ?? a.athlete?.displayName ?? '알 수 없음',
-    position:      a.position?.abbreviation ?? a.athlete?.position?.abbreviation ?? '-',
-    stars:         a.stars ?? 0,
-    rating:        typeof a.rating === 'object' ? (a.rating?.value ?? 0) : (a.rating ?? 0),
-    hometown:      a.hometown ? `${a.hometown.city ?? ''}, ${a.hometown.state ?? ''}`.replace(/^, |, $/, '') : '-',
-    committed:     a.team?.displayName ?? a.team?.name ?? null,
-    committedLogo: a.team?.logos?.[0]?.href ?? null,
-    class:         classYear,
-  }))
+// 고교 리크루팅 뉴스 (Google News RSS)
+async function fetchHsRecruitingNews(classYear) {
+  const query = `basketball recruiting class ${classYear} top prospects rankings`
+  const url   = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`
+  const res   = await fetch(url, { headers: CDN_HEADERS })
+  if (!res.ok) return []
+  const xml = await res.text()
+  return parseRSS(xml)
+    .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
+    .slice(0, 12)
 }
 
 export async function fetchAmateurRankings() {
   if (amateurCache.data && Date.now() < amateurCache.exp) return amateurCache.data
 
-  const curYear  = new Date().getFullYear()
-  const [col, hs1, hs2] = await Promise.allSettled([
-    fetchCollegeStats(),
-    fetchHsClass(curYear),
-    fetchHsClass(curYear + 1),
+  const curYear = new Date().getFullYear()
+
+  const [colRes, hs1Res, hs2Res] = await Promise.allSettled([
+    fetchCollegeLeaders(),
+    fetchHsRecruitingNews(curYear),
+    fetchHsRecruitingNews(curYear + 1),
   ])
 
+  const rawHs1 = hs1Res.status === 'fulfilled' ? hs1Res.value : []
+  const rawHs2 = hs2Res.status === 'fulfilled' ? hs2Res.value : []
+
+  const [t1, t2] = await Promise.all([
+    Promise.allSettled(rawHs1.map(n => translateTitle(n.title))),
+    Promise.allSettled(rawHs2.map(n => translateTitle(n.title))),
+  ])
+
+  const toTranslated = (items, settled) =>
+    items.map((n, i) => ({ ...n, title: settled[i]?.status === 'fulfilled' ? settled[i].value : n.title }))
+
   const data = {
-    college: col.status  === 'fulfilled' ? col.value  : [],
+    college: colRes.status === 'fulfilled' ? colRes.value : [],
     hs: {
-      [curYear]:     hs1.status === 'fulfilled' ? hs1.value : [],
-      [curYear + 1]: hs2.status === 'fulfilled' ? hs2.value : [],
+      [curYear]:     toTranslated(rawHs1, t1),
+      [curYear + 1]: toTranslated(rawHs2, t2),
     },
   }
 
   amateurCache.data = data
   amateurCache.exp  = Date.now() + TTL_AMATEUR
-  console.log(`[NBA] 아마추어: 대학 ${data.college.length}명, 고교 ${curYear}클래스 ${data.hs[curYear].length}명, ${curYear + 1}클래스 ${data.hs[curYear + 1].length}명`)
+  console.log(`[NBA] 아마추어: 대학 ${data.college.length}명, 고교 뉴스 ${rawHs1.length}+${rawHs2.length}건`)
   return data
 }
 
