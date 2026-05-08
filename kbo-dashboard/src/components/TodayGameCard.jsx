@@ -30,16 +30,16 @@ function WinProbBar({ awayTeam, homeTeam, awayWR, homeWR }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
         <span style={{ fontWeight: 700, color: awayColor }}>{awayPct}%</span>
-        <span style={{ color: 'rgba(var(--fg-rgb), 0.25)', fontSize: '11px' }}>승리 예상</span>
+        <span style={{ color: 'rgba(var(--fg-rgb), 0.25)', fontSize: '10px' }}>승리 예상</span>
         <span style={{ fontWeight: 700, color: homeColor }}>{100 - awayPct}%</span>
       </div>
       <div style={{ height: '6px', borderRadius: '99px', boxShadow: N.inset, overflow: 'hidden', display: 'flex' }}>
         <div style={{ width: `${awayPct}%`, background: `linear-gradient(to right, ${awayColor}, ${awayColor}bb)`, borderRadius: '99px 0 0 99px', transition: 'width 1s cubic-bezier(.4,0,.2,1)' }} />
         <div style={{ width: `${100-awayPct}%`, background: `linear-gradient(to left, ${homeColor}, ${homeColor}bb)`, borderRadius: '0 99px 99px 0', marginLeft: 'auto', transition: 'width 1s cubic-bezier(.4,0,.2,1)' }} />
       </div>
-      <div style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(var(--fg-rgb), 0.25)' }}>
+      <div style={{ textAlign: 'center', fontSize: '10px', color: 'rgba(var(--fg-rgb), 0.25)' }}>
         {KBO_TEAMS[favored]?.short} 우세
       </div>
     </div>
@@ -66,7 +66,7 @@ function TeamBlock({ teamKey, score, side, isWinner, status }) {
           {team.short}
         </div>
       </div>
-      <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(var(--fg-rgb), 0.5)' }}>{team.name}</span>
+      <span style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(var(--fg-rgb), 0.5)' }}>{team.name}</span>
       {!isScheduled && score !== null && (
         <span style={{
           fontSize: '48px', fontWeight: 900, letterSpacing: '-2px', lineHeight: 1,
@@ -93,18 +93,18 @@ function BasesDisplay({ bases }) {
 function GameInfo({ game }) {
   const { status, time, stadium, inning, inningHalf, outs, bases } = game
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', color: 'rgba(var(--fg-rgb), 0.4)', fontSize: '13px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', color: 'rgba(var(--fg-rgb), 0.4)', fontSize: '12px' }}>
       {status === 'live' && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <BasesDisplay bases={bases} />
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontWeight: 700, fontSize: '15px', color: 'rgba(var(--fg-rgb), 0.8)' }}>{inning}회 {inningHalf}</span>
+            <span style={{ fontWeight: 700, fontSize: '14px', color: 'rgba(var(--fg-rgb), 0.8)' }}>{inning}회 {inningHalf}</span>
             <span style={{ opacity: 0.5 }}>{outs}사</span>
           </div>
         </div>
       )}
       {status === 'final'     && <span style={{ opacity: 0.5, fontWeight: 500 }}>최종 결과</span>}
-      {status === 'scheduled' && <span style={{ fontWeight: 700, fontSize: '16px', color: 'rgba(var(--fg-rgb), 0.75)' }}>{time}</span>}
+      {status === 'scheduled' && <span style={{ fontWeight: 700, fontSize: '15px', color: 'rgba(var(--fg-rgb), 0.75)' }}>{time}</span>}
       <span style={{ opacity: 0.4 }}>{stadium}</span>
     </div>
   )
@@ -186,7 +186,11 @@ export default function TodayGameCard({ game, standings = [] }) {
           <GameInfo game={game} />
         </div>
 
-        <div style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(var(--fg-rgb), 0.18)' }}>
+        <div style={{ textAlign: 'center', fontSize: '10px', color: 'rgba(var(--fg-rgb), 0.18)' }}>
+
+
+
+
           클릭하여 선발 라인업 보기
         </div>
       </div>

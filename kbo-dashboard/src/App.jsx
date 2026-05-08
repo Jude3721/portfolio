@@ -183,8 +183,7 @@ function App() {
       <header style={{
         position: 'sticky', top: 0, zIndex: 100,
         background: H.bg, backdropFilter: 'blur(12px)',
-        borderBottom: `1px solid ${H.border}`,
-        padding: '14px 24px',
+        padding: '14px 24px 0',
         transition: 'background 0.3s, border-color 0.3s',
       }}>
         {/* 상단 행 */}
