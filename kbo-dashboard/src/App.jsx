@@ -143,6 +143,31 @@ function App() {
   const dateStr = `${year}.${month}.${day}`
   const timeStr = lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
+  // 테마별 헤더 색상
+  const H = isDark ? {
+    bg:      'rgba(10,10,20,0.94)',
+    border:  'rgba(255,255,255,0.07)',
+    text:    '#fff',
+    muted:   'rgba(255,255,255,0.35)',
+    subtle:  'rgba(255,255,255,0.25)',
+    btnBg:   'rgba(255,255,255,0.06)',
+    btnBd:   'rgba(255,255,255,0.1)',
+    tabActive: '#fff',
+    tabInactive: 'rgba(255,255,255,0.35)',
+    tabLine: '#4ade80',
+  } : {
+    bg:      'rgba(228,233,242,0.96)',
+    border:  'rgba(20,20,50,0.08)',
+    text:    'rgba(20,20,50,0.92)',
+    muted:   'rgba(20,20,50,0.45)',
+    subtle:  'rgba(20,20,50,0.35)',
+    btnBg:   'rgba(20,20,50,0.05)',
+    btnBd:   'rgba(20,20,50,0.12)',
+    tabActive: 'rgba(20,20,50,0.9)',
+    tabInactive: 'rgba(20,20,50,0.35)',
+    tabLine: '#16a34a',
+  }
+
   return (
     <>
     {showWishModal && (
@@ -157,19 +182,20 @@ function App() {
       {/* ── 헤더 ── */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(10,10,20,0.94)', backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        background: H.bg, backdropFilter: 'blur(12px)',
+        borderBottom: `1px solid ${H.border}`,
         padding: '14px 24px',
+        transition: 'background 0.3s, border-color 0.3s',
       }}>
         {/* 상단 행 */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
 
           {/* 좌측: 로고 + 날짜 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '22px', fontWeight: 900, letterSpacing: '-0.5px', color: '#fff' }}>
+            <span style={{ fontSize: '22px', fontWeight: 900, letterSpacing: '-0.5px', color: H.text }}>
               ⚾ KBO
             </span>
-            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>Dashboard</span>
+            <span style={{ fontSize: '13px', color: H.muted }}>Dashboard</span>
             <span style={{
               fontSize: '12px', fontWeight: 700, padding: '2px 9px', borderRadius: '99px',
               background: isNextDay ? 'rgba(165,180,252,0.15)' : 'rgba(74,222,128,0.12)',
@@ -187,11 +213,11 @@ function App() {
               : null
             }
             {hasLiveGame && countdown > 0 && (
-              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)', fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ fontSize: '12px', color: H.subtle, fontVariantNumeric: 'tabular-nums' }}>
                 {countdown}s
               </span>
             )}
-            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)' }}>{timeStr}</span>
+            <span style={{ fontSize: '12px', color: H.subtle }}>{timeStr}</span>
 
             {/* 위시팀 버튼 */}
             <button
@@ -200,15 +226,14 @@ function App() {
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '4px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                background: wishTeam ? `${KBO_TEAMS[wishTeam]?.color}25` : 'rgba(255,255,255,0.06)',
-                outline: wishTeam ? `1px solid ${KBO_TEAMS[wishTeam]?.color}60` : '1px solid rgba(255,255,255,0.1)',
-                color: '#fff', fontSize: '12px', fontWeight: 700, transition: 'all 0.15s',
+                background: wishTeam ? `${KBO_TEAMS[wishTeam]?.color}25` : H.btnBg,
+                outline: wishTeam ? `1px solid ${KBO_TEAMS[wishTeam]?.color}60` : `1px solid ${H.btnBd}`,
+                color: H.text, fontSize: '12px', fontWeight: 700, transition: 'all 0.15s',
               }}
             >
               {wishTeam ? (
                 <>
-                  <img
-                    src={KBO_TEAMS[wishTeam]?.logo} alt={wishTeam}
+                  <img src={KBO_TEAMS[wishTeam]?.logo} alt={wishTeam}
                     style={{ height: '20px', objectFit: 'contain' }}
                     onError={e => e.target.style.display = 'none'}
                   />
@@ -219,14 +244,14 @@ function App() {
               )}
             </button>
 
-            {/* 다크모드 토글 */}
+            {/* 다크/라이트 토글 */}
             <button
               onClick={toggleTheme}
               title={isDark ? '라이트 모드' : '다크 모드'}
               style={{
                 padding: '5px 10px', borderRadius: '8px', fontSize: '15px',
-                border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
-                background: 'rgba(255,255,255,0.06)', transition: 'all 0.15s',
+                border: `1px solid ${H.btnBd}`, cursor: 'pointer',
+                background: H.btnBg, transition: 'all 0.15s',
                 display: 'flex', alignItems: 'center',
               }}
             >
@@ -239,8 +264,9 @@ function App() {
               disabled={isRefreshing}
               style={{
                 padding: '5px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
-                border: '1px solid rgba(255,255,255,0.1)', cursor: isRefreshing ? 'not-allowed' : 'pointer',
-                background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)',
+                border: `1px solid ${H.btnBd}`,
+                cursor: isRefreshing ? 'not-allowed' : 'pointer',
+                background: H.btnBg, color: H.muted,
                 opacity: isRefreshing ? 0.5 : 1, transition: 'all 0.15s',
                 display: 'flex', alignItems: 'center', gap: '5px',
               }}
@@ -257,7 +283,7 @@ function App() {
         </div>
 
         {/* 탭 */}
-        <nav style={{ display: 'flex', gap: '4px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <nav style={{ display: 'flex', gap: '4px', borderBottom: `1px solid ${H.border}` }}>
           {NAV_TABS.map(tab => {
             const isActive = activeTab === tab.id
             return (
@@ -267,9 +293,9 @@ function App() {
                 style={{
                   padding: '9px 18px', border: 'none', cursor: 'pointer',
                   borderRadius: '10px 10px 0 0', fontSize: '13px', fontWeight: 700,
-                  background: isActive ? 'rgba(255,255,255,0.07)' : 'transparent',
-                  color: isActive ? '#fff' : 'rgba(255,255,255,0.35)',
-                  borderBottom: isActive ? '2px solid #4ade80' : '2px solid transparent',
+                  background: isActive ? (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(20,20,50,0.06)') : 'transparent',
+                  color: isActive ? H.tabActive : H.tabInactive,
+                  borderBottom: isActive ? `2px solid ${H.tabLine}` : '2px solid transparent',
                   transition: 'all 0.15s',
                 }}
               >
