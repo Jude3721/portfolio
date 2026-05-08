@@ -61,3 +61,9 @@ export async function fetchTeamNews(tri) {
   const data = await res.json()
   return data?.items ?? []
 }
+
+export async function fetchDraftProspects() {
+  const res = await fetch(`${API_BASE}/api/draft`)
+  if (!res.ok) throw new Error(`draft 오류: ${res.status}`)
+  return res.json()
+}

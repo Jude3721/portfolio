@@ -589,6 +589,70 @@ export async function fetchTradeNews(category = 'all', tri = null) {
   return items
 }
 
+// ─── 드래프트 전망 ──────────────────────────────────────────────
+const draftCache = { data: null, exp: 0 }
+const TTL_DRAFT  = 3_600_000 // 1시간
+
+async function fetchDraftNews(year) {
+  try {
+    const query = `NBA draft ${year} prospects big board mock`
+    const url   = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`
+    const res   = await fetch(url, { headers: CDN_HEADERS })
+    if (!res.ok) return []
+    const xml = await res.text()
+    return parseRSS(xml)
+      .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
+      .slice(0, 10)
+  } catch {
+    return []
+  }
+}
+
+export async function fetchDraftProspects() {
+  if (draftCache.data && Date.now() < draftCache.exp) return draftCache.data
+
+  const year = new Date().getFullYear()
+  let type      = 'pre-draft'
+  let prospects = []
+
+  try {
+    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/draft/picks?season=${year}&limit=60`
+    const res = await fetch(url, { headers: CDN_HEADERS })
+    if (res.ok) {
+      const json  = await res.json()
+      const picks = json?.picks ?? []
+      if (picks.length > 0) {
+        type      = 'picks'
+        prospects = picks.map((pick, idx) => ({
+          rank:      pick.pick ?? idx + 1,
+          round:     pick.round ?? 1,
+          name:      pick.athlete?.displayName ?? '알 수 없음',
+          position:  pick.athlete?.position?.abbreviation ?? '-',
+          school:    pick.athlete?.college?.name ?? pick.athlete?.team?.displayName ?? '-',
+          team:      pick.team?.abbreviation ?? '-',
+          teamLogo:  pick.team?.logos?.[0]?.href ?? null,
+          teamColor: pick.team?.color ? `#${pick.team.color}` : null,
+        }))
+      }
+    }
+  } catch (e) {
+    console.warn('[NBA] draft picks 오류:', e.message)
+  }
+
+  const rawNews        = await fetchDraftNews(year)
+  const translated     = await translateTitles(rawNews.map(n => n.title))
+  const news           = rawNews.map((n, i) => ({ ...n, title: translated[i] ?? n.title }))
+
+  // 드래프트 날짜: 보통 6월 마지막 목요일
+  const draftDate = `${year}-06-25`
+  const data      = { type, year, draftDate, prospects, news }
+
+  draftCache.data = data
+  draftCache.exp  = Date.now() + (type === 'picks' ? TTL_DRAFT : 600_000)
+  console.log(`[NBA] 드래프트: ${type}, 선수 ${prospects.length}명, 뉴스 ${news.length}건`)
+  return data
+}
+
 function parseRSS(xml) {
   const getCDATA = s => s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim()
   const getTag   = (s, tag) => {

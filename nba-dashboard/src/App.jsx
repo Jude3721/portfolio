@@ -5,6 +5,7 @@ import PlayoffBracket from './components/PlayoffBracket'
 import TeamNews from './components/TeamNews'
 import TradeNews from './components/TradeNews'
 import UpcomingGames from './components/UpcomingGames'
+import DraftProspects from './components/DraftProspects'
 import { fetchTodayGames, fetchStandings } from './services/nbaApi'
 import './App.css'
 
@@ -13,6 +14,7 @@ const TABS = [
   { id: 'standings', label: '📊 순위' },
   { id: 'news',      label: '📰 팀 뉴스' },
   { id: 'trades',    label: '🔄 트레이드' },
+  { id: 'draft',     label: '🎯 드래프트' },
 ]
 
 const REFRESH_MS = 30_000
@@ -157,6 +159,7 @@ export default function App() {
 
         {activeTab === 'news'   && <TeamNews />}
         {activeTab === 'trades' && <TradeNews />}
+        {activeTab === 'draft'  && <DraftProspects />}
       </main>
     </div>
   )
