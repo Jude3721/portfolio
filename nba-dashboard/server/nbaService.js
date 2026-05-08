@@ -674,7 +674,7 @@ async function fetchCollegeLeaders() {
   const blkCat     = byName('blocksPerGame')     ?? byName('block')
 
   const toMap = cat => new Map(
-    (cat?.leaders ?? []).map(l => [l.athlete?.id, l.value ?? parseFloat(l.displayValue) || 0])
+    (cat?.leaders ?? []).map(l => [l.athlete?.id, l.value ?? (parseFloat(l.displayValue) || 0)])
   )
   const rebMap = toMap(rebCat)
   const astMap = toMap(astCat)
@@ -690,7 +690,7 @@ async function fetchCollegeLeaders() {
       position:   a.position?.abbreviation ?? '-',
       school:     a.team?.displayName ?? '-',
       schoolLogo: a.team?.logos?.[0]?.href ?? null,
-      pts:        entry.value ?? parseFloat(entry.displayValue) || 0,
+      pts:        entry.value ?? (parseFloat(entry.displayValue) || 0),
       reb:        rebMap.get(id) ?? 0,
       ast:        astMap.get(id) ?? 0,
       stl:        stlMap.get(id) ?? 0,
