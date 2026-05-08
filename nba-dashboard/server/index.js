@@ -16,6 +16,8 @@ const PORT       = process.env.PORT || 3002
 // ─── Socket.io 채팅 ────────────────────────────────────────────
 const io = new Server(httpServer, {
   cors: { origin: ALLOWED_ORIGINS, methods: ['GET', 'POST'] },
+  transports: ['polling', 'websocket'],
+  allowUpgrades: true,
 })
 
 const chatMessages = []  // 최근 메시지 (최대 80개)
@@ -27,13 +29,14 @@ io.on('connection', socket => {
   io.emit('chat:online', onlineCount)
   socket.emit('chat:history', chatMessages.slice(-30))
 
-  socket.on('chat:message', ({ name, text }) => {
+  socket.on('chat:message', ({ name, text, teamTri }) => {
     if (!text?.trim()) return
     const msg = {
-      id:   Date.now(),
-      name: (name?.trim() || 'Guest').slice(0, 16),
-      text: text.trim().slice(0, 300),
-      time: new Date().toISOString(),
+      id:      Date.now(),
+      name:    (name?.trim() || 'Guest').slice(0, 16),
+      text:    text.trim().slice(0, 300),
+      time:    new Date().toISOString(),
+      teamTri: teamTri ?? null,
     }
     chatMessages.push(msg)
     if (chatMessages.length > MAX_MSG) chatMessages.shift()

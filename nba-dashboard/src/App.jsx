@@ -75,7 +75,7 @@ export default function App() {
           onClose={() => setShowWishModal(false)}
         />
       )}
-      <ChatRoom />
+      <ChatRoom wishTeam={wishTeam} />
       {/* 헤더 */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 100,
