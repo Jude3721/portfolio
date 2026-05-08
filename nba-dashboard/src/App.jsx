@@ -7,6 +7,9 @@ import TradeNews from './components/TradeNews'
 import UpcomingGames from './components/UpcomingGames'
 import DraftProspects from './components/DraftProspects'
 import AmateurRankings from './components/AmateurRankings'
+import WishTeamModal from './components/WishTeamModal'
+import ChatRoom from './components/ChatRoom'
+import { NBA_TEAMS } from './data/nbaTeams'
 import { fetchTodayGames, fetchStandings } from './services/nbaApi'
 import './App.css'
 
@@ -28,6 +31,14 @@ export default function App() {
   const [lastUpdated, setLastUpdated]   = useState(new Date())
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [gamesSource, setGamesSource]   = useState('loading')
+  const [wishTeam, setWishTeam]         = useState(() => localStorage.getItem('nba_wish_team') || null)
+  const [showWishModal, setShowWishModal] = useState(false)
+
+  const handleWishSelect = team => {
+    if (team) localStorage.setItem('nba_wish_team', team)
+    else localStorage.removeItem('nba_wish_team')
+    setWishTeam(team)
+  }
 
   const loadAll = useCallback(async (showRefresh = false) => {
     if (showRefresh) setIsRefreshing(true)
@@ -57,6 +68,14 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: '#fff' }}>
+      {showWishModal && (
+        <WishTeamModal
+          wishTeam={wishTeam}
+          onSelect={handleWishSelect}
+          onClose={() => setShowWishModal(false)}
+        />
+      )}
+      <ChatRoom />
       {/* 헤더 */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 100,
@@ -74,6 +93,33 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {hasLive && <span className="live-badge"><span className="live-dot" />LIVE</span>}
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)' }}>{dateStr} {timeStr}</span>
+
+          {/* 위시팀 버튼 */}
+          <button
+            onClick={() => setShowWishModal(true)}
+            title="위시 팀 선택"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
+              border: `1px solid ${wishTeam ? `${NBA_TEAMS[wishTeam]?.color}60` : 'rgba(255,255,255,0.1)'}`,
+              cursor: 'pointer',
+              background: wishTeam ? `${NBA_TEAMS[wishTeam]?.color}20` : 'rgba(255,255,255,0.06)',
+              color: wishTeam ? '#fff' : 'rgba(255,255,255,0.5)',
+              transition: 'all 0.15s',
+            }}
+          >
+            {wishTeam ? (
+              <>
+                <img src={NBA_TEAMS[wishTeam]?.logo} alt={wishTeam}
+                  style={{ height: '18px', objectFit: 'contain' }}
+                />
+                <span>{NBA_TEAMS[wishTeam]?.short}</span>
+              </>
+            ) : (
+              <span>⭐ 내 팀</span>
+            )}
+          </button>
+
           <button
             onClick={() => loadAll(true)}
             disabled={isRefreshing}
@@ -156,7 +202,7 @@ export default function App() {
         {activeTab === 'games' && <PlayoffBracket />}
 
         {activeTab === 'standings' && (
-          <StandingsTable standings={standings} />
+          <StandingsTable standings={standings} wishTeam={wishTeam} />
         )}
 
         {activeTab === 'news'   && <TeamNews />}

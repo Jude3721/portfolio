@@ -2,17 +2,21 @@ import { useState } from 'react'
 import { NBA_TEAMS, EAST_TEAMS, WEST_TEAMS } from '../data/nbaTeams'
 import RosterModal from './RosterModal'
 
-function TeamRow({ s, rank, color, onTeamClick }) {
+function TeamRow({ s, rank, color, onTeamClick, isWish }) {
   const team = NBA_TEAMS[s.tricode] ?? { name: s.name, short: s.name, color: '#888', logo: '' }
   const streak = s.streak ?? ''
   const streakColor = streak.startsWith('W') ? '#4ade80' : '#f87171'
 
   return (
     <tr
-      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.15s', cursor: 'pointer' }}
+      style={{
+        borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.15s', cursor: 'pointer',
+        background: isWish ? `${team.color}18` : 'transparent',
+        boxShadow: isWish ? `inset 3px 0 0 ${team.color}` : 'none',
+      }}
       onClick={() => onTeamClick(s)}
-      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+      onMouseEnter={e => e.currentTarget.style.background = isWish ? `${team.color}28` : 'rgba(255,255,255,0.05)'}
+      onMouseLeave={e => e.currentTarget.style.background = isWish ? `${team.color}18` : 'transparent'}
     >
       <td style={{ padding: '10px 8px', width: '32px', textAlign: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>
         {rank <= 6
@@ -29,7 +33,10 @@ function TeamRow({ s, rank, color, onTeamClick }) {
             />
           </div>
           <div>
-            <div style={{ fontSize: '14px', fontWeight: rank <= 8 ? 700 : 500, color: '#fff' }}>{s.city}</div>
+            <div style={{ fontSize: '14px', fontWeight: rank <= 8 ? 700 : 500, color: '#fff', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              {s.city}
+              {isWish && <span style={{ fontSize: '10px', color: '#F4A261' }}>★</span>}
+            </div>
             <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{s.name}</div>
           </div>
         </div>
@@ -49,7 +56,7 @@ function TeamRow({ s, rank, color, onTeamClick }) {
   )
 }
 
-export default function StandingsTable({ standings = [] }) {
+export default function StandingsTable({ standings = [], wishTeam = null }) {
   const [conf, setConf]         = useState('east')
   const [selected, setSelected] = useState(null)
 
@@ -120,7 +127,7 @@ export default function StandingsTable({ standings = [] }) {
           </thead>
           <tbody>
             {filtered.map((s, i) => (
-              <TeamRow key={s.tricode} s={s} rank={i + 1} color={confColor} onTeamClick={setSelected} />
+              <TeamRow key={s.tricode} s={s} rank={i + 1} color={confColor} onTeamClick={setSelected} isWish={s.tricode === wishTeam} />
             ))}
           </tbody>
         </table>

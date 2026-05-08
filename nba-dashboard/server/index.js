@@ -1,4 +1,6 @@
+import { createServer } from 'http'
 import express from 'express'
+import { Server } from 'socket.io'
 import { fetchScoreboard, fetchBoxscore, fetchStandings, fetchPlayoffBracket, fetchRoster, fetchTeamNews, fetchTradeNews, fetchUpcomingGames, fetchDraftProspects, fetchAmateurRankings } from './nbaService.js'
 
 const ALLOWED_ORIGINS = [
@@ -7,8 +9,42 @@ const ALLOWED_ORIGINS = [
   'http://localhost:4173',
 ]
 
-const app  = express()
-const PORT = process.env.PORT || 3002
+const app        = express()
+const httpServer = createServer(app)
+const PORT       = process.env.PORT || 3002
+
+// ─── Socket.io 채팅 ────────────────────────────────────────────
+const io = new Server(httpServer, {
+  cors: { origin: ALLOWED_ORIGINS, methods: ['GET', 'POST'] },
+})
+
+const chatMessages = []  // 최근 메시지 (최대 80개)
+const MAX_MSG      = 80
+let   onlineCount  = 0
+
+io.on('connection', socket => {
+  onlineCount++
+  io.emit('chat:online', onlineCount)
+  socket.emit('chat:history', chatMessages.slice(-30))
+
+  socket.on('chat:message', ({ name, text }) => {
+    if (!text?.trim()) return
+    const msg = {
+      id:   Date.now(),
+      name: (name?.trim() || 'Guest').slice(0, 16),
+      text: text.trim().slice(0, 300),
+      time: new Date().toISOString(),
+    }
+    chatMessages.push(msg)
+    if (chatMessages.length > MAX_MSG) chatMessages.shift()
+    io.emit('chat:message', msg)
+  })
+
+  socket.on('disconnect', () => {
+    onlineCount = Math.max(0, onlineCount - 1)
+    io.emit('chat:online', onlineCount)
+  })
+})
 
 app.use((req, res, next) => {
   const origin = req.headers.origin
@@ -132,6 +168,6 @@ app.get('/api/draft', async (req, res) => {
   }
 })
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`NBA 백엔드 서버: http://localhost:${PORT}`)
 })
