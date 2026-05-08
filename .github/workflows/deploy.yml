@@ -52,6 +52,7 @@ jobs:
           git add nba-dashboard/index.html nba-dashboard/assets/
           git add kbo-dashboard/index.html kbo-dashboard/assets/
           git diff --staged --quiet || git commit -m "ci: 자동 빌드 배포"
+          git pull --rebase origin main
           git push
 
       - name: Deploy NBA Backend to Render
