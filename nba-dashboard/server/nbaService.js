@@ -653,6 +653,80 @@ export async function fetchDraftProspects() {
   return data
 }
 
+// ─── 아마추어 랭킹 ─────────────────────────────────────────────
+const amateurCache = { data: null, exp: 0 }
+const TTL_AMATEUR  = 3_600_000 // 1시간
+
+async function fetchCollegeStats() {
+  const season = new Date().getFullYear()
+  const url    = `https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/statistics/athletes?limit=50&sort=points%3Adesc&season=${season}`
+  const res    = await fetch(url, { headers: CDN_HEADERS })
+  if (!res.ok) throw new Error(`college stats ${res.status}`)
+  const json = await res.json()
+
+  const athletes = json?.athletes ?? json?.items ?? []
+  return athletes.map((entry, idx) => {
+    const a       = entry.athlete ?? entry
+    const rawStats = entry.stats ?? []
+    return {
+      rank:       idx + 1,
+      name:       a.displayName ?? '알 수 없음',
+      position:   a.position?.abbreviation ?? '-',
+      school:     a.team?.displayName ?? a.team?.name ?? '-',
+      schoolLogo: a.team?.logos?.[0]?.href ?? null,
+      pts:        parseFloat(rawStats[0]) || 0,
+      reb:        parseFloat(rawStats[1]) || 0,
+      ast:        parseFloat(rawStats[2]) || 0,
+      stl:        parseFloat(rawStats[3]) || 0,
+      blk:        parseFloat(rawStats[4]) || 0,
+    }
+  }).filter(p => p.pts > 0)
+}
+
+async function fetchHsClass(classYear) {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/recruiting/athletes?limit=60&class=${classYear}`
+  const res = await fetch(url, { headers: CDN_HEADERS })
+  if (!res.ok) throw new Error(`hs class ${classYear} ${res.status}`)
+  const json = await res.json()
+
+  const athletes = json?.athletes ?? []
+  return athletes.slice(0, 50).map((a, idx) => ({
+    rank:          a.rank ?? idx + 1,
+    name:          a.displayName ?? a.athlete?.displayName ?? '알 수 없음',
+    position:      a.position?.abbreviation ?? a.athlete?.position?.abbreviation ?? '-',
+    stars:         a.stars ?? 0,
+    rating:        typeof a.rating === 'object' ? (a.rating?.value ?? 0) : (a.rating ?? 0),
+    hometown:      a.hometown ? `${a.hometown.city ?? ''}, ${a.hometown.state ?? ''}`.replace(/^, |, $/, '') : '-',
+    committed:     a.team?.displayName ?? a.team?.name ?? null,
+    committedLogo: a.team?.logos?.[0]?.href ?? null,
+    class:         classYear,
+  }))
+}
+
+export async function fetchAmateurRankings() {
+  if (amateurCache.data && Date.now() < amateurCache.exp) return amateurCache.data
+
+  const curYear  = new Date().getFullYear()
+  const [col, hs1, hs2] = await Promise.allSettled([
+    fetchCollegeStats(),
+    fetchHsClass(curYear),
+    fetchHsClass(curYear + 1),
+  ])
+
+  const data = {
+    college: col.status  === 'fulfilled' ? col.value  : [],
+    hs: {
+      [curYear]:     hs1.status === 'fulfilled' ? hs1.value : [],
+      [curYear + 1]: hs2.status === 'fulfilled' ? hs2.value : [],
+    },
+  }
+
+  amateurCache.data = data
+  amateurCache.exp  = Date.now() + TTL_AMATEUR
+  console.log(`[NBA] 아마추어: 대학 ${data.college.length}명, 고교 ${curYear}클래스 ${data.hs[curYear].length}명, ${curYear + 1}클래스 ${data.hs[curYear + 1].length}명`)
+  return data
+}
+
 function parseRSS(xml) {
   const getCDATA = s => s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim()
   const getTag   = (s, tag) => {

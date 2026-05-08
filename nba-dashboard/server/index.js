@@ -1,5 +1,5 @@
 import express from 'express'
-import { fetchScoreboard, fetchBoxscore, fetchStandings, fetchPlayoffBracket, fetchRoster, fetchTeamNews, fetchTradeNews, fetchUpcomingGames, fetchDraftProspects } from './nbaService.js'
+import { fetchScoreboard, fetchBoxscore, fetchStandings, fetchPlayoffBracket, fetchRoster, fetchTeamNews, fetchTradeNews, fetchUpcomingGames, fetchDraftProspects, fetchAmateurRankings } from './nbaService.js'
 
 const ALLOWED_ORIGINS = [
   'https://jude3721.github.io',
@@ -108,6 +108,16 @@ app.get('/api/news/:tri', async (req, res) => {
     res.json({ items })
   } catch (err) {
     console.error('[server] news error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.get('/api/amateur', async (req, res) => {
+  try {
+    const data = await fetchAmateurRankings()
+    res.json(data)
+  } catch (err) {
+    console.error('[server] amateur error:', err.message)
     res.status(500).json({ error: err.message })
   }
 })

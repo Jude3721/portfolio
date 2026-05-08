@@ -67,3 +67,9 @@ export async function fetchDraftProspects() {
   if (!res.ok) throw new Error(`draft 오류: ${res.status}`)
   return res.json()
 }
+
+export async function fetchAmateurRankings() {
+  const res = await fetch(`${API_BASE}/api/amateur`)
+  if (!res.ok) throw new Error(`amateur 오류: ${res.status}`)
+  return res.json()
+}
