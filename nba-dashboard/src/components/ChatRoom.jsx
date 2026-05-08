@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { NBA_TEAMS } from '../data/nbaTeams'
 
-const API_BASE   = import.meta.env.VITE_API_BASE ?? ''
-const POLL_MS    = 2500
+const API_BASE    = import.meta.env.VITE_API_BASE ?? ''
+const POLL_MS     = 3000
+const RETRY_MS    = 10000 // 서버 미준비 시 재시도 간격
 
 function formatTime(iso) {
   return new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
@@ -25,14 +26,15 @@ export default function ChatRoom({ wishTeam }) {
   const [input, setInput]         = useState('')
   const [name, setName]           = useState(() => localStorage.getItem('nba_chat_name') || '')
   const [nameInput, setNameInput] = useState('')
-  const [hasNew, setHasNew]       = useState(false)
-  const [connected, setConnected] = useState(false)
-  const [sending, setSending]     = useState(false)
-  const bottomRef  = useRef(null)
-  const lastIdRef  = useRef(0)
-  const myName     = useRef(name)
-  const openRef    = useRef(open)
-  openRef.current  = open
+  const [hasNew, setHasNew]         = useState(false)
+  const [connected, setConnected]   = useState(false)
+  const [serverReady, setServerReady] = useState(false)
+  const [sending, setSending]       = useState(false)
+  const bottomRef   = useRef(null)
+  const lastIdRef   = useRef(0)
+  const myName      = useRef(name)
+  const openRef     = useRef(open)
+  openRef.current   = open
 
   const saveName = () => {
     const n = nameInput.trim() || `농구팬${Math.floor(Math.random() * 9000 + 1000)}`
@@ -40,7 +42,6 @@ export default function ChatRoom({ wishTeam }) {
     setName(n); myName.current = n
   }
 
-  // 새 메시지 fetch
   const fetchNew = useCallback(async () => {
     try {
       const r = await fetch(`${API_BASE}/api/chat/messages?since=${lastIdRef.current}`)
@@ -58,24 +59,37 @@ export default function ChatRoom({ wishTeam }) {
     }
   }, [])
 
-  // 초기 로드
+  // 서버 준비 확인 + 초기 메시지 로드
   useEffect(() => {
-    fetch(`${API_BASE}/api/chat/messages`)
-      .then(r => r.json())
-      .then(d => {
+    let retryId = null
+
+    const tryConnect = async () => {
+      try {
+        const r = await fetch(`${API_BASE}/api/chat/messages`)
+        if (!r.ok) throw new Error(`${r.status}`)
+        const d    = await r.json()
         const msgs = d.messages ?? []
         setMessages(msgs)
         if (msgs.length > 0) lastIdRef.current = msgs[msgs.length - 1].id
+        setServerReady(true)
         setConnected(true)
-      })
-      .catch(() => setConnected(false))
+      } catch {
+        setServerReady(false)
+        setConnected(false)
+        retryId = setTimeout(tryConnect, RETRY_MS) // 10초 후 재시도
+      }
+    }
+
+    tryConnect()
+    return () => clearTimeout(retryId)
   }, [])
 
-  // 폴링
+  // 폴링 (서버 준비됐을 때만)
   useEffect(() => {
+    if (!serverReady) return
     const id = setInterval(fetchNew, POLL_MS)
     return () => clearInterval(id)
-  }, [fetchNew])
+  }, [serverReady, fetchNew])
 
   useEffect(() => {
     if (open) {
@@ -89,7 +103,7 @@ export default function ChatRoom({ wishTeam }) {
   }, [messages])
 
   const send = useCallback(async () => {
-    if (!input.trim() || !name || sending) return
+    if (!input.trim() || !name || sending || !serverReady) return
     const text = input.trim()
     setInput('')
     setSending(true)
@@ -143,7 +157,9 @@ export default function ChatRoom({ wishTeam }) {
               <span style={{ fontSize: '11px' }}>
                 {connected
                   ? <span style={{ color: '#4ade80' }}>● 연결됨</span>
-                  : <span style={{ color: '#f87171' }}>● 연결 중...</span>
+                  : serverReady
+                    ? <span style={{ color: '#facc15' }}>● 재연결 중...</span>
+                    : <span style={{ color: 'rgba(255,255,255,0.3)' }}>● 서버 준비 중...</span>
                 }
               </span>
             </div>
@@ -188,8 +204,14 @@ export default function ChatRoom({ wishTeam }) {
               {/* 메시지 목록 */}
               <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px 4px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {messages.length === 0 && (
-                  <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '13px', marginTop: '40px' }}>
-                    첫 번째 메시지를 보내보세요!
+                  <div style={{ textAlign: 'center', fontSize: '13px', marginTop: '40px' }}>
+                    {serverReady
+                      ? <span style={{ color: 'rgba(255,255,255,0.2)' }}>첫 번째 메시지를 보내보세요!</span>
+                      : <div>
+                          <div style={{ fontSize: '24px', marginBottom: '8px' }}>⏳</div>
+                          <span style={{ color: 'rgba(255,255,255,0.3)' }}>서버 준비 중입니다<br/>잠시만 기다려주세요...</span>
+                        </div>
+                    }
                   </div>
                 )}
                 {messages.map(msg => {
@@ -256,7 +278,7 @@ export default function ChatRoom({ wishTeam }) {
                     onKeyDown={onKey}
                     placeholder={sending ? '전송 중...' : '메시지 입력...'}
                     maxLength={300}
-                    disabled={sending}
+                    disabled={sending || !serverReady}
                     style={{
                       flex: 1, padding: '8px 12px', borderRadius: '10px',
                       background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
@@ -266,7 +288,7 @@ export default function ChatRoom({ wishTeam }) {
                   />
                   <button
                     onClick={send}
-                    disabled={!input.trim() || sending}
+                    disabled={!input.trim() || sending || !serverReady}
                     style={{
                       padding: '8px 13px', borderRadius: '10px', border: 'none',
                       background: (input.trim() && !sending) ? accentColor : 'rgba(255,255,255,0.07)',
