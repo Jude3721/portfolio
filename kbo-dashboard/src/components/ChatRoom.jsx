@@ -381,7 +381,22 @@ export default function ChatRoom({ wishTeam }) {
         onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
         onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
       >
-        {open ? '×' : (wishInfo ? wishInfo.short.slice(0, 2) : '⚾')}
+        {open ? (
+          <span style={{ fontSize: '22px', color: wishInfo ? '#fff' : 'rgba(var(--fg-rgb),0.6)' }}>×</span>
+        ) : wishInfo ? (
+          <img
+            src={wishInfo.logo} alt={wishInfo.short}
+            style={{ width: '34px', height: '34px', objectFit: 'contain' }}
+            onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block' }}
+          />
+        ) : (
+          <span>⚾</span>
+        )}
+        {wishInfo && !open && (
+          <span style={{ display: 'none', fontSize: '13px', fontWeight: 800, color: '#fff' }}>
+            {wishInfo.short.slice(0, 2)}
+          </span>
+        )}
         {hasNew && !open && (
           <span style={{
             position: 'absolute', top: '6px', right: '6px',
