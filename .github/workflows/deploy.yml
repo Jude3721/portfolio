@@ -13,6 +13,8 @@ on:
       - 'kbo-dashboard/vite.config.js'
       - 'kbo-dashboard/package*.json'
       - 'kbo-dashboard/.env.production'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
 
 jobs:
   build:
