@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'nba-dashboard/src/**'
+      - 'nba-dashboard/server/**'
       - 'nba-dashboard/vite.config.js'
       - 'nba-dashboard/package*.json'
       - 'nba-dashboard/.env.production'
@@ -52,3 +53,7 @@ jobs:
           git add kbo-dashboard/index.html kbo-dashboard/assets/
           git diff --staged --quiet || git commit -m "ci: 자동 빌드 배포"
           git push
+
+      - name: Deploy NBA Backend to Render
+        if: ${{ secrets.RENDER_DEPLOY_HOOK != '' }}
+        run: curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
