@@ -1,32 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { io } from 'socket.io-client'
 import { NBA_TEAMS } from '../data/nbaTeams'
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? ''
-
-let socket = null
-function getSocket() {
-  if (!socket) {
-    socket = io(API_BASE || undefined, {
-      transports: ['polling', 'websocket'], // polling 우선 — Render.com 호환
-      upgrade: true,
-    })
-  }
-  return socket
-}
+const API_BASE   = import.meta.env.VITE_API_BASE ?? ''
+const POLL_MS    = 2500
 
 function formatTime(iso) {
-  const d = new Date(iso)
-  return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
 }
 
 function TeamLogo({ tri, size = 22 }) {
   const team = tri ? NBA_TEAMS[tri] : null
   if (!team) return null
   return (
-    <img
-      src={team.logo}
-      alt={tri}
+    <img src={team.logo} alt={tri}
       style={{ width: size, height: size, objectFit: 'contain', flexShrink: 0 }}
       onError={e => e.target.style.display = 'none'}
     />
@@ -39,34 +25,57 @@ export default function ChatRoom({ wishTeam }) {
   const [input, setInput]         = useState('')
   const [name, setName]           = useState(() => localStorage.getItem('nba_chat_name') || '')
   const [nameInput, setNameInput] = useState('')
-  const [online, setOnline]       = useState(0)
   const [hasNew, setHasNew]       = useState(false)
   const [connected, setConnected] = useState(false)
-  const bottomRef = useRef(null)
-  const myName    = useRef(name)
+  const [sending, setSending]     = useState(false)
+  const bottomRef  = useRef(null)
+  const lastIdRef  = useRef(0)
+  const myName     = useRef(name)
+  const openRef    = useRef(open)
+  openRef.current  = open
 
   const saveName = () => {
     const n = nameInput.trim() || `농구팬${Math.floor(Math.random() * 9000 + 1000)}`
     localStorage.setItem('nba_chat_name', n)
-    setName(n)
-    myName.current = n
+    setName(n); myName.current = n
   }
 
-  useEffect(() => {
-    const s = getSocket()
-    s.on('connect',      () => setConnected(true))
-    s.on('disconnect',   () => setConnected(false))
-    s.on('chat:online',  count => setOnline(count))
-    s.on('chat:history', msgs => setMessages(msgs))
-    s.on('chat:message', msg => {
-      setMessages(prev => [...prev, msg])
-      if (!open) setHasNew(true)
-    })
-    return () => {
-      s.off('connect'); s.off('disconnect')
-      s.off('chat:online'); s.off('chat:history'); s.off('chat:message')
+  // 새 메시지 fetch
+  const fetchNew = useCallback(async () => {
+    try {
+      const r = await fetch(`${API_BASE}/api/chat/messages?since=${lastIdRef.current}`)
+      if (!r.ok) { setConnected(false); return }
+      const d    = await r.json()
+      const msgs = d.messages ?? []
+      if (msgs.length > 0) {
+        setMessages(prev => [...prev, ...msgs])
+        lastIdRef.current = msgs[msgs.length - 1].id
+        if (!openRef.current) setHasNew(true)
+      }
+      setConnected(true)
+    } catch {
+      setConnected(false)
     }
-  }, [open])
+  }, [])
+
+  // 초기 로드
+  useEffect(() => {
+    fetch(`${API_BASE}/api/chat/messages`)
+      .then(r => r.json())
+      .then(d => {
+        const msgs = d.messages ?? []
+        setMessages(msgs)
+        if (msgs.length > 0) lastIdRef.current = msgs[msgs.length - 1].id
+        setConnected(true)
+      })
+      .catch(() => setConnected(false))
+  }, [])
+
+  // 폴링
+  useEffect(() => {
+    const id = setInterval(fetchNew, POLL_MS)
+    return () => clearInterval(id)
+  }, [fetchNew])
 
   useEffect(() => {
     if (open) {
@@ -79,15 +88,29 @@ export default function ChatRoom({ wishTeam }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const send = useCallback(() => {
-    if (!input.trim() || !name) return
-    getSocket().emit('chat:message', { name, text: input.trim(), teamTri: wishTeam ?? null })
+  const send = useCallback(async () => {
+    if (!input.trim() || !name || sending) return
+    const text = input.trim()
     setInput('')
-  }, [input, name, wishTeam])
+    setSending(true)
+    try {
+      await fetch(`${API_BASE}/api/chat/messages`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ name, text, teamTri: wishTeam ?? null }),
+      })
+      await fetchNew()  // 즉시 갱신
+    } catch {
+      setConnected(false)
+    } finally {
+      setSending(false)
+    }
+  }, [input, name, wishTeam, sending, fetchNew])
 
   const onKey = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }
 
   const wishTeamInfo = wishTeam ? NBA_TEAMS[wishTeam] : null
+  const accentColor  = wishTeamInfo?.color ?? '#F4A261'
 
   return (
     <>
@@ -96,8 +119,8 @@ export default function ChatRoom({ wishTeam }) {
           position: 'fixed', bottom: '84px', right: '24px', zIndex: 1500,
           width: '320px', height: '460px',
           background: '#0f1117', borderRadius: '20px',
-          border: `1px solid ${wishTeamInfo ? `${wishTeamInfo.color}50` : 'rgba(255,255,255,0.1)'}`,
-          boxShadow: `0 16px 60px rgba(0,0,0,0.6)${wishTeamInfo ? `, 0 0 0 1px ${wishTeamInfo.color}20` : ''}`,
+          border: `1px solid ${wishTeamInfo ? `${accentColor}50` : 'rgba(255,255,255,0.1)'}`,
+          boxShadow: '0 16px 60px rgba(0,0,0,0.6)',
           display: 'flex', flexDirection: 'column',
           animation: 'chatFadeUp 0.2s ease',
         }}>
@@ -106,41 +129,37 @@ export default function ChatRoom({ wishTeam }) {
             padding: '12px 14px', flexShrink: 0,
             borderBottom: '1px solid rgba(255,255,255,0.07)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            background: wishTeamInfo ? `${wishTeamInfo.color}15` : 'transparent',
+            background: wishTeamInfo ? `${accentColor}15` : 'transparent',
             borderRadius: '20px 20px 0 0',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {wishTeamInfo && (
                 <img src={wishTeamInfo.logo} alt={wishTeam}
-                  style={{ width: '26px', height: '26px', objectFit: 'contain' }}
+                  style={{ width: '24px', height: '24px', objectFit: 'contain' }}
                   onError={e => e.target.style.display = 'none'}
                 />
               )}
-              <div>
-                <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>
-                  🏀 NBA 채팅방
-                </span>
-                <span style={{ marginLeft: '6px', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-                  {connected
-                    ? <><span style={{ color: '#4ade80' }}>●</span> {online}명</>
-                    : <span style={{ color: '#f87171' }}>● 연결 중...</span>
-                  }
-                </span>
-              </div>
+              <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>🏀 NBA 채팅방</span>
+              <span style={{ fontSize: '11px' }}>
+                {connected
+                  ? <span style={{ color: '#4ade80' }}>● 연결됨</span>
+                  : <span style={{ color: '#f87171' }}>● 연결 중...</span>
+                }
+              </span>
             </div>
-            <button
-              onClick={() => setOpen(false)}
-              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '20px', lineHeight: 1 }}
-            >×</button>
+            <button onClick={() => setOpen(false)}
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '20px', lineHeight: 1 }}>
+              ×
+            </button>
           </div>
 
           {!name ? (
             /* 닉네임 설정 */
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', gap: '12px' }}>
-              <div style={{ fontSize: '36px' }}>
+              <div style={{ marginBottom: '4px' }}>
                 {wishTeamInfo
-                  ? <img src={wishTeamInfo.logo} alt={wishTeam} style={{ width: '52px', height: '52px', objectFit: 'contain' }} />
-                  : '👋'
+                  ? <img src={wishTeamInfo.logo} alt="" style={{ width: '52px', height: '52px', objectFit: 'contain' }} />
+                  : <span style={{ fontSize: '40px' }}>👋</span>
                 }
               </div>
               <p style={{ fontSize: '14px', fontWeight: 700, color: '#fff', textAlign: 'center' }}>닉네임을 설정하세요</p>
@@ -150,22 +169,17 @@ export default function ChatRoom({ wishTeam }) {
                 onChange={e => setNameInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && saveName()}
                 placeholder="닉네임 (최대 16자)"
-                maxLength={16}
-                autoFocus
+                maxLength={16} autoFocus
                 style={{
                   width: '100%', padding: '10px 14px', borderRadius: '10px',
                   background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
                   color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
                 }}
               />
-              <button
-                onClick={saveName}
-                style={{
-                  width: '100%', padding: '11px', borderRadius: '10px', border: 'none',
-                  background: wishTeamInfo?.color ?? '#F4A261',
-                  color: '#fff', fontSize: '14px', fontWeight: 800, cursor: 'pointer',
-                }}
-              >
+              <button onClick={saveName} style={{
+                width: '100%', padding: '11px', borderRadius: '10px', border: 'none',
+                background: accentColor, color: '#fff', fontSize: '14px', fontWeight: 800, cursor: 'pointer',
+              }}>
                 입장하기
               </button>
             </div>
@@ -179,51 +193,39 @@ export default function ChatRoom({ wishTeam }) {
                   </div>
                 )}
                 {messages.map(msg => {
-                  const isMe     = msg.name === myName.current
-                  const msgTeam  = msg.teamTri ? NBA_TEAMS[msg.teamTri] : null
+                  const isMe    = msg.name === myName.current
+                  const msgTeam = msg.teamTri ? NBA_TEAMS[msg.teamTri] : null
                   return (
                     <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
                       {/* 이름 + 팀 로고 */}
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '3px',
-                        flexDirection: isMe ? 'row-reverse' : 'row',
-                      }}>
-                        {msgTeam && <TeamLogo tri={msg.teamTri} size={16} />}
-                        {!isMe && (
+                      {!isMe && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '3px', marginLeft: '32px' }}>
+                          {msgTeam && <TeamLogo tri={msg.teamTri} size={14} />}
                           <span style={{ fontSize: '10px', color: msgTeam ? msgTeam.color : 'rgba(255,255,255,0.35)' }}>
                             {msg.name}
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
 
-                      {/* 메시지 버블 */}
                       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '5px', flexDirection: isMe ? 'row-reverse' : 'row' }}>
                         {/* 팀 로고 아바타 */}
-                        {msgTeam ? (
-                          <div style={{
-                            width: '26px', height: '26px', borderRadius: '50%', flexShrink: 0,
-                            background: `${msgTeam.color}22`, border: `1px solid ${msgTeam.color}50`,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}>
-                            <TeamLogo tri={msg.teamTri} size={18} />
-                          </div>
-                        ) : (
-                          <div style={{
-                            width: '26px', height: '26px', borderRadius: '50%', flexShrink: 0,
-                            background: 'rgba(255,255,255,0.08)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '12px', color: 'rgba(255,255,255,0.4)',
-                          }}>
-                            🏀
-                          </div>
-                        )}
+                        <div style={{
+                          width: '26px', height: '26px', borderRadius: '50%', flexShrink: 0,
+                          background: msgTeam ? `${msgTeam.color}22` : 'rgba(255,255,255,0.08)',
+                          border: msgTeam ? `1px solid ${msgTeam.color}50` : '1px solid rgba(255,255,255,0.1)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          {msgTeam
+                            ? <TeamLogo tri={msg.teamTri} size={18} />
+                            : <span style={{ fontSize: '12px' }}>🏀</span>
+                          }
+                        </div>
 
                         <div style={{
                           maxWidth: '190px', padding: '8px 11px',
                           borderRadius: isMe ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                          background: isMe ? (wishTeamInfo?.color ?? '#F4A261') : 'rgba(255,255,255,0.1)',
+                          background: isMe ? accentColor : 'rgba(255,255,255,0.1)',
                           color: '#fff', fontSize: '13px', lineHeight: 1.45, wordBreak: 'break-word',
-                          fontWeight: 500,
                         }}>
                           {msg.text}
                         </div>
@@ -240,13 +242,10 @@ export default function ChatRoom({ wishTeam }) {
 
               {/* 입력창 */}
               <div style={{ padding: '8px 10px 12px', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
-                {/* 내 팀 배지 */}
                 {wishTeamInfo && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px' }}>
                     <TeamLogo tri={wishTeam} size={14} />
-                    <span style={{ fontSize: '10px', color: wishTeamInfo.color, fontWeight: 700 }}>
-                      {wishTeamInfo.short} 팬
-                    </span>
+                    <span style={{ fontSize: '10px', color: accentColor, fontWeight: 700 }}>{wishTeamInfo.short} 팬</span>
                     <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)' }}>· {name}</span>
                   </div>
                 )}
@@ -255,22 +254,24 @@ export default function ChatRoom({ wishTeam }) {
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={onKey}
-                    placeholder="메시지 입력..."
+                    placeholder={sending ? '전송 중...' : '메시지 입력...'}
                     maxLength={300}
+                    disabled={sending}
                     style={{
                       flex: 1, padding: '8px 12px', borderRadius: '10px',
                       background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
                       color: '#fff', fontSize: '13px', outline: 'none',
+                      opacity: sending ? 0.6 : 1,
                     }}
                   />
                   <button
                     onClick={send}
-                    disabled={!input.trim()}
+                    disabled={!input.trim() || sending}
                     style={{
                       padding: '8px 13px', borderRadius: '10px', border: 'none',
-                      background: input.trim() ? (wishTeamInfo?.color ?? '#F4A261') : 'rgba(255,255,255,0.07)',
-                      color: input.trim() ? '#fff' : 'rgba(255,255,255,0.2)',
-                      fontSize: '16px', cursor: input.trim() ? 'pointer' : 'default',
+                      background: (input.trim() && !sending) ? accentColor : 'rgba(255,255,255,0.07)',
+                      color: (input.trim() && !sending) ? '#fff' : 'rgba(255,255,255,0.2)',
+                      fontSize: '16px', cursor: (input.trim() && !sending) ? 'pointer' : 'default',
                       transition: 'all 0.15s', fontWeight: 700,
                     }}
                   >↑</button>
@@ -287,23 +288,24 @@ export default function ChatRoom({ wishTeam }) {
         style={{
           position: 'fixed', bottom: '24px', right: '24px', zIndex: 1500,
           width: '52px', height: '52px', borderRadius: '50%', border: 'none',
-          background: wishTeamInfo ? wishTeamInfo.color : '#F4A261',
-          color: '#fff', fontSize: open ? '22px' : '22px', cursor: 'pointer',
-          boxShadow: `0 4px 20px ${wishTeamInfo ? `${wishTeamInfo.color}60` : 'rgba(244,162,97,0.4)'}`,
+          background: accentColor, cursor: 'pointer',
+          boxShadow: `0 4px 20px ${accentColor}60`,
           transition: 'all 0.2s',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
         onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
         onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
       >
-        {open
-          ? <span style={{ fontSize: '22px' }}>×</span>
-          : wishTeamInfo
-            ? <img src={wishTeamInfo.logo} alt={wishTeam} style={{ width: '30px', height: '30px', objectFit: 'contain' }} onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='block' }} />
-            : null
-        }
-        {!open && <span style={{ display: wishTeamInfo ? 'none' : 'block', fontSize: '22px' }}>💬</span>}
-
+        {open ? (
+          <span style={{ fontSize: '22px', color: '#fff' }}>×</span>
+        ) : wishTeamInfo ? (
+          <img src={wishTeamInfo.logo} alt={wishTeam}
+            style={{ width: '30px', height: '30px', objectFit: 'contain' }}
+            onError={e => { e.target.style.display='none' }}
+          />
+        ) : (
+          <span style={{ fontSize: '22px' }}>💬</span>
+        )}
         {hasNew && !open && (
           <span style={{
             position: 'absolute', top: '6px', right: '6px',
