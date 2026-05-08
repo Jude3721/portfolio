@@ -7,6 +7,9 @@ import InjuryPage from './components/InjuryPage'
 import MovesPage from './components/MovesPage'
 import NewsPage from './components/NewsPage'
 import ThemePicker from './components/ThemePicker'
+import WishTeamModal from './components/WishTeamModal'
+import ChatRoom from './components/ChatRoom'
+import { KBO_TEAMS } from './data/kboTeams'
 import { mockGames, mockNextDayGames } from './data/mockGames'
 import { mockStandings } from './data/mockStandings'
 import { fetchTodayGamesWithLineup, fetchStandings, getDisplayDate } from './services/kboApi'
@@ -37,6 +40,14 @@ function App() {
   const [countdown, setCountdown]             = useState(0)
   const intervalRef  = useRef(null)
   const countdownRef = useRef(null)
+  const [wishTeam, setWishTeam]         = useState(() => localStorage.getItem('kbo_wish_team') || null)
+  const [showWishModal, setShowWishModal] = useState(false)
+
+  const handleWishSelect = team => {
+    if (team) localStorage.setItem('kbo_wish_team', team)
+    else localStorage.removeItem('kbo_wish_team')
+    setWishTeam(team)
+  }
 
   const hasLiveGame      = games.some((g) => g.status === 'live')
   const REFRESH_INTERVAL = hasLiveGame ? 30 : 60
@@ -122,6 +133,14 @@ function App() {
 
   return (
     <>
+    {showWishModal && (
+      <WishTeamModal
+        wishTeam={wishTeam}
+        onSelect={handleWishSelect}
+        onClose={() => setShowWishModal(false)}
+      />
+    )}
+    <ChatRoom wishTeam={wishTeam} />
     <main>
       {/* ── 헤더 ── */}
       <header style={{
@@ -188,6 +207,37 @@ function App() {
             <span style={{ fontSize: '14px', color: 'rgba(var(--fg-rgb), 0.3)', fontVariantNumeric: 'tabular-nums' }}>
               {timeStr}
             </span>
+
+            {/* 위시팀 버튼 */}
+            <button
+              onClick={() => setShowWishModal(true)}
+              title="응원 팀 선택"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '6px 12px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                background: 'var(--neu-bg)',
+                boxShadow: wishTeam
+                  ? `0 3px 10px ${KBO_TEAMS[wishTeam]?.color}50, 4px 4px 10px var(--neu-sd), -3px -3px 7px var(--neu-sl)`
+                  : '4px 4px 10px var(--neu-sd), -3px -3px 7px var(--neu-sl)',
+                color: wishTeam ? KBO_TEAMS[wishTeam]?.color : 'rgba(var(--fg-rgb),0.45)',
+                fontSize: '13px', fontWeight: 700, transition: 'all 0.15s',
+              }}
+            >
+              {wishTeam ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{
+                    width: '16px', height: '16px', borderRadius: '50%', background: KBO_TEAMS[wishTeam]?.color,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '7px', fontWeight: 800, color: '#fff', flexShrink: 0,
+                  }}>
+                    {KBO_TEAMS[wishTeam]?.short.slice(0, 2)}
+                  </span>
+                  {KBO_TEAMS[wishTeam]?.short}
+                </span>
+              ) : (
+                <span>⭐ 내 팀</span>
+              )}
+            </button>
 
             {/* 새로고침 버튼 */}
             <button

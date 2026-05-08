@@ -13,8 +13,18 @@ const PORT = process.env.PORT || 3002
 app.use(express.json())
 
 // ─── 채팅 (HTTP 폴링) ──────────────────────────────────────────
-const chatMessages = []
-const MAX_MSG      = 80
+const chatMessages    = []
+const MAX_MSG         = 80
+const nickActivity    = new Map()
+const NICK_TIMEOUT_MS = 5 * 60 * 1000
+
+app.post('/api/chat/nickname/check', (req, res) => {
+  const name = req.body?.name?.trim()
+  if (!name) return res.json({ available: false, reason: '닉네임을 입력해주세요' })
+  const last    = nickActivity.get(name)
+  const isTaken = last && Date.now() - last < NICK_TIMEOUT_MS
+  res.json({ available: !isTaken })
+})
 
 app.use((req, res, next) => {
   const origin = req.headers.origin
@@ -158,6 +168,7 @@ app.post('/api/chat/messages', (req, res) => {
   }
   chatMessages.push(msg)
   if (chatMessages.length > MAX_MSG) chatMessages.shift()
+  nickActivity.set(msg.name, Date.now())
   res.json({ message: msg })
 })
 

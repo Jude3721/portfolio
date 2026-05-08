@@ -21,15 +21,53 @@ try {
 const app = express()
 const PORT = process.env.PORT || 3001
 
+app.use(express.json())
+
 app.use((req, res, next) => {
   const origin = req.headers.origin
   if (ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin)
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   }
   if (req.method === 'OPTIONS') return res.sendStatus(204)
   next()
+})
+
+// ─── 채팅 ──────────────────────────────────────────────────────
+const chatMessages    = []
+const MAX_MSG         = 80
+const nickActivity    = new Map()   // name → lastActiveMs
+const NICK_TIMEOUT_MS = 5 * 60 * 1000
+
+app.post('/api/chat/nickname/check', (req, res) => {
+  const name = req.body?.name?.trim()
+  if (!name) return res.json({ available: false, reason: '닉네임을 입력해주세요' })
+  const last    = nickActivity.get(name)
+  const isTaken = last && Date.now() - last < NICK_TIMEOUT_MS
+  res.json({ available: !isTaken })
+})
+
+app.get('/api/chat/messages', (req, res) => {
+  const since = parseInt(req.query.since ?? '0')
+  const msgs  = since ? chatMessages.filter(m => m.id > since) : chatMessages.slice(-30)
+  res.json({ messages: msgs })
+})
+
+app.post('/api/chat/messages', (req, res) => {
+  const { name, text, teamKey } = req.body ?? {}
+  if (!text?.trim()) return res.status(400).json({ error: 'text required' })
+  const msg = {
+    id:      Date.now(),
+    name:    (name?.trim() || 'Guest').slice(0, 16),
+    text:    text.trim().slice(0, 300),
+    time:    new Date().toISOString(),
+    teamKey: teamKey ?? null,
+  }
+  chatMessages.push(msg)
+  if (chatMessages.length > MAX_MSG) chatMessages.shift()
+  nickActivity.set(msg.name, Date.now())
+  res.json({ message: msg })
 })
 
 function getDisplayDateStr() {
