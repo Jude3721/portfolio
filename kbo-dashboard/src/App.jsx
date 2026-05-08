@@ -142,71 +142,44 @@ function App() {
     )}
     <ChatRoom wishTeam={wishTeam} />
     <main>
-      {/* ── 헤더 ── */}
+      {/* ── 헤더 (NBA 스타일) ── */}
       <header style={{
-        background: 'var(--neu-bg)',
-        boxShadow: '0 4px 14px var(--neu-sd), 0 -2px 6px var(--neu-sl)',
-        padding: '14px 24px 0',
-        position: 'sticky', top: 0, zIndex: 50,
+        position: 'sticky', top: 0, zIndex: 100,
+        background: 'rgba(10,10,20,0.94)', backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        padding: '14px 24px',
       }}>
         {/* 상단 행 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          {/* 좌측: 로고 + 날짜 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '22px', fontWeight: 900, letterSpacing: '-0.5px', color: '#fff' }}>
+              ⚾ KBO
+            </span>
+            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>Dashboard</span>
+            <span style={{
+              fontSize: '12px', fontWeight: 700, padding: '2px 9px', borderRadius: '99px',
+              background: isNextDay ? 'rgba(165,180,252,0.15)' : 'rgba(74,222,128,0.12)',
+              border: `1px solid ${isNextDay ? 'rgba(165,180,252,0.3)' : 'rgba(74,222,128,0.3)'}`,
+              color: isNextDay ? '#a5b4fc' : '#4ade80',
+            }}>
+              {isNextDay ? '내일' : '오늘'} {dateStr}
+            </span>
+          </div>
 
-          {/* 로고 + 타이틀 */}
-          <span style={{ fontSize: '22px' }}>⚾</span>
-          <span style={{ fontSize: '18px', fontWeight: 800, color: 'rgba(var(--fg-rgb), 0.92)', letterSpacing: '-0.3px' }}>
-            KBO 대시보드
-          </span>
-
-          {/* 날짜 배지 */}
-          <span style={{
-            fontSize: '14px', fontWeight: 700, letterSpacing: '0.5px',
-            padding: '3px 10px', borderRadius: '99px',
-            background: isNextDay ? 'rgba(99,102,241,0.15)' : 'rgba(74,222,128,0.12)',
-            border: `1px solid ${isNextDay ? 'rgba(99,102,241,0.35)' : 'rgba(74,222,128,0.3)'}`,
-            color: isNextDay ? '#a5b4fc' : '#4ade80',
-          }}>
-            {isNextDay ? '내일' : '오늘'} {dateStr}
-          </span>
-
-          {/* 디자인 프리뷰 링크 — 개발 환경에서만 노출 */}
-          {import.meta.env.DEV && (
-            <a
-              href="/portfolio/kbo-dashboard/design-preview.html"
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                fontSize: '14px', fontWeight: 600, padding: '3px 10px', borderRadius: '99px',
-                background: 'rgba(var(--fg-rgb), 0.05)', border: '1px solid rgba(var(--fg-rgb), 0.1)',
-                color: 'rgba(var(--fg-rgb), 0.4)', textDecoration: 'none', transition: 'all 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.color = 'rgba(var(--fg-rgb), 0.75)'; e.currentTarget.style.borderColor = 'rgba(var(--fg-rgb), 0.25)' }}
-              onMouseLeave={e => { e.currentTarget.style.color = 'rgba(var(--fg-rgb), 0.4)';  e.currentTarget.style.borderColor = 'rgba(var(--fg-rgb), 0.1)' }}
-            >
-              Design Preview
-            </a>
-          )}
-
-          {/* 우측 컨트롤 */}
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            {/* 데이터 소스 */}
-            {dataSource === 'live' ? (
-              <span className="live-badge"><span className="live-dot" />실시간</span>
-            ) : (
-              <span style={{ fontSize: '14px', color: 'rgba(var(--fg-rgb), 0.3)', letterSpacing: '0.5px' }}>목업 데이터</span>
-            )}
-
-            {/* 카운트다운 */}
+          {/* 우측: 컨트롤 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* 실시간 / 카운트다운 */}
+            {dataSource === 'live'
+              ? <span className="live-badge"><span className="live-dot" />실시간</span>
+              : null
+            }
             {hasLiveGame && countdown > 0 && (
-              <span style={{ fontSize: '14px', color: 'rgba(var(--fg-rgb), 0.35)', fontVariantNumeric: 'tabular-nums' }}>
-                {countdown}초 후 갱신
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)', fontVariantNumeric: 'tabular-nums' }}>
+                {countdown}s
               </span>
             )}
-
-            {/* 업데이트 시간 */}
-            <span style={{ fontSize: '14px', color: 'rgba(var(--fg-rgb), 0.3)', fontVariantNumeric: 'tabular-nums' }}>
-              {timeStr}
-            </span>
+            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)' }}>{timeStr}</span>
 
             {/* 위시팀 버튼 */}
             <button
@@ -214,26 +187,25 @@ function App() {
               title="응원 팀 선택"
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '6px 12px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                background: 'var(--neu-bg)',
-                boxShadow: wishTeam
-                  ? `0 3px 10px ${KBO_TEAMS[wishTeam]?.color}50, 4px 4px 10px var(--neu-sd), -3px -3px 7px var(--neu-sl)`
-                  : '4px 4px 10px var(--neu-sd), -3px -3px 7px var(--neu-sl)',
-                color: wishTeam ? KBO_TEAMS[wishTeam]?.color : 'rgba(var(--fg-rgb),0.45)',
-                fontSize: '13px', fontWeight: 700, transition: 'all 0.15s',
+                padding: '5px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                background: wishTeam ? `${KBO_TEAMS[wishTeam]?.color}25` : 'rgba(255,255,255,0.06)',
+                outline: wishTeam ? `1px solid ${KBO_TEAMS[wishTeam]?.color}60` : '1px solid rgba(255,255,255,0.1)',
+                color: wishTeam ? '#fff' : 'rgba(255,255,255,0.5)',
+                fontSize: '12px', fontWeight: 700, transition: 'all 0.15s',
               }}
             >
               {wishTeam ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <>
                   <span style={{
-                    width: '16px', height: '16px', borderRadius: '50%', background: KBO_TEAMS[wishTeam]?.color,
+                    width: '16px', height: '16px', borderRadius: '50%',
+                    background: KBO_TEAMS[wishTeam]?.color,
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '7px', fontWeight: 800, color: '#fff', flexShrink: 0,
                   }}>
                     {KBO_TEAMS[wishTeam]?.short.slice(0, 2)}
                   </span>
                   {KBO_TEAMS[wishTeam]?.short}
-                </span>
+                </>
               ) : (
                 <span>⭐ 내 팀</span>
               )}
@@ -244,31 +216,26 @@ function App() {
               onClick={handleManualRefresh}
               disabled={isRefreshing}
               style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '6px 14px', borderRadius: '10px',
-                background: 'var(--neu-bg)',
-                border: 'none',
-                boxShadow: isRefreshing ? N.inset : N.btn,
-                color: 'rgba(var(--fg-rgb), 0.65)',
-                fontSize: '14px', fontWeight: 600,
-                cursor: isRefreshing ? 'not-allowed' : 'pointer',
-                opacity: isRefreshing ? 0.5 : 1,
-                transition: 'all 0.2s',
+                padding: '5px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
+                border: '1px solid rgba(255,255,255,0.1)', cursor: isRefreshing ? 'not-allowed' : 'pointer',
+                background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)',
+                opacity: isRefreshing ? 0.5 : 1, transition: 'all 0.15s',
+                display: 'flex', alignItems: 'center', gap: '5px',
               }}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                 style={{ animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }}>
                 <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
                 <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
               </svg>
-              새로고침
+              {isRefreshing ? '···' : '새로고침'}
             </button>
           </div>
         </div>
 
         {/* 탭 내비게이션 */}
-        <nav style={{ display: 'flex', gap: '4px' }}>
+        <nav style={{ display: 'flex', gap: '4px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           {NAV_TABS.map(tab => {
             const isActive = activeTab === tab.id
             return (
@@ -276,15 +243,12 @@ function App() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 style={{
-                  padding: '8px 18px',
-                  borderRadius: '10px 10px 0 0',
-                  fontSize: '14px', fontWeight: 600,
-                  cursor: 'pointer', border: 'none',
-                  background: 'var(--neu-bg)',
-                  color: isActive ? '#c084fc' : 'rgba(var(--fg-rgb), 0.38)',
-                  border: 'none',
-                  boxShadow: isActive ? N.inset : 'none',
-                  transition: 'all 0.2s',
+                  padding: '9px 18px', border: 'none', cursor: 'pointer',
+                  borderRadius: '10px 10px 0 0', fontSize: '13px', fontWeight: 700,
+                  background: isActive ? 'rgba(255,255,255,0.07)' : 'transparent',
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.35)',
+                  borderBottom: isActive ? '2px solid #4ade80' : '2px solid transparent',
+                  transition: 'all 0.15s',
                 }}
               >
                 {tab.label}
