@@ -608,27 +608,19 @@ async function fetchDraftNews(year) {
   }
 }
 
-async function fetchLotteryOrder(year) {
+async function fetchPickOrderFromStandings() {
   try {
-    const season = `${year - 1}-${String(year).slice(-2)}`
-    const url = `https://stats.nba.com/stats/draftlottery?LeagueID=00&Season=${season}`
-    const res = await fetch(url, { headers: STATS_HEADERS })
-    if (!res.ok) return []
-    const json = await res.json()
-    const rs = json?.resultSets?.[0]
-    if (!rs?.rowSet?.length) return []
-    const h = rs.headers
-    const get = (row, k) => row[h.indexOf(k)]
-    return rs.rowSet
-      .map(row => ({
-        rank:     Number(get(row, 'FINAL_DRAFT_PICK') ?? get(row, 'CURRENT_PICK')) || 0,
-        team:     get(row, 'TEAM_ABBREVIATION') ?? '',
-        teamName: get(row, 'TEAM_NAME') ?? '',
-        teamLogo: null,
-        teamColor: null,
+    const standings = await fetchStandings()
+    if (!standings?.length) return []
+    return [...standings]
+      .sort((a, b) => a.wins - b.wins || b.losses - a.losses)
+      .map((t, i) => ({
+        rank:  i + 1,
+        round: i < 30 ? 1 : 2,
+        team:  t.tricode,
+        wins:  t.wins,
+        losses: t.losses,
       }))
-      .filter(p => p.rank && p.team)
-      .sort((a, b) => a.rank - b.rank)
   } catch {
     return []
   }
@@ -667,7 +659,7 @@ export async function fetchDraftProspects() {
 
   const pickOrder = type === 'picks'
     ? prospects.map(p => ({ rank: p.rank, round: p.round, team: p.team, teamLogo: p.teamLogo, teamColor: p.teamColor }))
-    : await fetchLotteryOrder(year)
+    : await fetchPickOrderFromStandings()
 
   const rawNews        = await fetchDraftNews(year)
   const translated     = await translateTitles(rawNews.map(n => n.title))
