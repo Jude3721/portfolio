@@ -10,6 +10,17 @@ const ALLOWED_ORIGINS = [
 const app  = express()
 const PORT = process.env.PORT || 3002
 
+app.use((req, res, next) => {
+  const origin = req.headers.origin
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204)
+  next()
+})
+
 app.use(express.json())
 
 // ─── 채팅 (HTTP 폴링) ──────────────────────────────────────────
@@ -24,17 +35,6 @@ app.post('/api/chat/nickname/check', (req, res) => {
   const last    = nickActivity.get(name)
   const isTaken = last && Date.now() - last < NICK_TIMEOUT_MS
   res.json({ available: !isTaken })
-})
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin
-  if (ALLOWED_ORIGINS.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin)
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-  }
-  if (req.method === 'OPTIONS') return res.sendStatus(204)
-  next()
 })
 
 app.get('/api/scoreboard', async (req, res) => {
