@@ -5,8 +5,6 @@ import express from 'express'
 import { fetchSchedule, fetchLineup, fetchTeamStats, fetchStandings, fetchTeamNews, fetchInjuries, fetchRosterMoves, fetchUpcomingSchedule } from './kboService.js'
 
 const ALLOWED_ORIGINS = [
-  'https://koreanba.com',
-  'https://www.koreanba.com',
   'https://jude3721.github.io',
   'http://localhost:5173',
   'http://localhost:4173',

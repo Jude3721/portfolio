@@ -2,8 +2,6 @@ import express from 'express'
 import { fetchScoreboard, fetchBoxscore, fetchStandings, fetchPlayoffBracket, fetchRoster, fetchTeamNews, fetchTradeNews, fetchUpcomingGames, fetchDraftProspects, fetchAmateurRankings } from './nbaService.js'
 
 const ALLOWED_ORIGINS = [
-  'https://koreanba.com',
-  'https://www.koreanba.com',
   'https://jude3721.github.io',
   'http://localhost:5173',
   'http://localhost:4173',
