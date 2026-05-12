@@ -608,6 +608,32 @@ async function fetchDraftNews(year) {
   }
 }
 
+async function fetchLotteryOrder(year) {
+  try {
+    const season = `${year - 1}-${String(year).slice(-2)}`
+    const url = `https://stats.nba.com/stats/draftlottery?LeagueID=00&Season=${season}`
+    const res = await fetch(url, { headers: STATS_HEADERS })
+    if (!res.ok) return []
+    const json = await res.json()
+    const rs = json?.resultSets?.[0]
+    if (!rs?.rowSet?.length) return []
+    const h = rs.headers
+    const get = (row, k) => row[h.indexOf(k)]
+    return rs.rowSet
+      .map(row => ({
+        rank:     Number(get(row, 'FINAL_DRAFT_PICK') ?? get(row, 'CURRENT_PICK')) || 0,
+        team:     get(row, 'TEAM_ABBREVIATION') ?? '',
+        teamName: get(row, 'TEAM_NAME') ?? '',
+        teamLogo: null,
+        teamColor: null,
+      }))
+      .filter(p => p.rank && p.team)
+      .sort((a, b) => a.rank - b.rank)
+  } catch {
+    return []
+  }
+}
+
 export async function fetchDraftProspects() {
   if (draftCache.data && Date.now() < draftCache.exp) return draftCache.data
 
@@ -639,17 +665,21 @@ export async function fetchDraftProspects() {
     console.warn('[NBA] draft picks 오류:', e.message)
   }
 
+  const pickOrder = type === 'picks'
+    ? prospects.map(p => ({ rank: p.rank, round: p.round, team: p.team, teamLogo: p.teamLogo, teamColor: p.teamColor }))
+    : await fetchLotteryOrder(year)
+
   const rawNews        = await fetchDraftNews(year)
   const translated     = await translateTitles(rawNews.map(n => n.title))
   const news           = rawNews.map((n, i) => ({ ...n, title: translated[i] ?? n.title }))
 
   // 드래프트 날짜: 보통 6월 마지막 목요일
   const draftDate = `${year}-06-25`
-  const data      = { type, year, draftDate, prospects, news }
+  const data      = { type, year, draftDate, prospects, pickOrder, news }
 
   draftCache.data = data
   draftCache.exp  = Date.now() + (type === 'picks' ? TTL_DRAFT : 600_000)
-  console.log(`[NBA] 드래프트: ${type}, 선수 ${prospects.length}명, 뉴스 ${news.length}건`)
+  console.log(`[NBA] 드래프트: ${type}, 선수 ${prospects.length}명, 픽순서 ${pickOrder.length}건, 뉴스 ${news.length}건`)
   return data
 }
 

@@ -6,7 +6,6 @@ import TeamNews from './components/TeamNews'
 import TradeNews from './components/TradeNews'
 import UpcomingGames from './components/UpcomingGames'
 import DraftProspects from './components/DraftProspects'
-import AmateurRankings from './components/AmateurRankings'
 import WishTeamModal from './components/WishTeamModal'
 import ChatRoom from './components/ChatRoom'
 import { NBA_TEAMS } from './data/nbaTeams'
@@ -19,7 +18,6 @@ const TABS = [
   { id: 'news',      label: '📰 팀 뉴스' },
   { id: 'trades',    label: '🔄 트레이드' },
   { id: 'draft',     label: '🎯 드래프트' },
-  { id: 'amateur',   label: '🏫 아마추어' },
 ]
 
 const REFRESH_MS = 30_000
@@ -208,7 +206,6 @@ export default function App() {
         {activeTab === 'news'   && <TeamNews />}
         {activeTab === 'trades' && <TradeNews />}
         {activeTab === 'draft'   && <DraftProspects />}
-        {activeTab === 'amateur' && <AmateurRankings />}
       </main>
     </div>
   )

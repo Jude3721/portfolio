@@ -108,6 +108,7 @@ export default function DraftProspects() {
 
   const isPicks     = data?.type === 'picks'
   const prospects   = data?.prospects ?? []
+  const pickOrder   = data?.pickOrder ?? []
   const news        = data?.news ?? []
   const year        = data?.year ?? new Date().getFullYear()
   const draftDate   = data?.draftDate
@@ -241,6 +242,46 @@ export default function DraftProspects() {
             예정일 {draftDate} · 드래프트 확정 후 순위가 업데이트됩니다
           </p>
           {draftDate && <Countdown target={draftDate} />}
+        </div>
+      )}
+
+      {/* 구단 픽 순서 */}
+      {pickOrder.length > 0 && (
+        <div style={{ marginBottom: '32px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: '12px', letterSpacing: '0.3px' }}>
+            구단 픽 순서
+          </h3>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))',
+            gap: '8px',
+          }}>
+            {pickOrder.map(p => (
+              <div
+                key={p.rank}
+                style={{
+                  background: p.teamColor ? `${p.teamColor}18` : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${p.teamColor ? `${p.teamColor}30` : 'rgba(255,255,255,0.06)'}`,
+                  borderRadius: '10px', padding: '8px 6px',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
+                }}
+              >
+                <span style={{
+                  fontSize: p.rank <= 5 ? '13px' : '11px', fontWeight: 900,
+                  color: p.rank <= 5 ? '#F4A261' : p.rank <= 14 ? '#fff' : 'rgba(255,255,255,0.45)',
+                }}>
+                  #{p.rank}
+                </span>
+                {p.teamLogo
+                  ? <img src={p.teamLogo} alt={p.team} style={{ height: '28px', objectFit: 'contain' }} />
+                  : <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{p.team}</span>
+                }
+                {p.teamLogo && (
+                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>{p.team}</span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
