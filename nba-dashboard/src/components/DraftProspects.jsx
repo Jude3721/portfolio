@@ -255,7 +255,7 @@ export default function DraftProspects() {
             </h3>
             {!isPicks && (
               <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>
-                성적 기준 예상
+                로터리 확정
               </span>
             )}
           </div>
@@ -288,6 +288,9 @@ export default function DraftProspects() {
                     : <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{p.team}</span>
                   }
                   <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>{p.team}</span>
+                  {p.via && (
+                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: 500 }}>via {p.via}</span>
+                  )}
                 </div>
               )
             })}

@@ -608,6 +608,41 @@ async function fetchDraftNews(year) {
   }
 }
 
+const DRAFT_PICK_ORDER = {
+  2026: [
+    { rank:  1, team: 'WAS' },
+    { rank:  2, team: 'UTA' },
+    { rank:  3, team: 'MEM' },
+    { rank:  4, team: 'CHI' },
+    { rank:  5, team: 'LAC', via: 'IND' },
+    { rank:  6, team: 'BKN' },
+    { rank:  7, team: 'SAC' },
+    { rank:  8, team: 'ATL', via: 'NOP' },
+    { rank:  9, team: 'DAL' },
+    { rank: 10, team: 'MIL' },
+    { rank: 11, team: 'GSW' },
+    { rank: 12, team: 'OKC' },
+    { rank: 13, team: 'MIA' },
+    { rank: 14, team: 'CHA' },
+    { rank: 15, team: 'CHI', via: 'POR' },
+    { rank: 16, team: 'MEM', via: 'PHX' },
+    { rank: 17, team: 'OKC', via: 'PHI' },
+    { rank: 18, team: 'CHA', via: 'ORL' },
+    { rank: 19, team: 'TOR' },
+    { rank: 20, team: 'SAS', via: 'ATL' },
+    { rank: 21, team: 'DET', via: 'MIN' },
+    { rank: 22, team: 'PHI', via: 'HOU' },
+    { rank: 23, team: 'ATL', via: 'CLE' },
+    { rank: 24, team: 'NYK' },
+    { rank: 25, team: 'LAL' },
+    { rank: 26, team: 'DEN' },
+    { rank: 27, team: 'BOS' },
+    { rank: 28, team: 'MIN', via: 'DET' },
+    { rank: 29, team: 'CLE', via: 'SAS' },
+    { rank: 30, team: 'DAL', via: 'OKC' },
+  ],
+}
+
 async function fetchPickOrderFromStandings() {
   try {
     const standings = await fetchStandings()
@@ -615,11 +650,9 @@ async function fetchPickOrderFromStandings() {
     return [...standings]
       .sort((a, b) => a.wins - b.wins || b.losses - a.losses)
       .map((t, i) => ({
-        rank:  i + 1,
-        round: i < 30 ? 1 : 2,
-        team:  t.tricode,
-        wins:  t.wins,
-        losses: t.losses,
+        rank:   i + 1,
+        round:  1,
+        team:   t.tricode,
       }))
   } catch {
     return []
@@ -659,7 +692,7 @@ export async function fetchDraftProspects() {
 
   const pickOrder = type === 'picks'
     ? prospects.map(p => ({ rank: p.rank, round: p.round, team: p.team, teamLogo: p.teamLogo, teamColor: p.teamColor }))
-    : await fetchPickOrderFromStandings()
+    : (DRAFT_PICK_ORDER[year] ?? await fetchPickOrderFromStandings())
 
   const rawNews        = await fetchDraftNews(year)
   const translated     = await translateTitles(rawNews.map(n => n.title))
