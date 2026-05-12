@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  base: '/portfolio/nba-dashboard/',
+  base: '/nba-dashboard/',
   plugins: [react()],
   server: {
     proxy: {
