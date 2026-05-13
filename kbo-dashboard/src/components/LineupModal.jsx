@@ -46,7 +46,7 @@ function PlayerCard({ playerName, teamKey, pos, onClose }) {
   return (
     <div
       onClick={onClose}
-      style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(0,0,0,0.45)' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(0,0,0,0.45)' }}
     >
       <div
         onClick={e => e.stopPropagation()}
@@ -214,7 +214,7 @@ export default function LineupModal({ game, loading = false, onClose }) {
 
   return (
     <>
-      <div onClick={() => { if (selectedPlayer) { setSelectedPlayer(null); return } onClose() }} style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(0,0,0,0.55)' }}>
+      <div onClick={() => { if (selectedPlayer) { setSelectedPlayer(null); return } onClose() }} style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(0,0,0,0.55)' }}>
         <div onClick={e => e.stopPropagation()} style={{
           width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto',
           borderRadius: '28px', padding: '24px',
