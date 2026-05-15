@@ -2,7 +2,7 @@
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import express from 'express'
-import { fetchSchedule, fetchLineup, fetchTeamStats, fetchStandings, fetchTeamNews, fetchInjuries, fetchRosterMoves, fetchUpcomingSchedule } from './kboService.js'
+import { fetchSchedule, fetchLineup, fetchTeamStats, fetchStandings, fetchTeamNews, fetchInjuries, fetchRosterMoves, fetchUpcomingSchedule, fetchHeadToHead } from './kboService.js'
 
 const ALLOWED_ORIGINS = [
   'https://jude3721.github.io',
@@ -155,6 +155,18 @@ app.get('/api/news/:teamKey', async (req, res) => {
   } catch (err) {
     console.error('[server] news error:', err.message)
     res.json({ news: [], total: 0, error: err.message })
+  }
+})
+
+app.get('/api/h2h/:awayTeam/:homeTeam', async (req, res) => {
+  try {
+    const away = decodeURIComponent(req.params.awayTeam)
+    const home = decodeURIComponent(req.params.homeTeam)
+    const h2h  = await fetchHeadToHead(away, home)
+    res.json({ h2h })
+  } catch (err) {
+    console.error('[server] h2h error:', err.message)
+    res.json({ h2h: null })
   }
 })
 

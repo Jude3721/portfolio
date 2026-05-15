@@ -256,7 +256,8 @@ export async function fetchSchedule(dateStr) {
 
   const games = parseGameList(data?.game || [], dateStr)
   const hasLive = games.some(g => g.status === 'live')
-  const ttl = hasLive ? TTL_SCHEDULE_LIVE : TTL_SCHEDULE_DEFAULT
+  const allFinal = games.length > 0 && games.every(g => g.status === 'final')
+  const ttl = hasLive ? TTL_SCHEDULE_LIVE : allFinal ? 86_400_000 : TTL_SCHEDULE_DEFAULT
   console.log(`[KBO] 경기: ${games.length}개 (라이브: ${hasLive ? 'O' : 'X'}, 캐시 ${ttl/1000}초)`)
   scheduleCache.set(dateStr, { data: games, exp: Date.now() + ttl })
   return games
@@ -631,6 +632,90 @@ export async function fetchTeamNews(teamKorName, page = 1) {
   const data = { news, total }
   newsCache.set(cacheKey, { data, exp: Date.now() + TTL_NEWS })
   return data
+}
+
+// ─── 상대전적 (시즌 경기 결과 집계) ─────────────────────────────
+const h2hCache   = new Map()
+const TTL_H2H    = 3_600_000 // 1시간
+
+// 시즌 전체 완료 경기 공유 캐시 (모든 H2H 쿼리가 공유)
+let _seasonGamesCache   = null
+let _seasonGamesExpiry  = 0
+let _seasonGamesLoading = null // 중복 요청 방지
+
+function getSeasonDates() {
+  const now   = new Date()
+  const year  = now.getFullYear()
+  const start = new Date(year, 2, 20) // 3월 20일 (시즌 개막 전 여유)
+  const dates = []
+  for (let d = new Date(start); d < now; d.setDate(d.getDate() + 1)) {
+    dates.push(
+      `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`
+    )
+  }
+  return dates
+}
+
+async function loadSeasonGames() {
+  if (_seasonGamesCache && Date.now() < _seasonGamesExpiry) return _seasonGamesCache
+  if (_seasonGamesLoading) return _seasonGamesLoading
+
+  _seasonGamesLoading = (async () => {
+    const dates = getSeasonDates()
+    const BATCH = 8
+    const allFinal = []
+
+    for (let i = 0; i < dates.length; i += BATCH) {
+      const batch   = dates.slice(i, i + BATCH)
+      const results = await Promise.allSettled(batch.map(d => fetchSchedule(d)))
+      for (const r of results) {
+        if (r.status === 'fulfilled') {
+          allFinal.push(...r.value.filter(g => g.status === 'final'))
+        }
+      }
+    }
+
+    console.log(`[KBO] 시즌 완료 경기 로드: ${allFinal.length}경기 (${dates.length}일 조회)`)
+    _seasonGamesCache  = allFinal
+    _seasonGamesExpiry = Date.now() + TTL_H2H
+    _seasonGamesLoading = null
+    return allFinal
+  })()
+
+  return _seasonGamesLoading
+}
+
+export async function fetchHeadToHead(awayTeam, homeTeam) {
+  const cacheKey = `${awayTeam}:${homeTeam}`
+  const cached   = h2hCache.get(cacheKey)
+  if (cached && Date.now() < cached.exp) return cached.data
+
+  try {
+    const games = await loadSeasonGames()
+    let awayWins = 0, homeWins = 0, draws = 0
+
+    for (const g of games) {
+      let aScore, hScore
+      if (g.awayTeam === awayTeam && g.homeTeam === homeTeam) {
+        aScore = g.awayScore; hScore = g.homeScore
+      } else if (g.awayTeam === homeTeam && g.homeTeam === awayTeam) {
+        aScore = g.homeScore; hScore = g.awayScore
+      } else continue
+
+      if (aScore > hScore)      awayWins++
+      else if (hScore > aScore) homeWins++
+      else                      draws++
+    }
+
+    const total  = awayWins + homeWins + draws
+    const result = total > 0 ? { awayWins, homeWins, draws, total } : null
+    console.log(`[KBO] 상대전적 ${awayTeam} vs ${homeTeam}: ${awayWins}승 ${draws}무 ${homeWins}패 (${total}경기)`)
+    h2hCache.set(cacheKey, { data: result, exp: Date.now() + TTL_H2H })
+    return result
+  } catch (err) {
+    console.error('[KBO] 상대전적 조회 실패:', err.message)
+    return null
+  }
 }
 
 // ─── 로스터 무브 ──────────────────────────────────────────────

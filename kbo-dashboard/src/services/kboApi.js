@@ -83,6 +83,14 @@ export async function fetchUpcomingSchedule(days = 7) {
   return data?.dates ?? []
 }
 
+/** 두 팀 시즌 상대전적 조회 */
+export async function fetchHeadToHead(awayTeam, homeTeam) {
+  const res = await fetch(`${API_BASE}/api/h2h/${encodeURIComponent(awayTeam)}/${encodeURIComponent(homeTeam)}`)
+  if (!res.ok) return null
+  const data = await res.json()
+  return data?.h2h ?? null
+}
+
 /** 팀 뉴스 조회 (page: 1-based) */
 export async function fetchTeamNews(teamKey, page = 1) {
   const res = await fetch(`${API_BASE}/api/news/${encodeURIComponent(teamKey)}?page=${page}`)

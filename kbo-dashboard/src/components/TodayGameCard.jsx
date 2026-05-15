@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { KBO_TEAMS } from '../data/mockGames'
 import LineupModal from './LineupModal'
-import { fetchGameLineup } from '../services/kboApi'
+import { fetchGameLineup, fetchHeadToHead } from '../services/kboApi'
 
 const N = {
   raised: '6px 6px 16px var(--neu-sd), -4px -4px 10px var(--neu-sl)',
@@ -90,6 +90,26 @@ function BasesDisplay({ bases }) {
   )
 }
 
+function HeadToHeadRecord({ awayTeam, homeTeam, h2h }) {
+  if (!h2h || h2h.total === 0) return null
+  const { awayWins, homeWins, draws } = h2h
+  const awayColor = KBO_TEAMS[awayTeam]?.color ?? '#888'
+  const homeColor = KBO_TEAMS[homeTeam]?.color ?? '#888'
+  const awayShort = KBO_TEAMS[awayTeam]?.short ?? awayTeam
+  const homeShort = KBO_TEAMS[homeTeam]?.short ?? homeTeam
+  const totalGames = awayWins + homeWins + draws
+
+  return (
+    <div style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(var(--fg-rgb), 0.45)' }}>
+      <span style={{ fontSize: '10px', opacity: 0.6 }}>시즌 상대전적 ({totalGames}경기)  </span>
+      <span style={{ fontWeight: 700, color: awayColor }}>{awayShort} {awayWins}승</span>
+      {draws > 0 && <span> · {draws}무</span>}
+      <span style={{ opacity: 0.4 }}> · </span>
+      <span style={{ fontWeight: 700, color: homeColor }}>{homeShort} {homeWins}승</span>
+    </div>
+  )
+}
+
 function GameInfo({ game }) {
   const { status, time, stadium, inning, inningHalf, outs, bases } = game
   return (
@@ -125,6 +145,13 @@ export default function TodayGameCard({ game, standings = [] }) {
   const [lineup, setLineup]               = useState(game.lineup)
   const [lineupLoading, setLineupLoading] = useState(false)
   const [hovered, setHovered]             = useState(false)
+  const [h2h, setH2h]                     = useState(null)
+
+  useEffect(() => {
+    fetchHeadToHead(awayTeam, homeTeam)
+      .then(data => setH2h(data))
+      .catch(() => {})
+  }, [awayTeam, homeTeam])
 
   const handleCardClick = async () => {
     setShowLineup(true)
@@ -178,6 +205,8 @@ export default function TodayGameCard({ game, standings = [] }) {
         </div>
 
         {status !== 'final' && <WinProbBar awayTeam={awayTeam} homeTeam={homeTeam} awayWR={awayWR} homeWR={homeWR} />}
+
+        <HeadToHeadRecord awayTeam={awayTeam} homeTeam={homeTeam} h2h={h2h} />
 
         <div style={{
           borderTop: '1px solid rgba(var(--fg-rgb), 0.06)', paddingTop: '12px',
